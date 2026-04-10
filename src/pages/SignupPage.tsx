@@ -13,6 +13,7 @@ const SignupPage = () => {
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkEmail, setCheckEmail] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,13 +22,33 @@ const SignupPage = () => {
     setLoading(true);
     try {
       await signUp(email, password, fullName);
-      navigate("/welcome");
+      // If Supabase has email confirmation disabled, the auth state
+      // change will auto-redirect via the route guard.
+      // If enabled, show a "check your email" message.
+      setCheckEmail(true);
     } catch (err: any) {
       setError(err.message || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
   };
+
+  if (checkEmail) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+        <div className="w-20 h-20 rounded-full bg-accent-soft mb-6 flex items-center justify-center">
+          <span className="text-3xl">✉️</span>
+        </div>
+        <h1 className="font-display text-2xl font-medium mb-2 text-center">Check your email</h1>
+        <p className="text-muted-ink text-center mb-6">
+          We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.
+        </p>
+        <button onClick={() => navigate("/login")} className="text-sm text-accent underline underline-offset-2">
+          Go to sign in
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 pt-16 pb-8 relative overflow-hidden">

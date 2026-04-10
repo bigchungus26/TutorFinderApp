@@ -46,11 +46,30 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/welcome" element={isLoggedIn ? <Navigate to="/" replace /> : <WelcomePage />} />
-      <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/signup" element={isLoggedIn ? <Navigate to="/" replace /> : <SignupPage />} />
+      <Route path="/welcome" element={
+        isLoggedIn && hasOnboarded ? <Navigate to="/" replace /> :
+        isLoggedIn && !hasOnboarded ? <Navigate to="/choose-role" replace /> :
+        <WelcomePage />
+      } />
+      <Route path="/login" element={
+        isLoggedIn && hasOnboarded ? <Navigate to="/" replace /> :
+        isLoggedIn && !hasOnboarded ? <Navigate to="/choose-role" replace /> :
+        <LoginPage />
+      } />
+      <Route path="/signup" element={
+        isLoggedIn && hasOnboarded ? <Navigate to="/" replace /> :
+        isLoggedIn && !hasOnboarded ? <Navigate to="/choose-role" replace /> :
+        <SignupPage />
+      } />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfUse />} />
+
+      {/* Role selection (logged in but not onboarded) */}
+      <Route path="/choose-role" element={
+        !isLoggedIn ? <Navigate to="/welcome" replace /> :
+        hasOnboarded ? <Navigate to="/" replace /> :
+        <WelcomePage />
+      } />
 
       {/* Onboarding (must be logged in) */}
       <Route path="/onboarding/student" element={
@@ -63,7 +82,7 @@ const AppRoutes = () => {
       {/* Student routes */}
       <Route path="/" element={
         !isLoggedIn ? <Navigate to="/welcome" replace /> :
-        !hasOnboarded ? <Navigate to="/welcome" replace /> :
+        !hasOnboarded ? <Navigate to="/choose-role" replace /> :
         role === "tutor" ? <Navigate to="/tutor/requests" replace /> :
         <StudentLayout><DiscoverPage /></StudentLayout>
       } />
