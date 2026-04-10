@@ -50,9 +50,6 @@ const SignupPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 pt-16 pb-8 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-accent-soft opacity-60 blur-3xl -translate-y-1/3 translate-x-1/3" />
-      <div className="absolute bottom-20 left-0 w-48 h-48 rounded-full bg-accent-soft opacity-40 blur-3xl -translate-x-1/3" />
-
       <div className="relative z-10 flex-1 flex flex-col">
         <div className="mb-4">
           <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
