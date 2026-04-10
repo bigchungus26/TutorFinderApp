@@ -5,25 +5,25 @@
 @layer base {
   :root {
     /* ── Backgrounds ── */
-    --background: 40 33% 97%;
+    --background: 36 24% 96%;
     --surface: 0 0% 100%;
     --surface-elevated: 0 0% 100%;
 
     /* ── Text (ink) ── */
     --foreground: 0 0% 10%;
     --ink: 0 0% 10%;
-    --ink-muted: 0 0% 42%;
-    --ink-subtle: 0 0% 58%;
+    --ink-muted: 160 10% 36%;
+    --ink-subtle: 155 10% 48%;
 
     /* ── Borders ── */
-    --hairline: 40 20% 90%;
-    --border: 40 20% 90%;
-    --input: 40 20% 90%;
+    --hairline: 150 18% 82%;
+    --border: 150 18% 82%;
+    --input: 150 18% 82%;
 
     /* ── Accent (green) ── */
-    --accent: 152 60% 42%;
+    --accent: 159 61% 47%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 152 50% 93%;
+    --accent-soft: 150 28% 89%;
 
     /* ── Status ── */
     --success: 155 46% 33%;
@@ -39,16 +39,16 @@
     --uni-ndu: 157 80% 24%;
 
     /* ── Mapped aliases (shadcn compat) ── */
-    --primary: 152 60% 42%;
+    --primary: 165 59% 30%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 20% 90%;
+    --secondary: 147 20% 72%;
     --secondary-foreground: 0 0% 10%;
-    --muted: 40 20% 94%;
-    --muted-foreground: 0 0% 42%;
-    --muted-ink: 0 0% 42%;
+    --muted: 36 20% 92%;
+    --muted-foreground: 160 10% 36%;
+    --muted-ink: 160 10% 36%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --ring: 152 60% 42%;
+    --ring: 159 61% 47%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
@@ -56,14 +56,14 @@
     --surface-foreground: 0 0% 10%;
 
     /* ── Sidebar (shadcn) ── */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-background: 36 24% 96%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 165 59% 30%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 150 28% 89%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 150 18% 82%;
+    --sidebar-ring: 159 61% 47%;
 
     /* ── Radius ── */
     --radius-sm: 0.5rem;
@@ -207,7 +207,7 @@
 /* Desktop layout adjustments */
 @media (min-width: 768px) {
   body {
-    background: hsl(40 33% 97%);
+    background: hsl(36 24% 96%);
   }
   #root {
     max-width: 100%;
@@ -222,57 +222,50 @@
 /* ── Dark mode ── */
 @layer base {
   .dark {
-    --background: 33 15% 8%;
-    --surface: 33 12% 11%;
-    --surface-elevated: 33 10% 14%;
-    --foreground: 40 20% 95%;
-    --ink: 40 20% 95%;
-    --ink-muted: 40 10% 60%;
-    --ink-subtle: 40 8% 45%;
-    --hairline: 33 8% 18%;
-    --border: 33 8% 18%;
-    --input: 33 8% 18%;
-    --accent: 152 55% 50%;
-    --accent-soft: 152 30% 18%;
+    --background: 36 24% 96%;
+    --surface: 0 0% 100%;
+    --surface-elevated: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --ink: 0 0% 10%;
+    --ink-muted: 160 10% 36%;
+    --ink-subtle: 155 10% 48%;
+    --hairline: 150 18% 82%;
+    --border: 150 18% 82%;
+    --input: 150 18% 82%;
+    --accent: 159 61% 47%;
+    --accent-soft: 150 28% 89%;
     --accent-foreground: 0 0% 100%;
-    --muted: 33 10% 14%;
-    --muted-foreground: 40 10% 60%;
-    --card: 33 12% 11%;
-    --card-foreground: 40 20% 95%;
-    --popover: 33 12% 11%;
-    --popover-foreground: 40 20% 95%;
-    --surface-foreground: 40 20% 95%;
-    /* University tints brightened for dark bg */
-    --uni-aub: 0 80% 65%;
-    --uni-lau: 220 80% 70%;
-    --uni-ndu: 157 60% 55%;
+    --muted: 36 20% 92%;
+    --muted-foreground: 160 10% 36%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --surface-foreground: 0 0% 10%;
   }
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --background: 33 15% 8%;
-      --surface: 33 12% 11%;
-      --surface-elevated: 33 10% 14%;
-      --foreground: 40 20% 95%;
-      --ink: 40 20% 95%;
-      --ink-muted: 40 10% 60%;
-      --ink-subtle: 40 8% 45%;
-      --hairline: 33 8% 18%;
-      --border: 33 8% 18%;
-      --input: 33 8% 18%;
-      --accent: 152 55% 50%;
-      --accent-soft: 152 30% 18%;
+      --background: 36 24% 96%;
+      --surface: 0 0% 100%;
+      --surface-elevated: 0 0% 100%;
+      --foreground: 0 0% 10%;
+      --ink: 0 0% 10%;
+      --ink-muted: 160 10% 36%;
+      --ink-subtle: 155 10% 48%;
+      --hairline: 150 18% 82%;
+      --border: 150 18% 82%;
+      --input: 150 18% 82%;
+      --accent: 159 61% 47%;
+      --accent-soft: 150 28% 89%;
       --accent-foreground: 0 0% 100%;
-      --muted: 33 10% 14%;
-      --muted-foreground: 40 10% 60%;
-      --card: 33 12% 11%;
-      --card-foreground: 40 20% 95%;
-      --popover: 33 12% 11%;
-      --popover-foreground: 40 20% 95%;
-      --surface-foreground: 40 20% 95%;
-      --uni-aub: 0 80% 65%;
-      --uni-lau: 220 80% 70%;
-      --uni-ndu: 157 60% 55%;
+      --muted: 36 20% 92%;
+      --muted-foreground: 160 10% 36%;
+      --card: 0 0% 100%;
+      --card-foreground: 0 0% 10%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 0 0% 10%;
+      --surface-foreground: 0 0% 10%;
     }
   }
 }
