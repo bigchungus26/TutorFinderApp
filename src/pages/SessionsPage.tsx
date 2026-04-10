@@ -3,7 +3,7 @@
 // Shows upcoming and past sessions with a review prompt (C5).
 // Pull-to-refresh, skeleton loading, empty states.
 // ============================================================
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Clock, Video, MapPin, X, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
