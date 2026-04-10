@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Supabase Data Access Hooks
+// Tutr — Supabase Data Access Hooks
 // These hooks wrap Supabase queries with React Query for
 // caching, loading states, and error handling.
 //
@@ -10,6 +10,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/types/database";
+import { toast, toastError } from "@/components/ui/sonner";
 
 // ============================================================
 // UNIVERSITIES
@@ -203,7 +204,9 @@ export function useCreateReview() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["reviews", variables.tutor_id] });
       queryClient.invalidateQueries({ queryKey: ["tutor", variables.tutor_id] });
+      toast.success("Review submitted!");
     },
+    onError: (err) => toastError(err),
   });
 }
 
@@ -255,7 +258,9 @@ export function useCreateSession() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      toast.success("Session booked!");
     },
+    onError: (err) => toastError(err),
   });
 }
 

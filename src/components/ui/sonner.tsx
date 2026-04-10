@@ -1,27 +1,49 @@
-import { useTheme } from "next-themes";
+// ── Sonner Toaster ─────────────────────────────────────────────
+// Styled to match Tutr design system:
+// - Surface bg, hairline border, shadow-float
+// - Fraunces title, Inter description
+// - top-center on mobile, bottom-right on desktop
+// - 3s default, 5s for errors
 import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      position="bottom-right"
       className="toaster group"
+      duration={3000}
       toastOptions={{
         classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          toast: [
+            "group toast",
+            "!bg-surface !border !border-hairline !shadow-float",
+            "!rounded-xl !px-4 !py-3.5",
+            "!text-ink",
+          ].join(" "),
+          title: "!font-display !text-body !font-medium !text-ink",
+          description: "!font-body !text-body-sm !text-ink-muted",
+          actionButton: "!bg-accent !text-accent-foreground !rounded-lg !px-4 !py-2 !text-label",
+          cancelButton: "!bg-muted !text-ink-muted !rounded-lg !px-4 !py-2 !text-label",
+          error: "!border-danger/30",
+          success: "!border-accent/30",
         },
       }}
       {...props}
     />
   );
 };
+
+// Helper: show error toast with Supabase-friendly message
+export function toastError(err: unknown, fallback = "Something went wrong. Please try again.") {
+  const msg =
+    err instanceof Error
+      ? err.message.length < 100 && !err.message.includes("JWT")
+        ? err.message
+        : fallback
+      : fallback;
+  toast.error(msg, { duration: 5000 });
+}
 
 export { Toaster, toast };

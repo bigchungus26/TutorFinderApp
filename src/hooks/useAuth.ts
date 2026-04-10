@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Supabase Auth Hook
+// Tutr — Supabase Auth Hook
 // Provides login, signup, logout, and current user state.
 // Replace the localStorage-based RoleContext when ready.
 // ============================================================

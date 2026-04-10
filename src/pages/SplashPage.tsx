@@ -1,42 +1,155 @@
-import { motion } from "framer-motion";
+// ============================================================
+// Tutr — SplashPage
+// Handles app-boot resolution: checks network, session, profile,
+// then navigates to the correct destination.
+// Displays minimum 900ms, maximum 2500ms.
+// ============================================================
+
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
+import { resolveDestination } from "@/lib/routing";
+import { variants, transitions } from "@/lib/motion";
+
+// Exit animation: subtle scale + opacity fade (220ms)
+const exitVariants = {
+  visible: { opacity: 1, scale: 1 },
+  exit: {
+    opacity: 0,
+    scale: 1.02,
+    transition: { duration: 0.22, ease: [0.2, 0, 0, 1] },
+  },
+};
+
+const MINIMUM_MS = 900;
+const MAXIMUM_MS = 2500;
 
 const SplashPage = () => {
   const navigate = useNavigate();
+  const [exiting, setExiting] = useState(false);
+  const destinationRef = useRef<string>("/welcome");
+  const resolvedRef = useRef(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => navigate("/welcome"), 2000);
-    return () => clearTimeout(timer);
-  }, [navigate]);
+    const startTime = Date.now();
+
+    // Hard timeout: always navigate after 2.5s regardless of async state
+    const hardTimeout = setTimeout(() => {
+      if (!resolvedRef.current) {
+        resolvedRef.current = true;
+        triggerExit(destinationRef.current);
+      }
+    }, MAXIMUM_MS);
+
+    const doResolve = async () => {
+      // Run checks in parallel
+      const [sessionResult] = await Promise.all([
+        supabase.auth.getSession(),
+        // navigator.onLine is sync; include as resolved promise for parallelism symmetry
+        Promise.resolve(navigator.onLine),
+      ]);
+
+      const online = navigator.onLine;
+      const user = sessionResult.data?.session?.user ?? null;
+
+      // Fetch profile if user is authenticated
+      let profile: any = null;
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        profile = data ?? null;
+      }
+
+      // Check sessionStorage for a pending deep-link
+      const pendingRoute = sessionStorage.getItem("pendingRoute") ?? undefined;
+
+      const destination = resolveDestination({
+        user,
+        profile,
+        online,
+        deepLink: pendingRoute,
+      });
+
+      // Clear pending route now that we've consumed it
+      if (pendingRoute) {
+        sessionStorage.removeItem("pendingRoute");
+      }
+
+      destinationRef.current = destination;
+
+      // Enforce minimum display time
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, MINIMUM_MS - elapsed);
+
+      await new Promise<void>((resolve) => setTimeout(resolve, remaining));
+
+      if (!resolvedRef.current) {
+        resolvedRef.current = true;
+        clearTimeout(hardTimeout);
+        triggerExit(destination);
+      }
+    };
+
+    doResolve().catch(() => {
+      // On any error, fall back to welcome
+      if (!resolvedRef.current) {
+        resolvedRef.current = true;
+        clearTimeout(hardTimeout);
+        triggerExit("/welcome");
+      }
+    });
+
+    return () => clearTimeout(hardTimeout);
+  }, []);
+
+  const triggerExit = (destination: string) => {
+    setExiting(true);
+    // Navigate after exit animation completes (220ms)
+    setTimeout(() => {
+      navigate(destination, { replace: true });
+    }, 240);
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen bg-background flex flex-col items-center justify-center relative overflow-hidden"
-      onClick={() => navigate("/welcome")}
-    >
-      <div className="absolute top-1/4 right-0 w-72 h-72 rounded-full bg-accent-soft opacity-50 blur-3xl translate-x-1/3" />
-      <div className="absolute bottom-1/4 left-0 w-56 h-56 rounded-full bg-accent-soft opacity-40 blur-3xl -translate-x-1/3" />
-
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-10 flex flex-col items-center"
-      >
-        <h1 className="font-display text-6xl font-semibold text-accent tracking-tight">Tutr</h1>
-        <motion.p
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.4 }}
-          className="text-muted-ink text-base mt-3"
+    <AnimatePresence>
+      {!exiting && (
+        <motion.div
+          key="splash"
+          initial="visible"
+          animate="visible"
+          exit="exit"
+          variants={exitVariants}
+          className="min-h-screen bg-background flex flex-col items-center justify-center"
         >
-          Peer tutoring, simplified.
-        </motion.p>
-      </motion.div>
-    </motion.div>
+          {/* Pulsing wordmark */}
+          <motion.h1
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            className="select-none"
+            style={{
+              fontFamily: "'Fraunces', serif",
+              fontSize: "2.25rem",
+              fontWeight: 500,
+              letterSpacing: "-0.02em",
+              color: "hsl(var(--ink))",
+            }}
+          >
+            Tutr
+          </motion.h1>
+
+          {/* Accent dot below */}
+          <motion.span
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+            className="block w-1.5 h-1.5 rounded-full bg-accent mt-4"
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

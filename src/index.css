@@ -93,6 +93,13 @@
 
 /* ── Typography utilities ── */
 @layer utilities {
+  .text-display-hero {
+    font-family: 'Fraunces', serif;
+    font-size: 3rem;
+    line-height: 3.25rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
   .text-display-xl {
     font-family: 'Fraunces', serif;
     font-size: 2.25rem;
@@ -149,6 +156,52 @@
     line-height: 1.125rem;
     font-weight: 500;
   }
+
+  /* New typography tokens for polish pass */
+  .text-display-hero-lg {
+    font-family: 'Fraunces', serif;
+    font-size: 3.5rem;     /* 56px */
+    line-height: 3.75rem;  /* 60px */
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  .text-overline {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.6875rem;  /* 11px */
+    line-height: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .font-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Paper texture overlay */
+.noise-overlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.04;
+}
+
+/* ── Shimmer animation for skeletons ── */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ── Scrollbar hide utility ── */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Phone frame on desktop */
@@ -163,5 +216,63 @@
     background: hsl(40 33% 97%);
     position: relative;
     box-shadow: var(--shadow-float);
+  }
+}
+
+/* ── Dark mode ── */
+@layer base {
+  .dark {
+    --background: 33 15% 8%;
+    --surface: 33 12% 11%;
+    --surface-elevated: 33 10% 14%;
+    --foreground: 40 20% 95%;
+    --ink: 40 20% 95%;
+    --ink-muted: 40 10% 60%;
+    --ink-subtle: 40 8% 45%;
+    --hairline: 33 8% 18%;
+    --border: 33 8% 18%;
+    --input: 33 8% 18%;
+    --accent: 152 55% 50%;
+    --accent-soft: 152 30% 18%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 33 10% 14%;
+    --muted-foreground: 40 10% 60%;
+    --card: 33 12% 11%;
+    --card-foreground: 40 20% 95%;
+    --popover: 33 12% 11%;
+    --popover-foreground: 40 20% 95%;
+    --surface-foreground: 40 20% 95%;
+    /* University tints brightened for dark bg */
+    --uni-aub: 0 80% 65%;
+    --uni-lau: 220 80% 70%;
+    --uni-ndu: 157 60% 55%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --background: 33 15% 8%;
+      --surface: 33 12% 11%;
+      --surface-elevated: 33 10% 14%;
+      --foreground: 40 20% 95%;
+      --ink: 40 20% 95%;
+      --ink-muted: 40 10% 60%;
+      --ink-subtle: 40 8% 45%;
+      --hairline: 33 8% 18%;
+      --border: 33 8% 18%;
+      --input: 33 8% 18%;
+      --accent: 152 55% 50%;
+      --accent-soft: 152 30% 18%;
+      --accent-foreground: 0 0% 100%;
+      --muted: 33 10% 14%;
+      --muted-foreground: 40 10% 60%;
+      --card: 33 12% 11%;
+      --card-foreground: 40 20% 95%;
+      --popover: 33 12% 11%;
+      --popover-foreground: 40 20% 95%;
+      --surface-foreground: 40 20% 95%;
+      --uni-aub: 0 80% 65%;
+      --uni-lau: 220 80% 70%;
+      --uni-ndu: 157 60% 55%;
+    }
   }
 }
