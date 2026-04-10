@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
+import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Footer } from "@/components/Footer";
@@ -39,6 +40,16 @@ const SignupPage = () => {
   if (checkEmail) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+        <div className="mb-6 w-full max-w-sm">
+          <button
+            type="button"
+            onClick={() => setCheckEmail(false)}
+            className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-ink shadow-[0_10px_25px_rgba(26,26,26,0.04)] transition-all hover:border-primary hover:text-primary"
+          >
+            <ArrowLeft size={16} />
+            Go back
+          </button>
+        </div>
         <div className="w-20 h-20 rounded-full bg-accent-soft mb-6 flex items-center justify-center">
           <span className="text-3xl">✉️</span>
         </div>
@@ -56,6 +67,16 @@ const SignupPage = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 pt-16 pb-8 relative overflow-hidden">
       <div className="relative z-10 flex-1 flex flex-col">
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-ink shadow-[0_10px_25px_rgba(26,26,26,0.04)] transition-all hover:border-primary hover:text-primary"
+          >
+            <ArrowLeft size={16} />
+            Go back
+          </button>
+        </div>
         <div className="mb-4">
           <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
         </div>
