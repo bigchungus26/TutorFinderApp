@@ -32,7 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import BookingSheet from "@/components/BookingSheet";
+import { BookingSheet } from "@/components/BookingSheet";
 
 // ── Constants ──────────────────────────────────────────────────
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
