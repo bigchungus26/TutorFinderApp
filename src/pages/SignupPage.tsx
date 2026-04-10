@@ -207,13 +207,16 @@ const SignupPage = () => {
           </div>
         ) : (
           /* Collapsed — tap to switch to student */
-          <button
-            onClick={() => switchRole("student")}
-            className="flex-1 flex items-center justify-center gap-2 w-full cursor-pointer"
-          >
-            <span className="text-body font-medium text-ink-muted">I'm a student</span>
-            <ChevronUp size={15} className="text-ink-muted" style={{ transform: "rotate(180deg)" }} />
-          </button>
+          <div className="flex-1 flex items-center justify-center px-6">
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => switchRole("student")}
+              className="flex items-center gap-3 bg-white/60 border border-white/80 rounded-2xl px-6 py-3.5 shadow-sm w-full max-w-xs justify-center"
+            >
+              <span className="text-sm font-semibold text-ink">I'm a student</span>
+              <ChevronUp size={15} className="text-ink-muted" style={{ transform: "rotate(180deg)" }} />
+            </motion.button>
+          </div>
         )}
       </motion.section>
 
@@ -267,13 +270,16 @@ const SignupPage = () => {
           </div>
         ) : (
           /* Collapsed — tap to switch to tutor */
-          <button
-            onClick={() => switchRole("tutor")}
-            className="flex-1 flex items-center justify-center gap-2 w-full cursor-pointer"
-          >
-            <ChevronUp size={15} className="text-ink-muted" />
-            <span className="text-body font-medium text-ink-muted">I'm a tutor</span>
-          </button>
+          <div className="flex-1 flex items-center justify-center px-6">
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => switchRole("tutor")}
+              className="flex items-center gap-3 bg-white/60 border border-white/80 rounded-2xl px-6 py-3.5 shadow-sm w-full max-w-xs justify-center"
+            >
+              <ChevronUp size={15} className="text-ink-muted" />
+              <span className="text-sm font-semibold text-ink">I'm a tutor</span>
+            </motion.button>
+          </div>
         )}
       </motion.section>
 
