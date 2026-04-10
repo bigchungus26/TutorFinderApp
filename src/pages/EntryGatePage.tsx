@@ -1,41 +1,6 @@
 import { motion } from "framer-motion";
-import { ArrowRight, BookOpen, GraduationCap, Sparkles } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Footer } from "@/components/Footer";
-import { transitions, variants } from "@/lib/motion";
-import { cn } from "@/lib/utils";
-import {
-  getRoleLandingPath,
-  getSelectedRole,
-  selectRole,
-  type SelectedRole,
-} from "@/lib/rolePreference";
-
-const roleCards: Array<{
-  role: SelectedRole;
-  eyebrow: string;
-  title: string;
-  description: string;
-  accentClass: string;
-  icon: typeof BookOpen;
-}> = [
-  {
-    role: "student",
-    eyebrow: "Student mode",
-    title: "I'm a student",
-    description: "Find trusted tutors by university, course, and budget.",
-    accentClass: "from-accent-soft via-white to-white",
-    icon: BookOpen,
-  },
-  {
-    role: "tutor",
-    eyebrow: "Tutor mode",
-    title: "I'm a tutor",
-    description: "Create your profile, get discovered, and grow your tutoring income.",
-    accentClass: "from-secondary/40 via-white to-white",
-    icon: GraduationCap,
-  },
-];
+import { getSelectedRole, getRoleLandingPath } from "@/lib/rolePreference";
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
@@ -45,137 +10,71 @@ const EntryGatePage = () => {
     return <Navigate to={getRoleLandingPath(storedRole)} replace />;
   }
 
-  const handleRoleSelect = (role: SelectedRole) => {
-    navigate(selectRole(role));
-  };
-
   return (
-    <div className="min-h-screen bg-background text-ink">
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-[360px] bg-[radial-gradient(circle_at_top,_rgba(47,191,140,0.14),_transparent_62%)]" />
-        <div className="absolute left-[-3rem] top-28 h-40 w-40 rounded-full bg-accent-soft/80 blur-3xl" />
-        <div className="absolute right-[-4rem] top-24 h-48 w-48 rounded-full bg-secondary/25 blur-3xl" />
-
-        <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-5 py-6 sm:px-8 sm:py-8">
-          <header className="flex items-center justify-between gap-4">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.24em] text-primary">
-              <Sparkles size={16} />
-              TutorFinder
-            </span>
-
-            <div className="flex items-center gap-3 text-sm">
-              <Link to="/login" className="text-ink-muted transition-colors hover:text-primary">
-                Sign in
-              </Link>
-              <Link
-                to="/signup"
-                className="rounded-full border border-hairline bg-white px-4 py-2 font-medium text-ink shadow-[0_10px_25px_rgba(26,26,26,0.04)] transition-all hover:border-primary hover:text-primary"
-              >
-                Sign up
-              </Link>
-            </div>
-          </header>
-
-          <main className="flex flex-1 items-center py-10 sm:py-14">
-            <div className="w-full">
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={variants.staggerChildren}
-                className="mx-auto max-w-3xl text-center"
-              >
-                <motion.p variants={variants.fadeSlideUp} className="text-overline text-primary">
-                  Choose how you want to use the platform
-                </motion.p>
-                <motion.h1
-                  variants={variants.fadeSlideUp}
-                  className="mt-4 text-display-hero-lg leading-[1.02] sm:text-[4.5rem]"
-                >
-                  Find the right academic support.
-                </motion.h1>
-                <motion.p
-                  variants={variants.fadeSlideUp}
-                  className="mx-auto mt-5 max-w-2xl text-body-lg leading-relaxed text-ink-muted"
-                >
-                  Browse as a student or join as a tutor. Start with the experience built for
-                  your goal and switch later whenever you need.
-                </motion.p>
-              </motion.div>
-
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={variants.staggerChildren}
-                className="mx-auto mt-10 grid max-w-4xl gap-4 sm:mt-14 md:grid-cols-2"
-              >
-                {roleCards.map((card) => {
-                  const Icon = card.icon;
-
-                  return (
-                    <motion.button
-                      key={card.role}
-                      variants={variants.scaleIn}
-                      whileHover={{ y: -4, transition: transitions.fast }}
-                      whileTap={{ scale: 0.985 }}
-                      type="button"
-                      onClick={() => handleRoleSelect(card.role)}
-                      className="group relative overflow-hidden rounded-[2rem] border border-hairline bg-white text-left shadow-[0_24px_70px_rgba(26,26,26,0.07)] transition-all hover:border-primary/35 hover:shadow-[0_28px_80px_rgba(31,122,99,0.12)]"
-                    >
-                      <div className={cn("absolute inset-0 bg-gradient-to-br", card.accentClass)} />
-                      <div className="absolute inset-x-6 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/12 to-transparent" />
-
-                      <div className="relative flex h-full flex-col p-6 sm:p-7">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="inline-flex h-14 w-14 items-center justify-center rounded-[1.35rem] border border-white/70 bg-white/90 text-primary shadow-sm">
-                            <Icon size={24} />
-                          </div>
-                          <span className="rounded-full border border-primary/10 bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
-                            {card.eyebrow}
-                          </span>
-                        </div>
-
-                        <div className="mt-12 space-y-3">
-                          <h2 className="text-display-sm text-ink sm:text-[1.65rem]">{card.title}</h2>
-                          <p className="max-w-sm text-body leading-relaxed text-ink-muted">
-                            {card.description}
-                          </p>
-                        </div>
-
-                        <div className="mt-10 flex items-center justify-between border-t border-primary/10 pt-5">
-                          <p className="text-body-sm text-ink-muted">
-                            {card.role === "student"
-                              ? "Search tutors fast"
-                              : "Build your tutor presence"}
-                          </p>
-                          <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                            Continue
-                            <ArrowRight
-                              size={16}
-                              className="transition-transform duration-200 group-hover:translate-x-1"
-                            />
-                          </span>
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </motion.div>
-
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={variants.fadeSlideUp}
-                className="mx-auto mt-8 max-w-3xl rounded-[1.75rem] border border-hairline/80 bg-white/85 px-5 py-4 text-center shadow-[0_16px_40px_rgba(26,26,26,0.05)] backdrop-blur sm:px-6"
-              >
-                <p className="text-body-sm text-ink-muted">
-                  One platform, two focused experiences. Choose the path that matches what you need today.
-                </p>
-              </motion.div>
-            </div>
-          </main>
-        </div>
+    <div
+      style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}
+      className="px-5 py-8"
+    >
+      {/* Wordmark */}
+      <div className="text-center shrink-0 mb-5">
+        <span
+          className="select-none"
+          style={{ fontFamily: "'Fraunces', serif", fontSize: "1.75rem", fontWeight: 500, letterSpacing: "-0.02em", color: "hsl(var(--ink))" }}
+        >
+          Tutr
+        </span>
       </div>
-      <Footer />
+
+      {/* Two fat buttons */}
+      <div className="flex-1 flex flex-col gap-4 min-h-0">
+
+        {/* Student */}
+        <motion.button
+          whileHover={{ scale: 1.025, y: -5, boxShadow: "0 24px 48px -8px hsl(152 50% 60% / 0.35)" }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 340, damping: 28 }}
+          onClick={() => navigate("/signup?intent=student")}
+          className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-2 min-h-0"
+          style={{ background: "hsl(152 42% 85%)" }}
+        >
+          <span
+            style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(2rem, 8vw, 2.75rem)", fontWeight: 500, color: "hsl(152 40% 18%)", letterSpacing: "-0.02em", lineHeight: 1.1 }}
+          >
+            I'm a student
+          </span>
+          <span className="text-sm" style={{ color: "hsl(152 30% 35%)" }}>Find tutors for your courses</span>
+        </motion.button>
+
+        {/* Tutor */}
+        <motion.button
+          whileHover={{ scale: 1.025, y: -5, boxShadow: "0 24px 48px -8px hsl(35 70% 55% / 0.35)" }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 340, damping: 28 }}
+          onClick={() => navigate("/signup?intent=tutor")}
+          className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-2 min-h-0"
+          style={{ background: "hsl(35 65% 86%)" }}
+        >
+          <span
+            style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(2rem, 8vw, 2.75rem)", fontWeight: 500, color: "hsl(35 50% 20%)", letterSpacing: "-0.02em", lineHeight: 1.1 }}
+          >
+            I'm a tutor
+          </span>
+          <span className="text-sm" style={{ color: "hsl(35 35% 38%)" }}>Teach students at your campus</span>
+        </motion.button>
+
+      </div>
+
+      {/* Footer */}
+      <div
+        className="shrink-0 flex items-center justify-center gap-3 mt-4"
+        style={{ color: "#8a8a8a", fontSize: "0.75rem", paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}
+      >
+        <Link to="/login" className="hover:text-accent transition-colors">Sign in</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/privacy" className="hover:text-accent transition-colors">Privacy</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/terms" className="hover:text-accent transition-colors">Terms</Link>
+      </div>
     </div>
   );
 };
