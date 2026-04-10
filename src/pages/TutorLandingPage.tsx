@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Footer } from "@/components/Footer";
 import { variants } from "@/lib/motion";
-import { setSelectedRole } from "@/lib/rolePreference";
+import { clearSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 
 const highlights = [
   {
@@ -40,6 +40,11 @@ const TutorLandingPage = () => {
     setSelectedRole("tutor");
   }, []);
 
+  const handleSwitchRole = () => {
+    clearSelectedRole();
+    navigate("/");
+  };
+
   return (
     <div className="min-h-screen bg-background text-ink">
       <div className="relative overflow-hidden">
@@ -54,9 +59,13 @@ const TutorLandingPage = () => {
             </span>
 
             <div className="flex items-center gap-3 text-sm">
-              <Link to="/?switch=1" className="text-ink-muted transition-colors hover:text-primary">
+              <button
+                type="button"
+                onClick={handleSwitchRole}
+                className="text-ink-muted transition-colors hover:text-primary"
+              >
                 Switch role
-              </Link>
+              </button>
               <Link to="/login" className="text-ink-muted transition-colors hover:text-primary">
                 Sign in
               </Link>

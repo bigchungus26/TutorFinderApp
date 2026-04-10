@@ -14,7 +14,7 @@ import { useUniversities, useTutors, useCourses } from "@/hooks/useSupabaseQuery
 import { TutorCard } from "@/components/TutorCard";
 import { Footer } from "@/components/Footer";
 import { variants } from "@/lib/motion";
-import { setSelectedRole } from "@/lib/rolePreference";
+import { clearSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 
 function statItem(label: string, value: string) {
   return (
@@ -53,6 +53,11 @@ const StudentLandingPage = () => {
     setSelectedRole("student");
   }, []);
 
+  const handleSwitchRole = () => {
+    clearSelectedRole();
+    navigate("/");
+  };
+
   const topUniversities = universities.slice(0, 4);
 
   const featuredTutors = useMemo(() => {
@@ -88,9 +93,13 @@ const StudentLandingPage = () => {
               </span>
             </div>
             <div className="hidden items-center gap-4 text-sm text-ink-muted sm:flex">
-              <Link to="/?switch=1" className="transition-colors hover:text-primary">
+              <button
+                type="button"
+                onClick={handleSwitchRole}
+                className="transition-colors hover:text-primary"
+              >
                 Switch role
-              </Link>
+              </button>
               <Link to="/login" className="transition-colors hover:text-primary">
                 Sign in
               </Link>

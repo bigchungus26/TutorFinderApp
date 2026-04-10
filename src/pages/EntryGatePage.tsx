@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { ArrowRight, BookOpen, GraduationCap, Sparkles } from "lucide-react";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Footer } from "@/components/Footer";
 import { transitions, variants } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import {
   getRoleLandingPath,
   getSelectedRole,
-  setSelectedRole,
+  selectRole,
   type SelectedRole,
 } from "@/lib/rolePreference";
 
@@ -39,17 +39,14 @@ const roleCards: Array<{
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const storedRole = getSelectedRole();
-  const isSwitchingRole = searchParams.get("switch") === "1";
 
-  if (storedRole && !isSwitchingRole) {
+  if (storedRole) {
     return <Navigate to={getRoleLandingPath(storedRole)} replace />;
   }
 
   const handleRoleSelect = (role: SelectedRole) => {
-    setSelectedRole(role);
-    navigate(getRoleLandingPath(role));
+    navigate(selectRole(role));
   };
 
   return (

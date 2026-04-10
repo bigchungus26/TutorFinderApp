@@ -17,10 +17,20 @@ export function setSelectedRole(role: SelectedRole) {
   window.localStorage.setItem(SELECTED_ROLE_KEY, role);
 }
 
+export function clearSelectedRole() {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(SELECTED_ROLE_KEY);
+}
+
 export function getRoleLandingPath(role: SelectedRole) {
   return role === "tutor" ? "/tutor" : "/student";
 }
 
 export function getRoleAppPath(role: SelectedRole) {
   return role === "tutor" ? "/tutor/requests" : "/discover";
+}
+
+export function selectRole(role: SelectedRole) {
+  setSelectedRole(role);
+  return getRoleLandingPath(role);
 }
