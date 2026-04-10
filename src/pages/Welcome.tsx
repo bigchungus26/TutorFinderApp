@@ -174,7 +174,7 @@ const WelcomePage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col relative overflow-hidden"
+    <div className="h-[100dvh] bg-transparent flex flex-col relative overflow-hidden"
       style={{ maxHeight: "100dvh" }}
     >
 
