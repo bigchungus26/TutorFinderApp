@@ -17,21 +17,9 @@ export const TutorLayout = ({ children }: { children: ReactNode }) => {
   const activeTab = tabs.find(t => location.pathname === t.path)?.path ?? "/tutor/requests";
 
   return (
-    <div className="min-h-[100dvh] bg-background relative overflow-x-hidden">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={location.pathname}
-          variants={tabVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="w-full"
-        >
-          {children}
-        </motion.div>
-      </AnimatePresence>
-      <Footer />
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[392px]">
+    <div className="min-h-[100dvh] bg-background relative overflow-x-hidden flex flex-col md:flex-row">
+      {/* ── Mobile bottom nav ────────────────────────────── */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[392px] md:hidden">
         <nav
           className="bg-surface rounded-xl shadow-float border border-hairline flex items-center justify-around px-2 py-2"
           aria-label="Tutor navigation"
@@ -72,6 +60,54 @@ export const TutorLayout = ({ children }: { children: ReactNode }) => {
             );
           })}
         </nav>
+      </div>
+
+      {/* ── Desktop sidebar nav ──────────────────────────── */}
+      <nav className="hidden md:flex md:flex-col md:w-64 md:border-r md:border-hairline md:bg-surface md:fixed md:h-screen md:left-0 md:top-0 md:pt-6 md:px-4 md:z-40">
+        <div className="mb-8">
+          <span className="text-lg font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
+        </div>
+        <div className="space-y-2 flex-1">
+          {tabs.map(tab => {
+            const active = activeTab === tab.path;
+            return (
+              <Link
+                key={tab.path}
+                to={tab.path}
+                className="relative"
+              >
+                <motion.div
+                  whileTap={{ scale: 0.98 }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    active
+                      ? "bg-accent-soft text-accent"
+                      : "text-ink-muted hover:bg-accent-soft/50 hover:text-accent"
+                  }`}
+                >
+                  <tab.icon size={20} />
+                  <span className="text-sm font-medium">{tab.label}</span>
+                </motion.div>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* ── Main content area ────────────────────────────── */}
+      <div className="flex-1 md:ml-64 w-full md:w-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            variants={tabVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="w-full"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+        <Footer />
       </div>
     </div>
   );
