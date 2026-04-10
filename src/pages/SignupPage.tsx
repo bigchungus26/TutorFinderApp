@@ -8,8 +8,8 @@ type Role = "student" | "tutor";
 type AuthMode = "signin" | "signup";
 
 // Panel background tones
-const STUDENT_BG = "hsl(152 45% 97%)";
-const TUTOR_BG   = "hsl(35 70% 97%)";
+const STUDENT_BG = "hsl(152 42% 88%)";
+const TUTOR_BG   = "hsl(35 65% 88%)";
 
 // Accent colors per role
 const STUDENT_ACCENT = "hsl(152 60% 42%)";
@@ -82,33 +82,33 @@ const SignupPage = () => {
 
   // Shared form rendered inside whichever panel is expanded
   const PanelForm = () => (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       {mode === "signup" && (
         <div>
-          <label className="text-xs font-medium text-ink-muted mb-1.5 block">Full name</label>
+          <label className="text-xs font-medium text-ink-muted mb-1 block">Full name</label>
           <input
             type="text"
             value={fullName}
             onChange={e => setFullName(e.target.value)}
             placeholder="Your full name"
             required
-            className="w-full px-4 py-3 rounded-xl border border-hairline bg-white/80 font-body text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-hairline bg-white/80 font-body text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
           />
         </div>
       )}
       <div>
-        <label className="text-xs font-medium text-ink-muted mb-1.5 block">Email</label>
+        <label className="text-xs font-medium text-ink-muted mb-1 block">Email</label>
         <input
           type="email"
           value={email}
           onChange={e => setEmail(e.target.value)}
           placeholder="you@university.edu"
           required
-          className="w-full px-4 py-3 rounded-xl border border-hairline bg-white/80 font-body text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+          className="w-full px-3.5 py-2.5 rounded-xl border border-hairline bg-white/80 font-body text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
         />
       </div>
       <div>
-        <label className="text-xs font-medium text-ink-muted mb-1.5 block">Password</label>
+        <label className="text-xs font-medium text-ink-muted mb-1 block">Password</label>
         <input
           type="password"
           value={password}
@@ -116,16 +116,16 @@ const SignupPage = () => {
           placeholder={mode === "signup" ? "At least 8 characters" : "••••••••"}
           required
           minLength={8}
-          className="w-full px-4 py-3 rounded-xl border border-hairline bg-white/80 font-body text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+          className="w-full px-3.5 py-2.5 rounded-xl border border-hairline bg-white/80 font-body text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
         />
       </div>
       {mode === "signup" && (
-        <label className="flex items-start gap-3 cursor-pointer">
+        <label className="flex items-start gap-2.5 cursor-pointer pt-0.5">
           <input
             type="checkbox"
             checked={agreedTerms}
             onChange={e => setAgreedTerms(e.target.checked)}
-            className="mt-0.5 w-4 h-4 rounded"
+            className="mt-0.5 w-4 h-4 shrink-0 rounded"
           />
           <span className="text-xs text-ink-muted leading-relaxed">
             I agree to the{" "}
@@ -142,8 +142,8 @@ const SignupPage = () => {
         whileTap={{ scale: 0.98 }}
         type="submit"
         disabled={loading || (mode === "signup" && !agreedTerms)}
-        className="w-full h-13 rounded-xl font-body font-semibold text-base text-white disabled:opacity-40 mt-1"
-        style={{ background: accent, height: "3.25rem" }}
+        className="w-full rounded-xl font-body font-semibold text-sm text-white disabled:opacity-40 mt-1"
+        style={{ background: accent, height: "3rem" }}
       >
         {loading
           ? (mode === "signup" ? "Creating…" : "Signing in…")
@@ -164,21 +164,21 @@ const SignupPage = () => {
       >
         {role === "student" ? (
           /* Expanded */
-          <div className="flex-1 flex flex-col px-6 pt-10 pb-4 overflow-y-auto min-h-0">
+          <div className="flex-1 flex flex-col px-6 pt-8 pb-5 overflow-hidden min-h-0">
             <Link
               to="/welcome"
-              className="text-sm text-ink-muted mb-6 block w-fit"
+              className="text-sm text-ink-muted mb-4 block w-fit"
             >
               ← Back
             </Link>
 
-            <p className="text-overline mb-1" style={{ color: STUDENT_ACCENT }}>Student</p>
-            <h1 className="text-display-lg text-ink mb-5">
+            <p className="text-overline mb-0.5" style={{ color: STUDENT_ACCENT }}>Student</p>
+            <h1 className="text-display-md text-ink mb-4">
               {mode === "signin" ? "Welcome back." : "Join as a student."}
             </h1>
 
             {/* Sign in / Sign up toggle */}
-            <div className="flex gap-1 bg-white/60 rounded-xl p-1 mb-5">
+            <div className="flex gap-1 bg-white/60 rounded-xl p-1 mb-4">
               <button
                 type="button"
                 onClick={() => { setMode("signin"); setError(""); }}
@@ -229,16 +229,16 @@ const SignupPage = () => {
       >
         {role === "tutor" ? (
           /* Expanded */
-          <div className="flex-1 flex flex-col px-6 pt-8 pb-safe overflow-y-auto min-h-0"
-            style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+          <div className="flex-1 flex flex-col px-6 pt-6 overflow-hidden min-h-0"
+            style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
           >
-            <p className="text-overline mb-1" style={{ color: TUTOR_ACCENT }}>Tutor</p>
-            <h1 className="text-display-lg text-ink mb-5">
+            <p className="text-overline mb-0.5" style={{ color: TUTOR_ACCENT }}>Tutor</p>
+            <h1 className="text-display-md text-ink mb-4">
               {mode === "signin" ? "Welcome back." : "Join as a tutor."}
             </h1>
 
             {/* Sign in / Sign up toggle */}
-            <div className="flex gap-1 bg-white/60 rounded-xl p-1 mb-5">
+            <div className="flex gap-1 bg-white/60 rounded-xl p-1 mb-4">
               <button
                 type="button"
                 onClick={() => { setMode("signin"); setError(""); }}
