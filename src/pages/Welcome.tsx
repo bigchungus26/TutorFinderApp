@@ -278,7 +278,7 @@ const WelcomePage = () => {
           {/* Sign-in link */}
           <div className="mt-1 text-center">
             <Link
-              to="/login"
+              to="/signup?mode=signin"
               className="text-caption text-accent hover:underline transition-colors"
             >
               Already have an account? Sign in
