@@ -203,14 +203,9 @@ const WelcomePage = () => {
           {/* Headline */}
           <motion.h1
             variants={variants.fadeSlideUp}
-            className="text-ink mb-4"
-            style={{ maxWidth: 360 }}
+            className="mb-4"
+            style={{ maxWidth: 360, color: "#1a1a1a" }}
           >
-            {/*
-              Use text-display-hero (48px/52px Fraunces 400 -0.02em) on md+.
-              Fall back to text-display-xl on very small screens.
-              The <em> phrase is italic Fraunces.
-            */}
             <span className="block text-display-xl sm:text-display-hero leading-tight">
               Learn from students
             </span>
@@ -231,8 +226,8 @@ const WelcomePage = () => {
           {/* Sub-headline — max 12 words */}
           <motion.p
             variants={variants.fadeSlideUp}
-            className="text-body text-ink-muted"
-            style={{ maxWidth: 320 }}
+            className="text-body"
+            style={{ maxWidth: 320, color: "#4a4a4a" }}
           >
             Peer tutors at AUB, LAU, and NDU. Students only.
           </motion.p>
@@ -290,7 +285,7 @@ const WelcomePage = () => {
             </Link>
           </div>
           {/* Footer */}
-          <div className="flex items-center justify-center gap-2 text-caption text-ink-muted mt-3">
+          <div className="flex items-center justify-center gap-2 mt-3" style={{ color: "#6b6b6b", fontSize: "0.75rem" }}>
             <span>Made in Beirut</span>
             <span aria-hidden="true">·</span>
             <Link to="/privacy" className="hover:text-accent transition-colors">Privacy</Link>

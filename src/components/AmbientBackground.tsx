@@ -8,8 +8,8 @@ export function AmbientBackground({ universityTint }: { universityTint?: string 
       : false
   );
 
-  const blob1Color = "hsl(152 50% 90%)";
-  const blob2Color = "hsl(35 80% 88%)";
+  const blob1Color = "hsl(152 50% 88% / 0.55)";
+  const blob2Color = "hsl(35 70% 88% / 0.45)";
 
   const blob1Animation = reducedMotion.current
     ? {}
