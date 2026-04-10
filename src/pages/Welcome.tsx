@@ -286,8 +286,6 @@ const WelcomePage = () => {
           </div>
           {/* Footer */}
           <div className="flex items-center justify-center gap-2 mt-3" style={{ color: "#6b6b6b", fontSize: "0.75rem" }}>
-            <span>Made in Beirut</span>
-            <span aria-hidden="true">·</span>
             <Link to="/privacy" className="hover:text-accent transition-colors">Privacy</Link>
             <span aria-hidden="true">·</span>
             <Link to="/terms" className="hover:text-accent transition-colors">Terms</Link>
