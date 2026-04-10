@@ -1,276 +1,321 @@
-// ── Welcome — Landing Page (Part 3 of polish pass) ───────────
-// Shown only to logged-out users. Route guards redirect authed users.
-import { useRef } from "react";
+import { useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
-import { Star } from "lucide-react";
+import {
+  ArrowRight,
+  GraduationCap,
+  ShieldCheck,
+  Sparkles,
+  BookOpen,
+  ArrowUpRight,
+  Users,
+} from "lucide-react";
+import { useUniversities, useTutors, useCourses } from "@/hooks/useSupabaseQuery";
+import { TutorCard } from "@/components/TutorCard";
+import { Footer } from "@/components/Footer";
 import { variants } from "@/lib/motion";
-// AmbientBackground is rendered globally in App.tsx — no need to duplicate here
 
-// ── Static mock tutor data ─────────────────────────────────────
-const MOCK_TUTORS = [
-  {
-    id: "1",
-    name: "Karim Haddad",
-    university: "AUB",
-    rating: 4.9,
-    reviews: 32,
-    courses: ["CMPS211", "CMPS303", "MATH201"],
-    hourly_rate: 22,
-  },
-  {
-    id: "2",
-    name: "Lea Nassar",
-    university: "LAU",
-    rating: 5.0,
-    reviews: 18,
-    courses: ["BIOL201", "CHEM101", "MATH101"],
-    hourly_rate: 18,
-  },
-  {
-    id: "3",
-    name: "Rami Khalil",
-    university: "NDU",
-    rating: 4.8,
-    reviews: 41,
-    courses: ["ECON201", "BUSN301", "STAT202"],
-    hourly_rate: 20,
-  },
-  {
-    id: "4",
-    name: "Sara Frem",
-    university: "AUB",
-    rating: 4.9,
-    reviews: 27,
-    courses: ["BIOL301", "CHEM201", "STAT101"],
-    hourly_rate: 24,
-  },
-];
-
-// ── University badge styling ───────────────────────────────────
-function uniBadgeClass(uni: string) {
-  if (uni === "AUB") return "bg-red-50 text-red-700 border border-red-100";
-  if (uni === "LAU") return "bg-blue-50 text-blue-700 border border-blue-100";
-  return "bg-emerald-50 text-emerald-700 border border-emerald-100";
-}
-
-// ── Mock Tutor Card ────────────────────────────────────────────
-function MockTutorCard({ tutor }: { tutor: (typeof MOCK_TUTORS)[0] }) {
-  const initials = tutor.name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
+function statItem(label: string, value: string) {
   return (
-    <div
-      className="bg-surface rounded-2xl border border-hairline p-4 shrink-0 shadow-sm"
-      style={{ width: 220 }}
-      aria-hidden="true"
-    >
-      {/* Avatar + name */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-accent-soft flex items-center justify-center shrink-0">
-          <span className="text-label font-semibold text-accent">{initials}</span>
-        </div>
-        <div className="min-w-0">
-          <p className="text-label font-semibold text-ink leading-tight truncate">
-            {tutor.name}
-          </p>
-          <span
-            className={`text-caption px-2 py-0.5 rounded-pill inline-block mt-0.5 ${uniBadgeClass(tutor.university)}`}
-          >
-            {tutor.university}
-          </span>
-        </div>
-      </div>
-
-      {/* Rating + rate */}
-      <div className="flex items-center gap-1.5 mb-3">
-        <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" />
-        <span className="text-label font-semibold text-ink">
-          {tutor.rating.toFixed(1)}
-        </span>
-        <span className="text-caption text-ink-muted">({tutor.reviews})</span>
-        <span className="text-caption text-ink-muted ml-auto whitespace-nowrap">
-          ${tutor.hourly_rate}/hr
-        </span>
-      </div>
-
-      {/* Course chips */}
-      <div className="flex flex-wrap gap-1.5">
-        {tutor.courses.slice(0, 3).map((c) => (
-          <span
-            key={c}
-            className="text-caption bg-accent-soft text-accent px-2 py-0.5 rounded-pill font-medium"
-          >
-            {c}
-          </span>
-        ))}
-      </div>
+    <div className="rounded-3xl border border-hairline bg-surface p-4 text-center">
+      <p className="text-display-sm font-semibold text-ink">{value}</p>
+      <p className="text-body-sm text-ink-muted mt-1">{label}</p>
     </div>
   );
 }
 
-// ── Autoplaying carousel ───────────────────────────────────────
-// Uses CSS keyframe animation on a duplicated list for a seamless loop.
-function TutorCarousel() {
-  const trackRef = useRef<HTMLDivElement>(null);
-
-  const pauseAnimation = () => {
-    if (trackRef.current) {
-      trackRef.current.style.animationPlayState = "paused";
-    }
-  };
-
-  const resumeAnimation = () => {
-    if (trackRef.current) {
-      trackRef.current.style.animationPlayState = "running";
-    }
-  };
-
-  // Duplicate list for seamless looping
-  const items = [...MOCK_TUTORS, ...MOCK_TUTORS];
-
-  return (
-    <div
-      className="relative overflow-hidden"
-      style={{ maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)" }}
-    >
-      <style>{`
-        @keyframes scrollLeft {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-        .carousel-track {
-          animation: scrollLeft 20s linear infinite;
-          will-change: transform;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .carousel-track {
-            animation: none;
-          }
-        }
-      `}</style>
-
-      <div
-        ref={trackRef}
-        className="carousel-track flex"
-        style={{ gap: 12, width: "max-content" }}
-        onTouchStart={pauseAnimation}
-        onTouchEnd={resumeAnimation}
-      >
-        {items.map((tutor, i) => (
-          <MockTutorCard key={`${tutor.id}-${i}`} tutor={tutor} />
-        ))}
-      </div>
+const HomeFeature = ({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: typeof ShieldCheck;
+  title: string;
+  description: string;
+}) => (
+  <div className="rounded-3xl border border-hairline bg-surface p-5 text-left">
+    <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-accent-soft text-accent mb-4">
+      <Icon size={20} />
     </div>
-  );
-}
+    <h3 className="text-body font-semibold text-ink mb-2">{title}</h3>
+    <p className="text-body-sm text-ink-muted leading-relaxed">{description}</p>
+  </div>
+);
 
-// ── Main Page ─────────────────────────────────────────────────
 const WelcomePage = () => {
   const navigate = useNavigate();
+  const { data: universities = [] } = useUniversities();
+  const { data: tutors = [] } = useTutors();
+  const { data: courses = [] } = useCourses();
+
+  const topUniversities = universities.slice(0, 4);
+
+  const featuredTutors = useMemo(() => {
+    return [...tutors]
+      .filter((tutor) => tutor.tutor_stats?.rating && tutor.hourly_rate != null)
+      .sort((a, b) => (b.tutor_stats?.rating ?? 0) - (a.tutor_stats?.rating ?? 0))
+      .slice(0, 4);
+  }, [tutors]);
+
+  const popularCourses = useMemo(() => {
+    const seen = new Set<string>();
+    return courses
+      .filter((course) => {
+        const label = `${course.code} • ${course.name}`;
+        if (seen.has(label)) return false;
+        seen.add(label);
+        return true;
+      })
+      .slice(0, 6);
+  }, [courses]);
 
   return (
-    <div className="h-[100dvh] bg-transparent flex flex-col relative overflow-hidden"
-      style={{ maxHeight: "100dvh" }}
-    >
-
-      {/* ── Logo wordmark ────────────────────────────────────── */}
-      <div className="px-6 pt-12 relative z-10">
-        <motion.span
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: [0.2, 0, 0, 1] }}
-          className="text-display-sm text-ink select-none"
-        >
-          Tutr
-        </motion.span>
-      </div>
-
-      {/* ── Hero zone — fills from logo to carousel ──────────── */}
-      <div
-        className="relative z-10 flex flex-col justify-end px-6 flex-1"
-        style={{ paddingBottom: "1.5rem", minHeight: 0 }}
-      >
-        <motion.div
-          variants={variants.staggerChildren}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* Headline */}
-          <motion.h1
-            variants={variants.fadeSlideUp}
-            className="mb-4"
-            style={{ maxWidth: 360, color: "#1a1a1a" }}
-          >
-            <span className="block text-display-xl sm:text-display-hero leading-tight">
-              Learn from students
+    <div className="min-h-screen bg-background text-ink">
+      <div className="max-w-6xl mx-auto px-5 py-8 sm:py-12">
+        <header className="flex items-center justify-between gap-4 mb-10">
+          <div>
+            <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.24em] text-accent">
+              <Sparkles size={16} /> TutorFinder
             </span>
-            <span className="block text-display-xl sm:text-display-hero leading-tight">
-              who've{" "}
-              <em
-                className="text-display-xl sm:text-display-hero"
-                style={{
-                  fontStyle: "italic",
-                  fontFamily: "'Fraunces', serif",
-                }}
-              >
-                been there.
-              </em>
-            </span>
-          </motion.h1>
-
-          {/* Sub-headline — max 12 words */}
-          <motion.p
-            variants={variants.fadeSlideUp}
-            className="text-body"
-            style={{ maxWidth: 320, color: "#4a4a4a" }}
-          >
-            Peer tutors at AUB, LAU, and NDU. Students only.
-          </motion.p>
-        </motion.div>
-      </div>
-
-      {/* ── Tutor carousel ───────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.32, delay: 0.2, ease: [0.2, 0, 0, 1] }}
-        className="relative z-10 pb-4 shrink-0"
-      >
-        <TutorCarousel />
-      </motion.div>
-
-      {/* ── Spacer for fixed bottom CTA ──────────────────────── */}
-      <div className="shrink-0" style={{ height: 110 }} />
-
-      {/* ── Sticky bottom action zone ──────────────────────────── */}
-      <div
-        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] z-50"
-        style={{
-          background:
-            "linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 28%)",
-          paddingTop: "2rem",
-        }}
-      >
-        <div className="px-5" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/signup")}
-            className="w-full h-14 rounded-xl bg-accent text-accent-foreground font-display font-medium text-base tracking-[-0.01em] transition-opacity active:opacity-90"
-          >
-            Get started
-          </motion.button>
-          <div className="flex items-center justify-center gap-2 mt-4" style={{ color: "#6b6b6b", fontSize: "0.75rem" }}>
-            <Link to="/privacy" className="hover:text-accent transition-colors">Privacy</Link>
-            <span aria-hidden="true">·</span>
-            <Link to="/terms" className="hover:text-accent transition-colors">Terms</Link>
           </div>
-        </div>
+          <div className="hidden sm:flex items-center gap-4 text-sm text-ink-muted">
+            <Link to="/login" className="hover:text-accent transition-colors">Sign in</Link>
+            <Link
+              to="/signup"
+              className="rounded-full border border-hairline bg-surface px-4 py-2 text-sm font-medium text-ink transition-all hover:border-accent hover:text-accent"
+            >
+              Sign up
+            </Link>
+          </div>
+        </header>
+
+        <section className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-start">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={variants.staggerChildren}
+            className="space-y-6"
+          >
+            <motion.p variants={variants.fadeSlideUp} className="text-overline text-accent uppercase tracking-[0.2em]">
+              Lebanon’s peer tutoring marketplace
+            </motion.p>
+            <motion.h1 variants={variants.fadeSlideUp} className="text-display-hero-lg sm:text-[3.5rem] leading-tight max-w-3xl">
+              Find tutors who’ve actually taken your course.
+            </motion.h1>
+            <motion.p variants={variants.fadeSlideUp} className="max-w-xl text-body-lg text-ink-muted leading-relaxed">
+              Search by university, course, rating and availability. Compare verified peer tutors from AUB, LAU, NDU and more.
+            </motion.p>
+
+            <motion.div variants={variants.fadeSlideUp} className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => navigate("/signup")}
+                className="inline-flex items-center justify-center gap-2 rounded-[1.75rem] bg-accent px-6 py-3 text-sm font-semibold text-accent-foreground shadow-sm shadow-accent/10 transition hover:shadow-md"
+              >
+                Find a tutor
+                <ArrowRight size={16} />
+              </button>
+              <button
+                onClick={() => navigate("/signup")}
+                className="inline-flex items-center justify-center gap-2 rounded-[1.75rem] border border-hairline bg-surface px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent"
+              >
+                Become a tutor
+                <ArrowUpRight size={16} />
+              </button>
+            </motion.div>
+
+            <motion.div variants={variants.fadeSlideUp} className="grid gap-4 sm:grid-cols-3">
+              {statItem("Lebanese universities", "AUB • LAU • NDU")}
+              {statItem("Average rating", "4.9 stars")}
+              {statItem("Profile-ready tutors", "50+ listings")}
+            </motion.div>
+          </motion.div>
+
+          <motion.div variants={variants.fadeSlideUp} className="grid gap-4">
+            <div className="rounded-4xl border border-hairline bg-surface p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <div>
+                  <div className="text-caption uppercase tracking-[0.18em] text-ink-muted">Campus spotlight</div>
+                  <p className="text-body font-semibold text-ink">Browse by university</p>
+                </div>
+                <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">Campus-first</span>
+              </div>
+              <div className="grid gap-3">
+                {topUniversities.length ? (
+                  topUniversities.map((uni) => (
+                    <button
+                      key={uni.id}
+                      type="button"
+                      onClick={() => navigate("/search")}
+                      className="rounded-3xl border border-hairline bg-white px-4 py-4 text-left transition hover:border-accent"
+                    >
+                      <p className="font-display text-sm font-semibold text-ink">{uni.short_name}</p>
+                      <p className="text-body-sm text-ink-muted">{uni.name}</p>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-body-sm text-ink-muted">Loading universities…</p>
+                )}
+              </div>
+            </div>
+            <div className="rounded-4xl border border-hairline bg-surface p-6 shadow-sm">
+              <div className="mb-4">
+                <div className="text-caption uppercase tracking-[0.18em] text-ink-muted">Top subjects</div>
+                <p className="text-body font-semibold text-ink">Most requested courses</p>
+              </div>
+              <div className="grid gap-3">
+                {popularCourses.length ? (
+                  popularCourses.map((course) => (
+                    <div key={course.id} className="rounded-3xl border border-hairline bg-white px-4 py-3">
+                      <p className="text-sm font-semibold text-ink">{course.code}</p>
+                      <p className="text-caption text-ink-muted truncate">{course.name}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-body-sm text-ink-muted">Loading trending courses…</p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
+        <section className="mt-16 space-y-10">
+          <div className="grid gap-6 lg:grid-cols-3">
+            <HomeFeature
+              icon={ShieldCheck}
+              title="Verified campus tutors"
+              description="Browse tutors who study your university courses and share your academic context."
+            />
+            <HomeFeature
+              icon={BookOpen}
+              title="Transparent pricing"
+              description="Compare hourly rates, ratings, and teaching style before you book."
+            />
+            <HomeFeature
+              icon={Users}
+              title="Fast matching"
+              description="Find available tutors by university, course, and session format."
+            />
+          </div>
+
+          <div className="rounded-[2rem] border border-hairline bg-surface p-8 shadow-sm">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-overline text-accent uppercase tracking-[0.2em] mb-3">How it works</p>
+                <h2 className="text-display-sm text-ink">Search, compare, and book confident campus support.</h2>
+              </div>
+              <Link
+                to="/search"
+                className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground shadow-sm shadow-accent/10 transition hover:shadow-md"
+              >
+                Start browsing
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-3xl border border-hairline bg-white p-5">
+                <p className="text-caption uppercase tracking-[0.18em] text-ink-muted mb-3">01</p>
+                <h3 className="text-body font-semibold text-ink mb-2">Search by course</h3>
+                <p className="text-body-sm text-ink-muted">Filter tutors by university, course, price, rating, and availability.</p>
+              </div>
+              <div className="rounded-3xl border border-hairline bg-white p-5">
+                <p className="text-caption uppercase tracking-[0.18em] text-ink-muted mb-3">02</p>
+                <h3 className="text-body font-semibold text-ink mb-2">Review profiles</h3>
+                <p className="text-body-sm text-ink-muted">Compare teaching experience, student reviews, and hourly rates in one view.</p>
+              </div>
+              <div className="rounded-3xl border border-hairline bg-white p-5">
+                <p className="text-caption uppercase tracking-[0.18em] text-ink-muted mb-3">03</p>
+                <h3 className="text-body font-semibold text-ink mb-2">Send a request</h3>
+                <p className="text-body-sm text-ink-muted">Message tutors directly and request a session with clear availability options.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-overline text-accent uppercase tracking-[0.2em]">Featured tutors</p>
+                <h2 className="text-display-sm text-ink">Top-rated peer tutors across Lebanon.</h2>
+              </div>
+              <Link to="/search" className="text-sm font-semibold text-accent hover:underline">
+                See all tutors
+              </Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {featuredTutors.length ? (
+                featuredTutors.map((tutor) => (
+                  <TutorCard key={tutor.id} tutor={tutor} />
+                ))
+              ) : (
+                <div className="rounded-3xl border border-hairline bg-surface p-8 text-center text-ink-muted">
+                  Loading featured tutors…
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-16 rounded-[2rem] border border-hairline bg-surface p-8 shadow-sm">
+          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] items-center">
+            <div>
+              <p className="text-overline text-accent uppercase tracking-[0.2em] mb-3">For tutors</p>
+              <h2 className="text-display-sm text-ink">Build a profile that students trust.</h2>
+              <p className="text-body-lg text-ink-muted mt-4 max-w-xl leading-relaxed">
+                Join TutorFinder to reach university students across Lebanon, showcase your strengths, and manage a public listing with subscription-ready tools.
+              </p>
+              <ul className="mt-6 space-y-3 text-body-sm text-ink-muted">
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-accent">✓</span>
+                  Add your courses, rates, availability, and student reviews.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-accent">✓</span>
+                  Keep your listing public with an easy subscription model.
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-accent">✓</span>
+                  Manage requests, messages, and bookings from one dashboard.
+                </li>
+              </ul>
+              <div className="mt-8">
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center gap-2 rounded-[1.75rem] bg-ink px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-black/10 transition hover:bg-[#111]"
+                >
+                  Start your tutor profile
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
+            <div className="rounded-4xl border border-hairline bg-white p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                  <GraduationCap size={22} />
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-[0.18em] text-ink-muted">Tutor package</p>
+                  <p className="text-body font-semibold text-ink">Ready for launch</p>
+                </div>
+              </div>
+              <div className="grid gap-4 text-body-sm text-ink-muted">
+                <div className="rounded-3xl border border-hairline p-4 bg-surface">
+                  <p className="font-semibold text-ink">Subscription-ready layout</p>
+                  <p>Prepare your profile for public visibility and recurring plan management.</p>
+                </div>
+                <div className="rounded-3xl border border-hairline p-4 bg-surface">
+                  <p className="font-semibold text-ink">Focus on university students</p>
+                  <p>Reach learners from Lebanon’s most trusted campuses with a targeted marketplace.</p>
+                </div>
+                <div className="rounded-3xl border border-hairline p-4 bg-surface">
+                  <p className="font-semibold text-ink">Simple onboarding</p>
+                  <p>Complete your profile, add courses and availability, and go live quickly.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
+      <Footer />
     </div>
   );
 };

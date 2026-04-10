@@ -243,9 +243,18 @@ create trigger trg_recalc_tutor_stats
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, full_name, avatar_url)
+  insert into public.profiles (
+    id,
+    role,
+    full_name,
+    avatar_url
+  )
   values (
     new.id,
+    case lower(coalesce(new.raw_user_meta_data->>'role', 'student'))
+      when 'tutor' then 'tutor'
+      else 'student'
+    end,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
     coalesce(new.raw_user_meta_data->>'avatar_url', '')
   );

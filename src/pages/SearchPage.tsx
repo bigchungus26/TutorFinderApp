@@ -557,7 +557,7 @@ const SearchPage = () => {
 
   // ── Render ─────────────────────────────────────────────────
   return (
-    <div className="px-5 pt-14 pb-4 md:px-8 md:py-6 md:max-w-6xl md:mx-auto">
+    <div className="px-5 pt-14 pb-4">
 
       {/* ── Search input ────────────────────────────────────── */}
       <div className="relative mb-3">
@@ -738,7 +738,7 @@ const SearchPage = () => {
               variants={variants.staggerChildren}
               initial="hidden"
               animate="visible"
-              className="space-y-2 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3"
+              className="space-y-2"
             >
               {filteredCourses
                 .slice(0, activeTab === "All" ? 4 : undefined)
@@ -781,7 +781,7 @@ const SearchPage = () => {
               variants={variants.staggerChildren}
               initial="hidden"
               animate="visible"
-              className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4"
+              className="space-y-3"
             >
               {filteredTutors
                 .slice(0, activeTab === "All" ? 3 : undefined)

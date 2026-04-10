@@ -21,6 +21,7 @@ import { AmbientBackground } from "@/components/AmbientBackground";
 const WelcomePage = lazy(() => import("@/pages/Welcome"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const SignupPage = lazy(() => import("@/pages/SignupPage"));
+const ChooseRolePage = lazy(() => import("@/pages/ChooseRolePage"));
 const StudentOnboarding = lazy(() => import("@/pages/StudentOnboarding"));
 const TutorOnboarding = lazy(() => import("@/pages/TutorOnboarding"));
 const DiscoverPage = lazy(() => import("@/pages/Discover"));
@@ -103,7 +104,7 @@ const AppRoutes = () => {
 
         {/* ── Role selection (authenticated but no role) ─ */}
         <Route path="/choose-role" element={
-          <RequireAuth><WelcomePage /></RequireAuth>
+          <RequireAuth><ChooseRolePage /></RequireAuth>
         } />
 
         {/* ── Onboarding ──────────────────────────────── */}

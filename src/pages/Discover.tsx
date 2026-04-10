@@ -294,7 +294,7 @@ const DiscoverPage = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-0 left-0 right-0 z-40 flex justify-center pt-4 md:left-64 pointer-events-none"
+            className="fixed top-0 left-0 right-0 z-40 flex justify-center pt-4 max-w-[440px] mx-auto pointer-events-none"
           >
             <div
               className="w-9 h-9 rounded-full bg-surface shadow-float flex items-center justify-center"
@@ -326,7 +326,7 @@ const DiscoverPage = () => {
           transition: "padding-top 0.2s",
         }}
       >
-        <div className="px-5 pt-14 md:px-8 md:py-6 md:max-w-6xl md:mx-auto">
+        <div className="px-5 pt-14">
 
           {/* ── 1. Greeting header ──────────────────────────── */}
           <motion.div
@@ -432,35 +432,35 @@ const DiscoverPage = () => {
           {/* ── 5. Tutors for your courses ──────────────────── */}
           {(hasEnrolledCourses || studentCoursesLoading || tutorsForCoursesLoading) && (
             <Section title="Tutors for your courses" overline="FOR YOU">
-              {tutorsForCoursesLoading ? (
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide md:!mx-0 md:!px-0 md:grid md:grid-cols-2 lg:grid-cols-3">
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      variants={variants.staggerItem}
-                      className="flex-shrink-0 w-[280px] md:w-auto"
-                    >
-                      <TutorCardSkeleton />
-                    </motion.div>
-                  ))}
-                </div>
-              ) : tutorsForCourses.length > 0 ? (
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide md:!mx-0 md:!px-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
-                  {tutorsForCourses.map((tutor) => (
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+                {tutorsForCoursesLoading ? (
+                  <>
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        variants={variants.staggerItem}
+                        className="flex-shrink-0 w-[280px]"
+                      >
+                        <TutorCardSkeleton />
+                      </motion.div>
+                    ))}
+                  </>
+                ) : tutorsForCourses.length > 0 ? (
+                  tutorsForCourses.map((tutor) => (
                     <motion.div
                       key={tutor.id}
                       variants={variants.staggerItem}
-                      className="flex-shrink-0 w-[280px] md:w-auto"
+                      className="flex-shrink-0 w-[280px]"
                     >
                       <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
                     </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <motion.p variants={variants.staggerItem} className="text-body-sm text-ink-muted py-2">
-                  No tutors found for your enrolled courses yet.
-                </motion.p>
-              )}
+                  ))
+                ) : (
+                  <motion.p variants={variants.staggerItem} className="text-body-sm text-ink-muted py-2">
+                    No tutors found for your enrolled courses yet.
+                  </motion.p>
+                )}
+              </div>
             </Section>
           )}
 
@@ -470,11 +470,11 @@ const DiscoverPage = () => {
             overline="TOP RATED"
           >
             {tutorsLoading ? (
-              <div className="space-y-3 md:space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
+              <div className="space-y-3">
                 <SkeletonList count={4} component={TutorCardSkeleton} />
               </div>
             ) : topTutors.length > 0 ? (
-              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
+              <div className="space-y-3">
                 {topTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
                     <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
@@ -491,7 +491,7 @@ const DiscoverPage = () => {
           {/* ── 7. Trending this week ────────────────────────── */}
           {trendingTutors.length > 0 && (
             <Section title="Trending this week" overline="TRENDING">
-              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
+              <div className="space-y-3">
                 {trendingTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
                     <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
@@ -504,7 +504,7 @@ const DiscoverPage = () => {
           {/* ── 8. New tutors at [uni] ──────────────────────── */}
           {newTutors.length > 0 && (
             <Section title={`New tutors at ${uni?.short_name ?? "your university"}`} overline="NEW">
-              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
+              <div className="space-y-3">
                 {newTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
                     <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
@@ -516,11 +516,11 @@ const DiscoverPage = () => {
 
           {/* ── 9. Popular courses ──────────────────────────── */}
           <Section title="Popular courses" overline="BROWSE">
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide md:!mx-0 md:!px-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
               {coursesLoading ? (
                 <>
                   {[0, 1, 2, 3].map((i) => (
-                    <motion.div key={i} variants={variants.staggerItem} className="flex-shrink-0 w-auto md:w-auto">
+                    <motion.div key={i} variants={variants.staggerItem} className="flex-shrink-0">
                       <CourseCardSkeleton />
                     </motion.div>
                   ))}
@@ -532,7 +532,7 @@ const DiscoverPage = () => {
                     variants={variants.staggerItem}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => navigate(`/course/${course.id}`)}
-                    className="flex-shrink-0 w-[140px] md:w-auto bg-surface rounded-xl border border-hairline p-3.5 text-left"
+                    className="flex-shrink-0 w-[140px] bg-surface rounded-xl border border-hairline p-3.5 text-left"
                     aria-label={`${course.code} — ${course.name}`}
                   >
                     {/* Uni-color accent bar */}
@@ -558,11 +558,11 @@ const DiscoverPage = () => {
           {(subjects.length > 0 || subjectsLoading) && (
             <Section title="Browse by subject" overline="EXPLORE">
               {subjectsLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <SkeletonList count={6} component={SubjectTileSkeleton} />
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   {subjects.map((subject) => (
                     <SubjectTile
                       key={subject}
