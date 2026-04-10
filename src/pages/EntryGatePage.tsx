@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { getSelectedRole, getRoleLandingPath } from "@/lib/rolePreference";
+import { getSelectedRole, getRoleLandingPath, setSelectedRole } from "@/lib/rolePreference";
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const EntryGatePage = () => {
           whileHover={{ scale: 1.025, y: -5, boxShadow: "0 24px 48px -8px hsl(152 50% 60% / 0.35)" }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 340, damping: 28 }}
-          onClick={() => navigate("/signup?intent=student")}
+          onClick={() => { setSelectedRole("student"); navigate("/signup"); }}
           className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-2 min-h-0"
           style={{ background: "hsl(152 42% 85%)" }}
         >
@@ -50,7 +50,7 @@ const EntryGatePage = () => {
           whileHover={{ scale: 1.025, y: -5, boxShadow: "0 24px 48px -8px hsl(35 70% 55% / 0.35)" }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 340, damping: 28 }}
-          onClick={() => navigate("/signup?intent=tutor")}
+          onClick={() => { setSelectedRole("tutor"); navigate("/signup"); }}
           className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-2 min-h-0"
           style={{ background: "hsl(35 65% 86%)" }}
         >

@@ -85,42 +85,17 @@ const SignupPage = () => {
           Start your student search or join the tutor marketplace for Lebanon's top campuses.
         </p>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {[
-            {
-              value: "student" as const,
-              label: "Student",
-              description: "Browse tutors, save favorites, and request sessions.",
-            },
-            {
-              value: "tutor" as const,
-              label: "Tutor",
-              description: "Build your profile and get discovered by students.",
-            },
-          ].map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setRole(option.value)}
-              className={`rounded-3xl border p-4 text-left transition-all ${
-                role === option.value
-                  ? "border-accent bg-accent-soft shadow-sm"
-                  : "border-hairline bg-surface hover:border-ink hover:bg-white"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <span className="font-display text-base font-semibold text-ink">
-                  {option.label}
-                </span>
-                {role === option.value ? (
-                  <span className="inline-flex items-center justify-center rounded-full bg-accent text-accent-foreground text-xs px-2 py-1">
-                    selected
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-sm text-ink-muted">{option.description}</p>
-            </button>
-          ))}
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium"
+          style={{ background: role === "tutor" ? "hsl(35 65% 86%)" : "hsl(152 42% 85%)", color: role === "tutor" ? "hsl(35 50% 20%)" : "hsl(152 40% 18%)" }}
+        >
+          {role === "tutor" ? "Joining as a tutor" : "Joining as a student"}
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="underline underline-offset-2 text-xs opacity-70 ml-1"
+          >
+            change
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 flex-1">
