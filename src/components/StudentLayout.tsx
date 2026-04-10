@@ -23,7 +23,7 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
   )?.path ?? "/";
 
   return (
-    <div className="min-h-screen bg-background relative pb-24">
+    <div className="min-h-[100dvh] bg-background relative overflow-x-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
@@ -31,6 +31,7 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
           initial="hidden"
           animate="visible"
           exit="exit"
+          className="w-full"
         >
           {children}
         </motion.div>

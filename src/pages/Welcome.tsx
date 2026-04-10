@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { variants } from "@/lib/motion";
-import { AmbientBackground } from "@/components/AmbientBackground";
+// AmbientBackground is rendered globally in App.tsx — no need to duplicate here
 
 // ── Static mock tutor data ─────────────────────────────────────
 const MOCK_TUTORS = [
@@ -174,9 +174,9 @@ const WelcomePage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
-      {/* Ambient animated background blobs */}
-      <AmbientBackground />
+    <div className="h-[100dvh] bg-background flex flex-col relative overflow-hidden"
+      style={{ maxHeight: "100dvh" }}
+    >
 
       {/* ── Logo wordmark ────────────────────────────────────── */}
       <div className="px-6 pt-12 relative z-10">
@@ -190,14 +190,10 @@ const WelcomePage = () => {
         </motion.span>
       </div>
 
-      {/* ── Hero zone — top 60% of viewport ─────────────────── */}
-      {/*
-        Flex column that occupies roughly the top 60vh,
-        with the headline anchored toward the bottom of that zone.
-      */}
+      {/* ── Hero zone — fills from logo to carousel ──────────── */}
       <div
-        className="relative z-10 flex flex-col justify-end px-6"
-        style={{ minHeight: "calc(60vh - 64px)", paddingBottom: "2rem" }}
+        className="relative z-10 flex flex-col justify-end px-6 flex-1"
+        style={{ paddingBottom: "1.5rem", minHeight: 0 }}
       >
         <motion.div
           variants={variants.staggerChildren}
@@ -248,36 +244,13 @@ const WelcomePage = () => {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.32, delay: 0.2, ease: [0.2, 0, 0, 1] }}
-        className="relative z-10 py-6"
+        className="relative z-10 pb-4 shrink-0"
       >
         <TutorCarousel />
       </motion.div>
 
-      {/* ── Footer — minimal ─────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.45, duration: 0.3 }}
-        className="relative z-10 px-6 pb-52 mt-auto"
-      >
-        <div className="flex items-center gap-2 text-caption text-ink-muted">
-          <span>Made in Beirut</span>
-          <span aria-hidden="true">·</span>
-          <Link
-            to="/privacy"
-            className="hover:text-accent transition-colors"
-          >
-            Privacy
-          </Link>
-          <span aria-hidden="true">·</span>
-          <Link
-            to="/terms"
-            className="hover:text-accent transition-colors"
-          >
-            Terms
-          </Link>
-        </div>
-      </motion.div>
+      {/* ── Spacer for fixed bottom CTA (160px) ──────────────── */}
+      <div className="shrink-0" style={{ height: 164 }} />
 
       {/* ── Sticky bottom action zone ──────────────────────────── */}
       <div
@@ -315,6 +288,14 @@ const WelcomePage = () => {
             >
               Already have an account? Sign in
             </Link>
+          </div>
+          {/* Footer */}
+          <div className="flex items-center justify-center gap-2 text-caption text-ink-muted mt-3">
+            <span>Made in Beirut</span>
+            <span aria-hidden="true">·</span>
+            <Link to="/privacy" className="hover:text-accent transition-colors">Privacy</Link>
+            <span aria-hidden="true">·</span>
+            <Link to="/terms" className="hover:text-accent transition-colors">Terms</Link>
           </div>
         </div>
       </div>

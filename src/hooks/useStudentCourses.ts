@@ -1,7 +1,6 @@
 // ── Student Courses Hooks (C6) ────────────────────────────────
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { toastError } from "@/components/ui/sonner";
 
 export function useStudentCourses(studentId: string) {
   return useQuery({
@@ -54,7 +53,7 @@ export function useSetStudentCourses() {
     onSuccess: (_, { studentId }) => {
       queryClient.invalidateQueries({ queryKey: ["student-courses", studentId] });
     },
-    onError: (err) => toastError(err),
+    // Don't toast here — callers use mutateAsync and handle errors themselves
   });
 }
 

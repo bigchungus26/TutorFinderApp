@@ -37,12 +37,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
 // Helper: show error toast with Supabase-friendly message
 export function toastError(err: unknown, fallback = "Something went wrong. Please try again.") {
-  const msg =
-    err instanceof Error
-      ? err.message.length < 100 && !err.message.includes("JWT")
-        ? err.message
-        : fallback
-      : fallback;
+  let msg = fallback;
+  if (err instanceof Error) {
+    const raw = err.message;
+    // Hide JWT/auth internals; show everything else (table missing, RLS denial, etc.)
+    if (!raw.includes("JWT") && !raw.includes("token")) {
+      msg = raw.length > 120 ? raw.slice(0, 120) + "…" : raw;
+    }
+  }
   toast.error(msg, { duration: 5000 });
 }
 

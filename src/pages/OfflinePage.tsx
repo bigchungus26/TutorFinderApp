@@ -38,7 +38,7 @@ const OfflinePage = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
+    <div className="h-[100dvh] bg-background flex flex-col items-center justify-center overflow-hidden px-6 text-center">
       <motion.div
         initial="hidden"
         animate="visible"

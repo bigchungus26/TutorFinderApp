@@ -17,7 +17,7 @@ export const TutorLayout = ({ children }: { children: ReactNode }) => {
   const activeTab = tabs.find(t => location.pathname === t.path)?.path ?? "/tutor/requests";
 
   return (
-    <div className="min-h-screen bg-background relative pb-24">
+    <div className="min-h-[100dvh] bg-background relative overflow-x-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
@@ -25,6 +25,7 @@ export const TutorLayout = ({ children }: { children: ReactNode }) => {
           initial="hidden"
           animate="visible"
           exit="exit"
+          className="w-full"
         >
           {children}
         </motion.div>

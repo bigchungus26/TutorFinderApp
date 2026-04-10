@@ -123,7 +123,7 @@ const SplashPage = () => {
           animate="visible"
           exit="exit"
           variants={exitVariants}
-          className="min-h-screen bg-background flex flex-col items-center justify-center"
+          className="h-[100dvh] bg-background flex flex-col items-center justify-center overflow-hidden"
         >
           {/* Pulsing wordmark */}
           <motion.h1
