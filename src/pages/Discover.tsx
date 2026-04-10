@@ -353,6 +353,7 @@ const DiscoverPage = () => {
               <div className="relative">
                 <button
                   aria-label="Notifications"
+                  onClick={() => navigate("/messages")}
                   className="w-9 h-9 rounded-full flex items-center justify-center border border-hairline bg-surface"
                 >
                   <Bell size={18} className="text-ink-muted" />

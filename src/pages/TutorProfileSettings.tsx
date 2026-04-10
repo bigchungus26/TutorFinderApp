@@ -600,6 +600,7 @@ const TutorProfilePage = () => {
           <SettingsRow
             icon={Settings}
             label="Account settings"
+            onClick={() => setEditProfileOpen(true)}
           />
           <SettingsRow
             icon={ArrowRightLeft}
@@ -610,6 +611,7 @@ const TutorProfilePage = () => {
           <SettingsRow
             icon={HelpCircle}
             label="Help & support"
+            onClick={() => window.open("mailto:support@tutr.app", "_blank")}
           />
           <SettingsRow
             icon={LogOut}
@@ -622,10 +624,10 @@ const TutorProfilePage = () => {
 
         {/* ── Footer ── */}
         <div className="flex justify-center gap-6 pb-4">
-          <button className="text-caption text-ink-muted hover:text-ink transition-colors">
+          <button onClick={() => navigate("/privacy")} className="text-caption text-ink-muted hover:text-ink transition-colors">
             Privacy
           </button>
-          <button className="text-caption text-ink-muted hover:text-ink transition-colors">
+          <button onClick={() => navigate("/terms")} className="text-caption text-ink-muted hover:text-ink transition-colors">
             Terms
           </button>
         </div>

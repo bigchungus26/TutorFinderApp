@@ -372,6 +372,13 @@ function SessionCard({ session, showReviewButton, onReview }: SessionCardProps) 
         {session.status === "upcoming" && (
           <motion.button
             whileTap={{ scale: 0.96 }}
+            onClick={() => {
+              if (session.location === "online" && (session as any).meeting_url) {
+                window.open((session as any).meeting_url, "_blank");
+              } else {
+                toast(`Session with ${session.tutor?.full_name ?? "your tutor"} · ${new Date(session.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`);
+              }
+            }}
             className="px-4 py-1.5 rounded-lg bg-accent text-accent-foreground text-label font-medium"
           >
             {session.location === "online" ? "Join" : "Details"}

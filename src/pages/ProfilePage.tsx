@@ -612,10 +612,10 @@ const ProfilePage = () => {
 
         {/* ── Footer ── */}
         <div className="flex justify-center gap-6 pb-4">
-          <button className="text-caption text-ink-muted hover:text-ink transition-colors">
+          <button onClick={() => navigate("/privacy")} className="text-caption text-ink-muted hover:text-ink transition-colors">
             Privacy
           </button>
-          <button className="text-caption text-ink-muted hover:text-ink transition-colors">
+          <button onClick={() => navigate("/terms")} className="text-caption text-ink-muted hover:text-ink transition-colors">
             Terms
           </button>
         </div>
