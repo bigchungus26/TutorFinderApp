@@ -153,7 +153,7 @@ const SignupPage = () => {
   );
 
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden">
+    <div style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
       {/* ── Student panel (top) ─────────────────────────────────── */}
       <motion.section
@@ -164,7 +164,9 @@ const SignupPage = () => {
       >
         {role === "student" ? (
           /* Expanded */
-          <div className="flex-1 flex flex-col px-6 pt-8 pb-5 overflow-hidden min-h-0">
+          <div className="flex-1 flex flex-col px-6 pb-5 overflow-hidden min-h-0"
+            style={{ paddingTop: "max(2rem, env(safe-area-inset-top))" }}
+          >
             <Link
               to="/welcome"
               className="text-sm text-ink-muted mb-4 block w-fit"
