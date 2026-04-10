@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { tabVariants } from "@/lib/motion";
 
 const tabs = [
-  { path: "/", icon: Sparkles, label: "Discover" },
+  { path: "/discover", icon: Sparkles, label: "Discover" },
   { path: "/search", icon: Search, label: "Search" },
   { path: "/sessions", icon: Calendar, label: "Sessions" },
   { path: "/profile", icon: User, label: "Profile" },
@@ -17,10 +17,10 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
 
   // Determine active tab path
   const activeTab = tabs.find(t =>
-    t.path === "/"
-      ? location.pathname === "/"
+    t.path === "/discover"
+      ? location.pathname === "/discover"
       : location.pathname.startsWith(t.path)
-  )?.path ?? "/";
+  )?.path ?? "/discover";
 
   return (
     <div className="min-h-[100dvh] bg-background relative overflow-x-hidden">

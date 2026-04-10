@@ -45,7 +45,7 @@ const RequireRole = ({ role, children }: RequireRoleProps) => {
 
   // Role mismatch — redirect to the user's correct home
   if (profile.role !== role) {
-    const destination = profile.role === "tutor" ? "/tutor/requests" : "/";
+    const destination = profile.role === "tutor" ? "/tutor/requests" : "/discover";
     return <Navigate to={destination} replace />;
   }
 

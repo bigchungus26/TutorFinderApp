@@ -424,7 +424,7 @@ const ProfilePage = () => {
   const handleSignOut = useCallback(async () => {
     try {
       await signOut();
-      navigate("/welcome");
+        navigate("/");
     } catch (err) {
       toastError(err);
     }

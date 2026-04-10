@@ -5,7 +5,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UniversityProvider } from "@/contexts/UniversityContext";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { StudentLayout } from "@/components/StudentLayout";
 import { TutorLayout } from "@/components/TutorLayout";
 import RequireAuth from "@/components/guards/RequireAuth";
@@ -16,7 +16,9 @@ import { TutorCardSkeleton } from "@/components/skeletons";
 import { initAuthListener } from "@/lib/authListener";
 import { useTheme } from "@/hooks/useTheme";
 // ── Lazy-load all pages for performance (J4) ─────────────────
-const WelcomePage = lazy(() => import("@/pages/Welcome"));
+const EntryGatePage = lazy(() => import("@/pages/EntryGatePage"));
+const StudentLandingPage = lazy(() => import("@/pages/StudentLandingPage"));
+const TutorLandingPage = lazy(() => import("@/pages/TutorLandingPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const SignupPage = lazy(() => import("@/pages/SignupPage"));
 const ChooseRolePage = lazy(() => import("@/pages/ChooseRolePage"));
@@ -78,9 +80,6 @@ function ThemeInit() {
 }
 
 const AppRoutes = () => {
-  const { profile } = useAuth();
-  const role = profile?.role;
-
   return (
     <Suspense fallback={<PageSkeleton />}>
       <AuthListenerInit />
@@ -91,7 +90,10 @@ const AppRoutes = () => {
         <Route path="/offline" element={<OfflinePage />} />
 
         {/* ── Public-only routes ───────────────────────── */}
-        <Route path="/welcome" element={<PublicOnly><WelcomePage /></PublicOnly>} />
+        <Route path="/" element={<PublicOnly><EntryGatePage /></PublicOnly>} />
+        <Route path="/welcome" element={<Navigate to="/student" replace />} />
+        <Route path="/student" element={<PublicOnly><StudentLandingPage /></PublicOnly>} />
+        <Route path="/tutor" element={<PublicOnly><TutorLandingPage /></PublicOnly>} />
         <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
         <Route path="/signup" element={<PublicOnly><SignupPage /></PublicOnly>} />
 
@@ -114,7 +116,7 @@ const AppRoutes = () => {
         } />
 
         {/* ── Student routes ───────────────────────────── */}
-        <Route path="/" element={
+        <Route path="/discover" element={
           <RequireAuth>
             <RequireRole role="student">
               <StudentLayout><ErrorBoundary compact><DiscoverPage /></ErrorBoundary></StudentLayout>

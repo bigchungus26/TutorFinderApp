@@ -8,6 +8,7 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRoleAppPath } from "@/lib/rolePreference";
 
 type PublicOnlyProps = {
   children: ReactNode;
@@ -27,8 +28,7 @@ const PublicOnly = ({ children }: PublicOnlyProps) => {
 
   // Authenticated and fully onboarded → redirect to role-appropriate home
   if (user && profile?.onboarded_at) {
-    const destination =
-      profile.role === "tutor" ? "/tutor/requests" : "/";
+    const destination = getRoleAppPath(profile.role === "tutor" ? "tutor" : "student");
     return <Navigate to={destination} replace />;
   }
 

@@ -14,6 +14,7 @@ import { NavigateFunction } from "react-router-dom";
 import { QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { getRoleLandingPath, getSelectedRole } from "@/lib/rolePreference";
 
 /**
  * Subscribes to Supabase auth state changes and handles global
@@ -43,7 +44,7 @@ export function initAuthListener(
         window.location.pathname + window.location.search + window.location.hash;
 
       // Only persist non-trivial paths (avoid saving /welcome, /login, /signup, /splash)
-      const skipPaths = ["/welcome", "/login", "/signup", "/offline", "/"];
+      const skipPaths = ["/", "/student", "/tutor", "/welcome", "/login", "/signup", "/offline"];
       if (!skipPaths.includes(window.location.pathname)) {
         sessionStorage.setItem("pendingRoute", currentPath);
       }
@@ -57,8 +58,8 @@ export function initAuthListener(
         duration: 4000,
       });
 
-      // Redirect to welcome screen
-      navigate("/welcome", { replace: true });
+      // Redirect to the remembered public landing
+      navigate(getRoleLandingPath(getSelectedRole() ?? "student"), { replace: true });
     }
   });
 

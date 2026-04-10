@@ -36,9 +36,9 @@ export function resolveDestination({
   // 2. Unauthenticated
   if (!user) {
     if (deepLink) {
-      return `/welcome?redirect=${encodeURIComponent(deepLink)}`;
+      return `/student?redirect=${encodeURIComponent(deepLink)}`;
     }
-    return "/welcome";
+    return "/student";
   }
 
   // 3. Authenticated but role not yet selected
@@ -53,7 +53,7 @@ export function resolveDestination({
 
   // 5. Fully onboarded student
   if (profile.role === "student") {
-    return deepLink || "/";
+    return deepLink || "/discover";
   }
 
   // 6. Fully onboarded tutor
@@ -62,5 +62,5 @@ export function resolveDestination({
   }
 
   // 7. Fallback
-  return "/";
+  return "/discover";
 }

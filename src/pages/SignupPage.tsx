@@ -1,13 +1,14 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Footer } from "@/components/Footer";
+import { getSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
-  const [role, setRole] = useState<"student" | "tutor">("student");
+  const [role, setRole] = useState<"student" | "tutor">(() => getSelectedRole() ?? "student");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,6 +16,10 @@ const SignupPage = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkEmail, setCheckEmail] = useState(false);
+
+  useEffect(() => {
+    setSelectedRole(role);
+  }, [role]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

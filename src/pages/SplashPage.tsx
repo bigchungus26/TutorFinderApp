@@ -28,7 +28,7 @@ const MAXIMUM_MS = 2500;
 const SplashPage = () => {
   const navigate = useNavigate();
   const [exiting, setExiting] = useState(false);
-  const destinationRef = useRef<string>("/welcome");
+  const destinationRef = useRef<string>("/student");
   const resolvedRef = useRef(false);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ const SplashPage = () => {
       if (!resolvedRef.current) {
         resolvedRef.current = true;
         clearTimeout(hardTimeout);
-        triggerExit("/welcome");
+        triggerExit("/student");
       }
     });
 

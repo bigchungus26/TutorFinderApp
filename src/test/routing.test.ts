@@ -17,13 +17,13 @@ describe("resolveDestination", () => {
     expect(resolveDestination({ user: makeUser(), profile: makeProfile(), online: false })).toBe("/offline");
   });
 
-  it("returns /welcome when unauthenticated", () => {
-    expect(resolveDestination({ user: null, profile: null, online: true })).toBe("/welcome");
+  it("returns /student when unauthenticated", () => {
+    expect(resolveDestination({ user: null, profile: null, online: true })).toBe("/student");
   });
 
-  it("returns /welcome with redirect when unauthenticated + deep link", () => {
+  it("returns /student with redirect when unauthenticated + deep link", () => {
     const result = resolveDestination({ user: null, profile: null, online: true, deepLink: "/tutor/abc" });
-    expect(result).toBe("/welcome?redirect=%2Ftutor%2Fabc");
+    expect(result).toBe("/student?redirect=%2Ftutor%2Fabc");
   });
 
   it("returns /choose-role when no profile.role", () => {
@@ -41,8 +41,8 @@ describe("resolveDestination", () => {
     expect(resolveDestination({ user: makeUser(), profile, online: true })).toBe("/onboarding/tutor");
   });
 
-  it("returns / for fully onboarded student", () => {
-    expect(resolveDestination({ user: makeUser(), profile: makeProfile(), online: true })).toBe("/");
+  it("returns /discover for fully onboarded student", () => {
+    expect(resolveDestination({ user: makeUser(), profile: makeProfile(), online: true })).toBe("/discover");
   });
 
   it("returns deep link for fully onboarded student with pending route", () => {

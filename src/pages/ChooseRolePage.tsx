@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { Footer } from "@/components/Footer";
 import { variants } from "@/lib/motion";
+import { getSelectedRole, setSelectedRole as persistSelectedRole } from "@/lib/rolePreference";
 
 const roleOptions = [
   {
@@ -25,7 +26,7 @@ const roleOptions = [
 const ChooseRolePage = () => {
   const navigate = useNavigate();
   const { user, profile, refreshProfile, loading } = useAuth();
-  const [selectedRole, setSelectedRole] = useState<"student" | "tutor">("student");
+  const [selectedRole, setSelectedRole] = useState<"student" | "tutor">(() => getSelectedRole() ?? "student");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,6 +52,7 @@ const ChooseRolePage = () => {
       return;
     }
 
+    persistSelectedRole(selectedRole);
     await refreshProfile();
     navigate(`/onboarding/${selectedRole}`);
   };

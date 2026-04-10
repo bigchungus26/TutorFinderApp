@@ -9,6 +9,7 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRoleLandingPath, getSelectedRole } from "@/lib/rolePreference";
 
 type RequireAuthProps = {
   children: ReactNode;
@@ -49,7 +50,7 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
   if (!user) {
     const currentPath = location.pathname + location.search + location.hash;
     sessionStorage.setItem("pendingRoute", currentPath);
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to={getRoleLandingPath(getSelectedRole() ?? "student")} replace />;
   }
 
   // Authenticated — render the protected content
