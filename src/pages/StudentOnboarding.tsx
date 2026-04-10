@@ -208,6 +208,8 @@ const StudentOnboarding = () => {
   // ── Save & finish ─────────────────────────────────────────
   const finish = async () => {
     if (!user) return;
+
+    // Profile update is required — block on failure
     try {
       await updateProfile.mutateAsync({
         id: user.id,
@@ -218,22 +220,28 @@ const StudentOnboarding = () => {
         bio,
         onboarded_at: new Date().toISOString(),
       });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to save profile. Please try again.");
+      return;
+    }
 
-      if (selectedCourseIds.length > 0) {
+    // Courses are optional — don't block if this fails
+    if (selectedCourseIds.length > 0) {
+      try {
         await setStudentCourses.mutateAsync({
           studentId: user.id,
           courseIds: selectedCourseIds,
           semester: semester || "Spring 2026",
         });
+      } catch (err) {
+        console.warn("Could not save courses (non-blocking):", err);
       }
-
-      setSelectedUniversity(selectedUni || "aub");
-      await refreshProfile();
-      localStorage.removeItem(STORAGE_KEY);
-      setShowSuccess(true);
-    } catch (err) {
-      console.error("Failed to save student profile:", err);
     }
+
+    setSelectedUniversity(selectedUni || "aub");
+    await refreshProfile();
+    localStorage.removeItem(STORAGE_KEY);
+    setShowSuccess(true);
   };
 
   const saving = updateProfile.isPending || setStudentCourses.isPending;

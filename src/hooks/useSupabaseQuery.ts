@@ -378,8 +378,7 @@ export function useUpdateProfile() {
     }: Partial<Profile> & { id: string }) => {
       const { data, error } = await supabase
         .from("profiles")
-        .update(updates)
-        .eq("id", id)
+        .upsert({ id, ...updates }, { onConflict: "id" })
         .select()
         .single();
       if (error) throw error;
