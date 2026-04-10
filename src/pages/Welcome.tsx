@@ -15,10 +15,10 @@ const WelcomePage = () => {
         <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-accent-soft opacity-60 blur-3xl -translate-y-1/3 translate-x-1/3" />
         <div className="relative z-10 flex-1 flex flex-col">
           <div className="mb-4">
-            <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Teachme</span>
+            <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
           </div>
           <h1 className="font-display text-[32px] leading-tight font-medium mb-3">
-            How will you use Teachme?
+            How will you use Tutr?
           </h1>
           <p className="text-muted-ink text-base leading-relaxed mb-12">
             You can switch anytime from your profile.
@@ -63,13 +63,13 @@ const WelcomePage = () => {
 
       <div className="relative z-10 flex-1 flex flex-col">
         <div className="mb-4">
-          <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Teachme</span>
+          <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
         </div>
         <h1 className="font-display text-[32px] leading-tight font-medium mb-3">
           Learn from students who've been there.
         </h1>
         <p className="text-muted-ink text-base leading-relaxed mb-12">
-          Teachme connects you with top peer tutors at your university.
+          Tutr connects you with top peer tutors at your university.
         </p>
 
         <div className="space-y-3 flex-1">

@@ -10,15 +10,15 @@
     --surface-foreground: 0 0% 10%;
     --muted-ink: 0 0% 42%;
     --hairline: 40 20% 90%;
-    --accent: 18 100% 56%;
+    --accent: 152 60% 42%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 18 100% 93%;
+    --accent-soft: 152 50% 93%;
     --success: 155 46% 33%;
     --success-foreground: 0 0% 100%;
     --uni-aub: 0 100% 27%;
     --uni-lau: 220 100% 32%;
     --uni-ndu: 157 80% 24%;
-    --primary: 18 100% 56%;
+    --primary: 152 60% 42%;
     --primary-foreground: 0 0% 100%;
     --secondary: 40 20% 90%;
     --secondary-foreground: 0 0% 10%;
@@ -28,7 +28,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 40 20% 90%;
     --input: 40 20% 90%;
-    --ring: 18 100% 56%;
+    --ring: 152 60% 42%;
     --radius: 0.875rem;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;

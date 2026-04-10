@@ -16,7 +16,7 @@ const TermsOfUse = () => {
         <section>
           <h2 className="font-display text-lg font-medium mb-2">1. Acceptance</h2>
           <p>
-            By creating an account or using Teachme, you agree to these Terms of Use and our{" "}
+            By creating an account or using Tutr, you agree to these Terms of Use and our{" "}
             <Link to="/privacy" className="text-accent underline">Privacy Policy</Link>. If you do not
             agree, do not use the platform.
           </p>
@@ -25,7 +25,7 @@ const TermsOfUse = () => {
         <section>
           <h2 className="font-display text-lg font-medium mb-2">2. What the Service Is</h2>
           <p>
-            Teachme is a peer tutoring marketplace that connects university students seeking academic
+            Tutr is a peer tutoring marketplace that connects university students seeking academic
             help with fellow students who have excelled in specific courses. We facilitate the
             connection — we are not the tutor and do not guarantee academic outcomes.
           </p>
@@ -64,7 +64,7 @@ const TermsOfUse = () => {
         <section>
           <h2 className="font-display text-lg font-medium mb-2">6. Limitation of Liability</h2>
           <p>
-            Teachme is provided "as is" without warranties of any kind. We are not liable for the
+            Tutr is provided "as is" without warranties of any kind. We are not liable for the
             quality of tutoring, academic results, or any disputes between users. Our total liability
             to you for any claim arising from or related to these Terms shall not exceed the greater of
             (a) the amount you paid us in the 12 months preceding the claim, or (b) USD $100.

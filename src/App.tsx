@@ -25,6 +25,7 @@ import TutorProfileSettings from "@/pages/TutorProfileSettings";
 import NotFound from "@/pages/NotFound";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfUse from "@/pages/TermsOfUse";
+import SplashPage from "@/pages/SplashPage";
 
 const queryClient = new QueryClient();
 
@@ -81,7 +82,7 @@ const AppRoutes = () => {
 
       {/* Student routes */}
       <Route path="/" element={
-        !isLoggedIn ? <Navigate to="/welcome" replace /> :
+        !isLoggedIn ? <SplashPage /> :
         !hasOnboarded ? <Navigate to="/choose-role" replace /> :
         role === "tutor" ? <Navigate to="/tutor/requests" replace /> :
         <StudentLayout><DiscoverPage /></StudentLayout>

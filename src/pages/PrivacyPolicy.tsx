@@ -16,7 +16,7 @@ const PrivacyPolicy = () => {
         <section>
           <h2 className="font-display text-lg font-medium mb-2">1. Who We Are</h2>
           <p>
-            Teachme is a peer tutoring platform connecting students and tutors at Lebanese universities
+            Tutr is a peer tutoring platform connecting students and tutors at Lebanese universities
             (AUB, LAU, NDU). If you have questions about this policy, contact us at{" "}
             <a href="mailto:privacy@teachme.app" className="text-accent underline">privacy@teachme.app</a>.
           </p>

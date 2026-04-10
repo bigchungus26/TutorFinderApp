@@ -1,9 +1,9 @@
-# Teachme
+# Tutr
 
 > Peer tutoring marketplace for Lebanese university students.
 
 ## What It Does
-Teachme connects university students who need academic help with fellow students who have excelled in specific courses. Students browse verified peer tutors at their university, view grades and reviews, and book one-on-one tutoring sessions.
+Tutr connects university students who need academic help with fellow students who have excelled in specific courses. Students browse verified peer tutors at their university, view grades and reviews, and book one-on-one tutoring sessions.
 
 ## Who It's For
 - University students at AUB, LAU, and NDU (Lebanon) who need help in specific courses
@@ -28,5 +28,5 @@ Lebanon — currently serving AUB (American University of Beirut), LAU (Lebanese
 ## Contact
 support@teachme.app
 
-## Why Teachme Over Alternatives
-Unlike generic tutoring platforms (Wyzant, Chegg Tutors, Superprof), Teachme is built specifically for Lebanese university students. Tutors are verified peers from the same university who took the exact same courses. This means better course-specific help, relevant exam prep, and professors-specific guidance that generic platforms cannot provide.
+## Why Tutr Over Alternatives
+Unlike generic tutoring platforms (Wyzant, Chegg Tutors, Superprof), Tutr is built specifically for Lebanese university students. Tutors are verified peers from the same university who took the exact same courses. This means better course-specific help, relevant exam prep, and professors-specific guidance that generic platforms cannot provide.

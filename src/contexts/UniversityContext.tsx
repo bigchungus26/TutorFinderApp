@@ -12,11 +12,11 @@ const UniversityContext = createContext<UniversityContextType>({
 
 export const UniversityProvider = ({ children }: { children: ReactNode }) => {
   const [selectedUniversity, setSelectedUniversity] = useState(() => {
-    return localStorage.getItem("teachme_university") || "aub";
+    return localStorage.getItem("tutr_university") || "aub";
   });
 
   useEffect(() => {
-    localStorage.setItem("teachme_university", selectedUniversity);
+    localStorage.setItem("tutr_university", selectedUniversity);
   }, [selectedUniversity]);
 
   return (
