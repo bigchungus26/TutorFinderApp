@@ -18,7 +18,16 @@ export default {
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        surface: "hsl(var(--surface))",
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          elevated: "hsl(var(--surface-elevated))",
+          foreground: "hsl(var(--surface-foreground))",
+        },
+        ink: {
+          DEFAULT: "hsl(var(--ink))",
+          muted: "hsl(var(--ink-muted))",
+          subtle: "hsl(var(--ink-subtle))",
+        },
         "muted-ink": "hsl(var(--muted-ink))",
         hairline: "hsl(var(--hairline))",
         accent: {
@@ -29,6 +38,14 @@ export default {
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        danger: {
+          DEFAULT: "hsl(var(--danger))",
+          foreground: "hsl(var(--danger-foreground))",
         },
         "uni-aub": "hsl(var(--uni-aub))",
         "uni-lau": "hsl(var(--uni-lau))",
@@ -72,14 +89,16 @@ export default {
         },
       },
       borderRadius: {
-        xl: "1.25rem",
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        pill: "999px",
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)",
+        lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
+        pill: "var(--radius-full)",
       },
       boxShadow: {
+        none: "none",
         float: "var(--shadow-float)",
+        press: "var(--shadow-press)",
       },
       keyframes: {
         "accordion-down": {

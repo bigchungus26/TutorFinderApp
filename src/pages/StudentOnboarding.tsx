@@ -59,12 +59,12 @@ const StudentOnboarding = () => {
       <div className="w-40 h-40 rounded-full bg-accent-soft mb-10 flex items-center justify-center">
         <div className="w-20 h-20 rounded-full bg-accent/20" />
       </div>
-      <h1 className="font-display text-[26px] leading-tight font-medium mb-3">Find tutors who aced your exact course.</h1>
+      <h1 className="text-display-md mb-3">Find tutors who aced your exact course.</h1>
       <p className="text-muted-ink text-base">Real students. Real grades. Real results.</p>
     </div>,
     // Screen 2 — University picker
     <div key="s2" className="px-6 pt-12 pb-8 flex-1">
-      <h1 className="font-display text-[26px] leading-tight font-medium mb-2">Pick your university.</h1>
+      <h1 className="text-display-md mb-2">Pick your university.</h1>
       <p className="text-muted-ink text-base mb-8">We'll show you tutors and courses at your school.</p>
       <div className="space-y-3">
         {universities.map(uni => (
@@ -87,7 +87,7 @@ const StudentOnboarding = () => {
     </div>,
     // Screen 3 — Majors
     <div key="s3" className="px-6 pt-12 pb-8 flex-1">
-      <h1 className="font-display text-[26px] leading-tight font-medium mb-2">What are you studying?</h1>
+      <h1 className="text-display-md mb-2">What are you studying?</h1>
       <p className="text-muted-ink text-base mb-6">Pick your area of focus. You can change this later.</p>
       <div className="flex flex-wrap gap-2 mb-6">
         {majors.map(m => (

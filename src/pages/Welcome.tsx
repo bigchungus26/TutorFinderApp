@@ -17,7 +17,7 @@ const WelcomePage = () => {
           <div className="mb-4">
             <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
           </div>
-          <h1 className="font-display text-[32px] leading-tight font-medium mb-3">
+          <h1 className="text-display-xl mb-3">
             How will you use Tutr?
           </h1>
           <p className="text-muted-ink text-base leading-relaxed mb-12">
@@ -65,7 +65,7 @@ const WelcomePage = () => {
         <div className="mb-4">
           <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
         </div>
-        <h1 className="font-display text-[32px] leading-tight font-medium mb-3">
+        <h1 className="text-display-xl mb-3">
           Learn from students who've been there.
         </h1>
         <p className="text-muted-ink text-base leading-relaxed mb-12">

@@ -37,7 +37,7 @@ const CourseDetail = () => {
           <ArrowLeft size={22} />
         </button>
         <div className="w-full h-1.5 rounded-full mb-5" style={{ backgroundColor: uni.color }} />
-        <h1 className="font-display text-[32px] font-medium leading-tight mb-1">{course.code}</h1>
+        <h1 className="text-display-xl mb-1">{course.code}</h1>
         <p className="text-lg text-muted-ink mb-2">{course.name}</p>
         <p className="text-sm text-muted-ink leading-relaxed mb-4">{course.description}</p>
         <div className="flex items-center gap-2 text-sm text-muted-ink">

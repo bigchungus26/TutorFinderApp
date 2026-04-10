@@ -36,7 +36,7 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
         <img src={tutor.avatar_url || "https://i.pravatar.cc/100"} alt={tutor.full_name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="font-display font-medium text-[15px]">{tutor.full_name}</span>
+            <span className="font-display font-medium text-body">{tutor.full_name}</span>
             {tutor.verified && <BadgeCheck size={15} className="text-accent flex-shrink-0" />}
           </div>
           <div className="text-sm text-muted-ink">{tutor.major}, {tutor.year}</div>
@@ -56,7 +56,7 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
         </div>
         {tutor.hourly_rate && (
           <div className="flex-shrink-0 self-start">
-            <span className="font-display font-medium text-[15px]">${tutor.hourly_rate}<span className="text-xs text-muted-ink font-body">/hr</span></span>
+            <span className="font-display font-medium text-body">${tutor.hourly_rate}<span className="text-xs text-muted-ink font-body">/hr</span></span>
           </div>
         )}
       </motion.div>

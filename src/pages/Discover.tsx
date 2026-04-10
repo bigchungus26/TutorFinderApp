@@ -44,7 +44,7 @@ const DiscoverPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="font-display text-[22px] font-medium">Good {getHour()}, {firstName}</h1>
+          <h1 className="font-display text-display-md">Good {getHour()}, {firstName}</h1>
         </div>
         <img src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"} alt="Profile" className="w-10 h-10 rounded-full" />
       </div>

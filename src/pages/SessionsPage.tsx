@@ -15,7 +15,7 @@ const SessionsPage = () => {
 
   return (
     <div className="px-5 pt-14 pb-4">
-      <h1 className="font-display text-[22px] font-medium mb-5">Sessions</h1>
+      <h1 className="font-display text-display-md mb-5">Sessions</h1>
 
       <div className="flex gap-1 mb-5">
         {(["upcoming", "past"] as const).map(t => (
@@ -37,7 +37,7 @@ const SessionsPage = () => {
               <div className="flex items-center gap-3 mb-3">
                 <img src={session.tutor?.avatar_url || "https://i.pravatar.cc/100"} alt={session.tutor?.full_name} className="w-10 h-10 rounded-full" />
                 <div className="flex-1">
-                  <div className="font-display font-medium text-[15px]">{session.tutor?.full_name}</div>
+                  <div className="font-display font-medium text-body">{session.tutor?.full_name}</div>
                   <div className="text-sm text-muted-ink">{session.course?.code} — {session.course?.name}</div>
                 </div>
               </div>

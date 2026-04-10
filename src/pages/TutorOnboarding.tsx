@@ -88,11 +88,11 @@ const TutorOnboarding = () => {
       <div className="w-40 h-40 rounded-full bg-accent-soft mb-10 flex items-center justify-center">
         <div className="w-16 h-16 rounded-xl bg-accent/20 rotate-12" />
       </div>
-      <h1 className="font-display text-[26px] leading-tight font-medium mb-3">Teach what you've mastered.</h1>
+      <h1 className="text-display-md mb-3">Teach what you've mastered.</h1>
       <p className="text-muted-ink text-base">Help fellow students succeed and earn on your own schedule.</p>
     </div>,
     <div key="t2" className="px-6 pt-12 pb-8 flex-1">
-      <h1 className="font-display text-[26px] leading-tight font-medium mb-2">Your university</h1>
+      <h1 className="text-display-md mb-2">Your university</h1>
       <p className="text-muted-ink text-base mb-8">We'll match you with students from your school.</p>
       <div className="space-y-3">
         {universities.map(uni => (
@@ -108,7 +108,7 @@ const TutorOnboarding = () => {
       </div>
     </div>,
     <div key="t3" className="px-6 pt-12 pb-8 flex-1 overflow-auto">
-      <h1 className="font-display text-[26px] leading-tight font-medium mb-2">Courses you can teach</h1>
+      <h1 className="text-display-md mb-2">Courses you can teach</h1>
       <p className="text-muted-ink text-base mb-4">Select courses and the grade you got.</p>
       <div className="relative mb-4">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-ink" />
@@ -148,7 +148,7 @@ const TutorOnboarding = () => {
       </div>
     </div>,
     <div key="t4" className="px-6 pt-12 pb-8 flex-1">
-      <h1 className="font-display text-[26px] leading-tight font-medium mb-2">Set your rate</h1>
+      <h1 className="text-display-md mb-2">Set your rate</h1>
       <p className="text-muted-ink text-base mb-8">You can adjust this anytime.</p>
       <div className="text-center mb-6">
         <span className="font-display text-5xl font-medium">${rate}</span>

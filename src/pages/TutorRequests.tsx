@@ -16,7 +16,7 @@ const TutorRequests = () => {
 
   return (
     <div className="px-5 pt-14 pb-4">
-      <h1 className="font-display text-[22px] font-medium mb-5">Requests</h1>
+      <h1 className="font-display text-display-md mb-5">Requests</h1>
       {isLoading ? (
         <div className="flex justify-center py-16">
           <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -28,7 +28,7 @@ const TutorRequests = () => {
               <div className="flex items-center gap-3 mb-3">
                 <img src={req.student?.avatar_url || "https://i.pravatar.cc/100"} alt={req.student?.full_name} className="w-10 h-10 rounded-full" />
                 <div className="flex-1">
-                  <div className="font-display font-medium text-[15px]">{req.student?.full_name}</div>
+                  <div className="font-display font-medium text-body">{req.student?.full_name}</div>
                   <div className="text-sm text-muted-ink">{req.course?.code} — {req.course?.name}</div>
                 </div>
               </div>

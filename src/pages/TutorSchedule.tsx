@@ -16,7 +16,7 @@ const bookedSlots: Record<string, string[]> = {
 const TutorSchedule = () => {
   return (
     <div className="px-5 pt-14 pb-4">
-      <h1 className="font-display text-[22px] font-medium mb-5">Schedule</h1>
+      <h1 className="font-display text-display-md mb-5">Schedule</h1>
       <p className="text-sm text-muted-ink mb-4">This week's booked sessions</p>
       <div className="overflow-x-auto -mx-5 px-5 pb-4">
         <div className="flex gap-2 min-w-[500px]">

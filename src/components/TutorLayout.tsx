@@ -29,7 +29,7 @@ export const TutorLayout = ({ children }: { children: ReactNode }) => {
       </AnimatePresence>
       <Footer />
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[392px]">
-        <nav className="bg-surface rounded-[20px] shadow-float border border-hairline flex items-center justify-around px-2 py-2" aria-label="Tutor navigation">
+        <nav className="bg-surface rounded-xl shadow-float border border-hairline flex items-center justify-around px-2 py-2" aria-label="Tutor navigation">
           {tabs.map(tab => {
             const active = location.pathname === tab.path;
             return (
@@ -39,7 +39,7 @@ export const TutorLayout = ({ children }: { children: ReactNode }) => {
                   className={`flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-colors ${active ? "text-accent" : "text-muted-ink"}`}
                 >
                   <tab.icon size={22} strokeWidth={active ? 2.2 : 1.8} />
-                  <span className="text-[11px] font-body font-medium">{tab.label}</span>
+                  <span className="text-caption font-body font-medium">{tab.label}</span>
                 </motion.div>
               </Link>
             );

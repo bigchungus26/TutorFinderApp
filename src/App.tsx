@@ -26,6 +26,7 @@ import NotFound from "@/pages/NotFound";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfUse from "@/pages/TermsOfUse";
 import SplashPage from "@/pages/SplashPage";
+import DesignSystem from "@/pages/DesignSystem";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const AppRoutes = () => {
       } />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/terms" element={<TermsOfUse />} />
+      <Route path="/design-system" element={<DesignSystem />} />
 
       {/* Role selection (logged in but not onboarded) */}
       <Route path="/choose-role" element={

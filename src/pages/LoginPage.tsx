@@ -34,7 +34,7 @@ const LoginPage = () => {
         <div className="mb-4">
           <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
         </div>
-        <h1 className="font-display text-[28px] leading-tight font-medium mb-2">Welcome back.</h1>
+        <h1 className="text-display-lg mb-2">Welcome back.</h1>
         <p className="text-muted-ink text-base mb-8">Sign in to continue.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4 flex-1">

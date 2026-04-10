@@ -9,7 +9,7 @@ const PrivacyPolicy = () => {
         Back
       </Link>
 
-      <h1 className="font-display text-[28px] leading-tight font-medium mb-2">Privacy Policy</h1>
+      <h1 className="text-display-lg mb-2">Privacy Policy</h1>
       <p className="text-sm text-muted-ink mb-8">Last updated: April 10, 2026</p>
 
       <div className="space-y-6 text-sm leading-relaxed text-foreground">

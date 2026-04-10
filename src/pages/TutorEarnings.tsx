@@ -15,7 +15,7 @@ const TutorEarnings = () => {
 
   return (
     <div className="px-5 pt-14 pb-4">
-      <h1 className="font-display text-[22px] font-medium mb-5">Earnings</h1>
+      <h1 className="font-display text-display-md mb-5">Earnings</h1>
       <div className="bg-surface rounded-xl border border-hairline p-6 text-center mb-6">
         <div className="text-sm text-muted-ink mb-1">This month</div>
         <div className="font-display text-4xl font-medium">${totalThisMonth}</div>
