@@ -204,18 +204,18 @@
   display: none;
 }
 
-/* Phone frame on desktop */
-@media (min-width: 480px) {
+/* Desktop layout adjustments */
+@media (min-width: 768px) {
   body {
     background: hsl(40 33% 97%);
   }
   #root {
-    max-width: 440px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     min-height: 100vh;
-    background: hsl(40 33% 97%);
+    background: transparent;
+    box-shadow: none;
     position: relative;
-    box-shadow: var(--shadow-float);
   }
 }
 
