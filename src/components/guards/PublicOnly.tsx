@@ -8,7 +8,7 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { getRoleAppPath } from "@/lib/rolePreference";
+import { getSelectedRole, getRoleAppPath } from "@/lib/rolePreference";
 
 type PublicOnlyProps = {
   children: ReactNode;
@@ -34,10 +34,8 @@ const PublicOnly = ({ children }: PublicOnlyProps) => {
 
   // Authenticated but not fully onboarded → redirect to onboarding flow
   if (user && !profile?.onboarded_at) {
-    const destination = profile?.role
-      ? `/onboarding/${profile.role}`
-      : "/choose-role";
-    return <Navigate to={destination} replace />;
+    const role = profile?.role ?? getSelectedRole() ?? "student";
+    return <Navigate to={`/onboarding/${role}`} replace />;
   }
 
   // Unauthenticated — render the public page
