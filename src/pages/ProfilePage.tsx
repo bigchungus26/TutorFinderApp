@@ -2,7 +2,7 @@
 // Teachme — ProfilePage (Student)
 // Sections: header, quick stats, my courses, saved tutors row, settings.
 // ============================================================
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -221,15 +221,17 @@ function CoursesEditSheet({ studentId, currentCourseIds, universityId, onClose }
   const setStudentCourses = useSetStudentCourses();
   const [courses, setCourses] = useState<{ id: string; code: string; name: string }[]>([]);
 
-  // Fetch courses inline
-  useState(() => {
+  // Fetch courses on mount
+  useEffect(() => {
+    let cancelled = false;
     (async () => {
       let query = supabase.from("courses").select("id, code, name").order("code");
       if (universityId) query = query.eq("university_id", universityId);
       const { data } = await query;
-      if (data) setCourses(data);
+      if (!cancelled && data) setCourses(data);
     })();
-  });
+    return () => { cancelled = true; };
+  }, [universityId]);
 
   const filtered = courses.filter(
     (c) =>
