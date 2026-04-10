@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — TutorProfileSettings
+// Tutr — TutorProfileSettings
 // Tutor's own profile page: header skeleton on load, courses
 // taught, availability link, dark mode toggle, save with toast.
 // ============================================================

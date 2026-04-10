@@ -1,5 +1,5 @@
 // ── Sonner Toaster ─────────────────────────────────────────────
-// Styled to match Teachme design system:
+// Styled to match Tutr design system:
 // - Surface bg, hairline border, shadow-float
 // - Fraunces title, Inter description
 // - top-center on mobile, bottom-right on desktop

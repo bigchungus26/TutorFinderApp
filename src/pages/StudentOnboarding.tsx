@@ -12,7 +12,7 @@ import { toast } from "@/components/ui/sonner";
 import { variants } from "@/lib/motion";
 
 // ── Constants ──────────────────────────────────────────────────
-const STORAGE_KEY = "teachme:onboarding:student";
+const STORAGE_KEY = "tutr:onboarding:student";
 
 const MAJORS = [
   "Computer Science", "Business", "Engineering", "Pre-med",
@@ -427,7 +427,7 @@ const StudentOnboarding = () => {
       <SuccessOverlay
         visible={showSuccess}
         title="You're all set!"
-        description="Welcome to Teachme. Let's find you a tutor."
+        description="Welcome to Tutr. Let's find you a tutor."
         onDismiss={() => navigate("/")}
       />
 

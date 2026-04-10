@@ -10,9 +10,9 @@ interface PageMetaProps {
   image?: string;
 }
 
-const DEFAULT_DESCRIPTION = "Find peer tutors at AUB, LAU, and NDU. Learn from students who've been there.";
+const DEFAULT_DESCRIPTION = "Find peer tutors at AUB, LAU, and NDU — by students who've aced your courses.";
 const DEFAULT_IMAGE = "https://teachme.app/og-default.png"; // placeholder
-const SITE_NAME = "Teachme";
+const SITE_NAME = "Tutr";
 
 function setMeta(name: string, content: string, property = false) {
   const attr = property ? "property" : "name";

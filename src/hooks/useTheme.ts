@@ -1,8 +1,8 @@
 // ============================================================
 // useTheme — Theme management hook (Part H)
-// Teachme tutoring app
+// Tutr app
 //
-// Reads/writes "teachme:theme" from localStorage.
+// Reads/writes "tutr:theme" from localStorage.
 // Values: "auto" | "light" | "dark"
 //
 // "auto" → follows prefers-color-scheme media query.
@@ -18,7 +18,7 @@ import { useState, useEffect, useCallback } from "react";
 
 export type ThemePreference = "auto" | "light" | "dark";
 
-const STORAGE_KEY = "teachme:theme";
+const STORAGE_KEY = "tutr:theme";
 
 function getStoredPreference(): ThemePreference {
   if (typeof window === "undefined") return "auto";

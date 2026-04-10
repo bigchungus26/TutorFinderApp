@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — ProfilePage (Student)
+// Tutr — ProfilePage (Student)
 // Sections: header, quick stats, my courses, saved tutors row, settings.
 // ============================================================
 import { useState, useEffect, useCallback } from "react";
@@ -25,26 +25,41 @@ import { useSessions } from "@/hooks/useSupabaseQuery";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { variants, transitions } from "@/lib/motion";
 import { toast, toastError } from "@/components/ui/sonner";
+import { CountUp } from "@/components/CountUp";
 import { supabase } from "@/lib/supabase";
 
 // ── Helpers ────────────────────────────────────────────────────
 function Avatar({ src, name, size = 96 }: { src?: string | null; name?: string; size?: number }) {
+  const [imgError, setImgError] = useState(false);
   const initials = name
     ? name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     : "?";
-  return src ? (
-    <img
-      src={src}
-      alt={name ?? "Avatar"}
-      style={{ width: size, height: size }}
-      className="rounded-full object-cover flex-shrink-0"
-    />
-  ) : (
+  const dicebearUrl = name
+    ? `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=e8f5ee,fbeee3,f5e6d3&fontFamily=serif`
+    : null;
+  const avatarSrc = src && !src.includes("pravatar.cc") && !imgError ? src : dicebearUrl;
+
+  return (
     <div
       style={{ width: size, height: size }}
-      className="rounded-full bg-accent-soft flex items-center justify-center text-accent text-display-sm font-semibold flex-shrink-0"
+      className="rounded-full flex-shrink-0 ring-4 ring-accent-soft ring-offset-2 ring-offset-background"
     >
-      {initials}
+      {avatarSrc ? (
+        <img
+          src={avatarSrc}
+          alt={name ?? "Avatar"}
+          style={{ width: size, height: size }}
+          className="rounded-full object-cover w-full h-full"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <div
+          style={{ width: size, height: size }}
+          className="rounded-full bg-accent-soft flex items-center justify-center text-accent text-display-sm font-semibold"
+        >
+          {initials}
+        </div>
+      )}
     </div>
   );
 }
@@ -366,9 +381,9 @@ interface SettingsRowProps {
 function SettingsRow({ icon: Icon, label, sublabel, onClick, destructive, highlight, right }: SettingsRowProps) {
   return (
     <motion.button
-      whileTap={{ scale: 0.98 }}
+      whileTap={{ scale: 0.99, backgroundColor: highlight ? "hsl(152 50% 93%)" : destructive ? "hsl(0 84% 97%)" : "hsl(40 20% 96%)" }}
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3.5 text-left ${destructive ? "text-destructive" : ""}`}
+      className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${highlight ? "bg-accent-soft/50 py-4" : ""} ${destructive ? "text-destructive" : ""}`}
     >
       <Icon
         size={20}
@@ -436,10 +451,12 @@ const ProfilePage = () => {
             name={profile?.full_name}
             size={96}
           />
-          <h1 className="text-display-md text-ink mt-3 mb-1">
+          <h1 className="text-display-md text-ink mt-4 mb-1">
             {profile?.full_name ?? "Student"}
           </h1>
-          <div className="flex items-center gap-2 mb-3">
+          {/* Accent divider punctuation */}
+          <div className="w-6 h-0.5 rounded-full bg-accent mb-2" />
+          <div className="flex items-center gap-2 mb-1.5">
             {uni && (
               <span
                 className="text-caption px-2.5 py-0.5 rounded-pill font-medium"
@@ -454,6 +471,14 @@ const ProfilePage = () => {
               </span>
             )}
           </div>
+          {/* Italic micro-stat */}
+          {profile?.created_at && (
+            <p className="text-caption text-ink-muted italic mb-3">
+              Member since{" "}
+              {new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              {uni ? ` · ${uni.short_name}` : ""}
+            </p>
+          )}
           <motion.button
             whileTap={{ scale: 0.96 }}
             onClick={() => setEditProfileOpen(true)}
@@ -468,7 +493,7 @@ const ProfilePage = () => {
         <div className="bg-surface rounded-xl border border-hairline p-4 mb-5">
           <div className="flex items-center justify-around">
             <div className="text-center">
-              <p className="text-display-sm text-ink font-semibold">{completedCount}</p>
+              <CountUp value={completedCount} className="text-display-sm text-ink font-semibold font-tabular" />
               <p className="text-caption text-ink-muted mt-0.5">Sessions</p>
             </div>
             <div className="w-px h-8 bg-hairline" />
@@ -477,12 +502,12 @@ const ProfilePage = () => {
               onClick={() => navigate("/saved")}
               className="text-center"
             >
-              <p className="text-display-sm text-ink font-semibold">{savedTutors.length}</p>
+              <CountUp value={savedTutors.length} className="text-display-sm text-ink font-semibold font-tabular" />
               <p className="text-caption text-ink-muted mt-0.5">Saved</p>
             </motion.button>
             <div className="w-px h-8 bg-hairline" />
             <div className="text-center">
-              <p className="text-display-sm text-ink font-semibold">{studentCourses.length}</p>
+              <CountUp value={studentCourses.length} className="text-display-sm text-ink font-semibold font-tabular" />
               <p className="text-caption text-ink-muted mt-0.5">Courses</p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 // ============================================================
-// SearchPage — Upgraded (Part F)
-// Teachme tutoring app
+// SearchPage — Upgraded (Part F, Polish Pass 11)
+// Tutr app
 // Features: debounced input, recent searches, advanced filter
 // sheet, active filter pills, empty state with course request,
 // stagger animation on results.
@@ -13,9 +13,10 @@ import {
   SlidersHorizontal,
   X,
   Star,
+  Clock,
 } from "lucide-react";
 import { useUniversity } from "@/contexts/UniversityContext";
-import { useCourses, useTutors } from "@/hooks/useSupabaseQuery";
+import { useCourses, useTutors, useUniversities } from "@/hooks/useSupabaseQuery";
 import { TutorCard } from "@/components/TutorCard";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
@@ -30,7 +31,7 @@ import {
 } from "@/components/ui/sheet";
 
 // ── Constants ──────────────────────────────────────────────────
-const RECENT_KEY = "teachme:recent-searches";
+const RECENT_KEY = "tutr:recent-searches";
 const MAX_RECENT = 8;
 
 type FilterTab = "All" | "Courses" | "Tutors";
@@ -398,6 +399,11 @@ const SearchPage = () => {
     setQuery(term);
   };
 
+  const handleClearAllRecent = () => {
+    localStorage.removeItem(RECENT_KEY);
+    setRecentSearches([]);
+  };
+
   // ── Filter / UI state ──────────────────────────────────────
   const [activeTab, setActiveTab] = useState<FilterTab>(
     searchParams.get("subject") ? "Courses" : "All"
@@ -410,6 +416,7 @@ const SearchPage = () => {
   // ── Data ───────────────────────────────────────────────────
   const { data: courses = [] } = useCourses(selectedUniversity);
   const { data: tutors = [] } = useTutors(selectedUniversity);
+  const { data: universities = [] } = useUniversities();
 
   // ── Filtered courses ───────────────────────────────────────
   const filteredCourses = useMemo(() => {
@@ -542,6 +549,9 @@ const SearchPage = () => {
     Tutors: tutorCount,
   };
 
+  const hasResults =
+    filteredCourses.length > 0 || filteredTutors.length > 0;
+
   const noResults =
     filteredCourses.length === 0 && filteredTutors.length === 0 && !!query;
 
@@ -552,15 +562,15 @@ const SearchPage = () => {
       {/* ── Search input ────────────────────────────────────── */}
       <div className="relative mb-3">
         <SearchIcon
-          size={18}
+          size={20}
           className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
         />
         <input
           autoFocus
           value={rawQuery}
           onChange={(e) => handleInputChange(e.target.value)}
-          placeholder="Search courses, tutors, or codes…"
-          className="w-full pl-10 pr-10 py-3.5 rounded-xl border border-hairline bg-surface text-body text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
+          placeholder="Search tutors, courses..."
+          className="w-full h-14 pl-11 pr-10 rounded-xl border border-hairline bg-surface text-body text-ink placeholder:text-ink-subtle focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
         />
         {rawQuery && (
           <button
@@ -622,6 +632,67 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
+      {/* ── Recent searches (shown when input is empty) ───── */}
+      <AnimatePresence>
+        {!rawQuery && recentSearches.length > 0 && (
+          <motion.div
+            variants={variants.fadeSlideUp}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="mb-5"
+          >
+            {/* Header row with label + clear button */}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-overline text-ink-muted">RECENT</p>
+              <button
+                onClick={handleClearAllRecent}
+                className="text-caption text-ink-muted hover:text-ink transition-colors"
+              >
+                Clear
+              </button>
+            </div>
+
+            {/* Staggered chips */}
+            <motion.div
+              variants={variants.staggerChildren}
+              initial="hidden"
+              animate="visible"
+              className="flex flex-wrap gap-2"
+            >
+              {recentSearches.map((term) => (
+                <motion.div
+                  key={term}
+                  variants={variants.staggerItem}
+                  className="inline-flex items-center gap-0.5"
+                >
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => handlePickRecent(term)}
+                    className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-l-pill bg-surface border border-hairline text-body-sm text-ink hover:bg-muted transition-colors"
+                  >
+                    <Clock size={12} className="text-ink-muted flex-shrink-0" />
+                    {term}
+                  </motion.button>
+                  <button
+                    onClick={() => handleRemoveRecent(term)}
+                    className="pl-1.5 pr-3 py-1.5 rounded-r-pill border border-l-0 border-hairline bg-surface text-ink-subtle hover:text-ink transition-colors"
+                    aria-label={`Remove "${term}" from recent`}
+                  >
+                    <X size={11} />
+                  </button>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── RESULTS overline + filter tabs ─────────────────── */}
+      {hasResults && (
+        <p className="text-overline text-ink-muted mb-2">RESULTS</p>
+      )}
+
       {/* ── Filter tabs with count badges ──────────────────── */}
       <div className="flex gap-1 mb-5">
         {FILTER_TABS.map((tab) => {
@@ -654,43 +725,6 @@ const SearchPage = () => {
         })}
       </div>
 
-      {/* ── Recent searches (shown when input is empty) ───── */}
-      <AnimatePresence>
-        {!rawQuery && recentSearches.length > 0 && (
-          <motion.div
-            variants={variants.fadeSlideUp}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="mb-5"
-          >
-            <p className="text-caption text-ink-subtle uppercase tracking-wider mb-2.5">
-              Recent
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {recentSearches.map((term) => (
-                <div key={term} className="inline-flex items-center gap-0.5">
-                  <motion.button
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => handlePickRecent(term)}
-                    className="pl-3 pr-1.5 py-1.5 rounded-l-pill border border-hairline bg-surface text-label text-ink hover:bg-muted transition-colors"
-                  >
-                    {term}
-                  </motion.button>
-                  <button
-                    onClick={() => handleRemoveRecent(term)}
-                    className="pl-1.5 pr-3 py-1.5 rounded-r-pill border border-l-0 border-hairline bg-surface text-ink-subtle hover:text-ink transition-colors"
-                    aria-label={`Remove "${term}" from recent`}
-                  >
-                    <X size={11} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* ── Courses section ────────────────────────────────── */}
       {(activeTab === "All" || activeTab === "Courses") &&
         filteredCourses.length > 0 && (
@@ -708,20 +742,28 @@ const SearchPage = () => {
             >
               {filteredCourses
                 .slice(0, activeTab === "All" ? 4 : undefined)
-                .map((c) => (
-                  <motion.button
-                    key={c.id}
-                    variants={variants.staggerItem}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate(`/course/${c.id}`)}
-                    className="w-full bg-surface rounded-xl border border-hairline p-4 text-left flex items-center gap-3"
-                  >
-                    <div className="flex-1">
-                      <div className="text-label text-ink font-medium">{c.code}</div>
-                      <div className="text-body-sm text-ink-muted">{c.name}</div>
-                    </div>
-                  </motion.button>
-                ))}
+                .map((c, i) => {
+                  const uni = universities.find((u) => u.id === c.university_id);
+                  return (
+                    <motion.div key={c.id} variants={variants.staggerItem} custom={i}>
+                      <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => navigate(`/course/${c.id}`)}
+                        className="w-full relative overflow-hidden bg-surface rounded-xl border border-hairline p-4 text-left flex items-center gap-3"
+                      >
+                        {/* Left accent bar tinted by university color */}
+                        <div
+                          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
+                          style={{ backgroundColor: uni?.color ?? "#2fa86e" }}
+                        />
+                        <div className="flex-1 pl-4">
+                          <div className="text-label text-ink font-medium">{c.code}</div>
+                          <div className="text-body-sm text-ink-muted">{c.name}</div>
+                        </div>
+                      </motion.button>
+                    </motion.div>
+                  );
+                })}
             </motion.div>
           </div>
         )}
@@ -743,8 +785,8 @@ const SearchPage = () => {
             >
               {filteredTutors
                 .slice(0, activeTab === "All" ? 3 : undefined)
-                .map((t) => (
-                  <motion.div key={t.id} variants={variants.staggerItem}>
+                .map((t, i) => (
+                  <motion.div key={t.id} variants={variants.staggerItem} custom={i}>
                     <TutorCard tutor={t as any} />
                   </motion.div>
                 ))}

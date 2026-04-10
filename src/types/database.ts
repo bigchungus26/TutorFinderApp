@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Supabase Database Types
+// Tutr — Supabase Database Types
 // These types mirror the SQL schema in supabase/migrations/.
 // After connecting to Supabase, regenerate with:
 //   npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/database.ts

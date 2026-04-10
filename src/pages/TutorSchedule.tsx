@@ -29,6 +29,28 @@ function slotToKey(slot: AvailabilitySlot): string {
   return cellKey(dayIdx, hourIdx);
 }
 
+// ── Week date helpers ──────────────────────────────────────────
+/** Returns the Monday of the current week as a Date (local time). */
+function getMonday(now: Date): Date {
+  const d = new Date(now);
+  const day = d.getDay(); // 0=Sun … 6=Sat
+  // Shift so Mon=0
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Returns an array of 7 Date objects Mon–Sun for the current week. */
+function getCurrentWeekDates(): Date[] {
+  const monday = getMonday(new Date());
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+}
+
 // ── Helpers ────────────────────────────────────────────────────
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -200,74 +222,78 @@ function AvailabilityGrid({ tutorId }: { tutorId: string }) {
 
   const activeCount = Object.values(localGrid).filter(v => v.active).length;
 
+  // Week dates for column headers
+  const weekDates = getCurrentWeekDates();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isToday = (date: Date) => date.getTime() === today.getTime();
+
   return (
     <div>
-      {/* Legend */}
-      <div className="flex items-center gap-4 mb-4 text-caption text-ink-muted">
-        <div className="flex items-center gap-1.5">
-          <div className="w-4 h-4 rounded-sm bg-accent-soft border border-accent" />
-          <span>Available</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-4 h-4 rounded-sm bg-surface border border-hairline" />
-          <span>Unavailable</span>
-        </div>
+      {/* Overline label */}
+      <p className="text-overline text-ink-muted mb-1">AVAILABILITY</p>
+
+      {/* Section title + slot count summary */}
+      <div className="flex items-baseline justify-between mb-4">
+        <h2 className="text-body font-semibold text-ink">Weekly schedule</h2>
+        <p className="text-caption text-ink-muted">
+          {activeCount} available slot{activeCount !== 1 ? "s" : ""} this week
+        </p>
       </div>
 
-      <div className="overflow-x-auto -mx-5 px-5">
-        <div className="min-w-[520px]">
-          {/* Day headers */}
-          <div className="grid gap-1 mb-1" style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}>
-            <div />
-            {DAYS.map(d => (
-              <div key={d} className="text-caption font-semibold text-ink-muted text-center py-1">
-                {d}
-              </div>
-            ))}
-          </div>
+      {/* Horizontal scrolling week view */}
+      <div className="overflow-x-auto scrollbar-hide flex gap-2 pb-2 -mx-5 px-5">
+        {DAYS.map((day, dayIdx) => {
+          const date = weekDates[dayIdx];
+          const todayCol = isToday(date);
 
-          {/* Hour rows */}
-          {HOURS_DISPLAY.map((label, hi) => (
+          return (
             <div
-              key={hi}
-              className="grid gap-1 mb-1"
-              style={{ gridTemplateColumns: "48px repeat(7, 1fr)" }}
+              key={day}
+              className={`min-w-[80px] flex flex-col gap-2 ${todayCol ? "bg-accent-soft rounded-xl p-2" : "p-2"}`}
             >
-              <div className="text-caption text-ink-muted flex items-center justify-end pr-2 whitespace-nowrap text-right">
-                {label}
+              {/* Column header */}
+              <div className="text-center mb-1">
+                <p className="text-overline text-ink-muted">{day}</p>
+                <p className={`font-display text-2xl font-medium leading-tight ${todayCol ? "text-accent" : "text-ink"}`}>
+                  {date.getDate()}
+                </p>
               </div>
-              {DAYS.map((_, di) => {
-                const key = cellKey(di, hi);
+
+              {/* Hour pills */}
+              {HOURS_DISPLAY.map((label, hourIdx) => {
+                const key = cellKey(dayIdx, hourIdx);
                 const { active } = localGrid[key] ?? { active: false };
+
                 return (
                   <motion.button
-                    key={di}
-                    whileTap={{ scale: 0.88 }}
-                    onClick={() => handleToggle(di, hi)}
-                    className={`h-8 rounded-md border transition-all duration-150 ${
-                      active
-                        ? "bg-accent-soft border-accent shadow-sm"
-                        : "bg-surface border-hairline hover:bg-accent-soft/40"
-                    }`}
-                    aria-label={`${DAYS[di]} ${label} — ${active ? "remove" : "add"} slot`}
+                    key={hourIdx}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleToggle(dayIdx, hourIdx)}
+                    aria-label={`${day} ${label} — ${active ? "remove" : "add"} slot`}
                     aria-pressed={active}
-                  />
+                    className={
+                      active
+                        ? "bg-accent text-accent-foreground rounded-lg py-2 px-2 text-center cursor-pointer text-xs font-medium font-display"
+                        : "border border-hairline rounded-lg py-2 px-2 text-center cursor-pointer text-xs text-ink-subtle"
+                    }
+                  >
+                    {label}
+                  </motion.button>
                 );
               })}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      <p className="text-caption text-ink-muted text-center mt-3 mb-4">
-        {activeCount} slot{activeCount !== 1 ? "s" : ""} selected
-      </p>
-
+      {/* Save button */}
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={handleSaveAll}
         disabled={!dirty && !upsertAvailability.isPending}
-        className="w-full h-12 rounded-xl bg-accent text-accent-foreground text-label font-semibold disabled:opacity-40 transition-opacity"
+        className="mt-6 w-full h-12 rounded-xl bg-accent text-accent-foreground text-label font-semibold disabled:opacity-40 transition-opacity"
       >
         {upsertAvailability.isPending ? "Saving…" : "Save changes"}
       </motion.button>

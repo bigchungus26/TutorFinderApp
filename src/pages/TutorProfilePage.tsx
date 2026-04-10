@@ -1,6 +1,6 @@
 // ============================================================
 // TutorProfilePage — Full Redesign (Part E)
-// Teachme tutoring app
+// Tutr app
 // ============================================================
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";

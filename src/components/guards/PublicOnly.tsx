@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — PublicOnly Guard
+// Tutr — PublicOnly Guard
 // Wraps routes that only unauthenticated users should see
 // (/welcome, /login, /signup). If the user is fully onboarded,
 // they are redirected to their home. Auth loading shows a dot.

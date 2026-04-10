@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Routing Resolution
+// Tutr — Routing Resolution
 // Pure function: maps auth/profile/network state → route string.
 // No side effects. No React imports. Safe to call anywhere.
 // ============================================================

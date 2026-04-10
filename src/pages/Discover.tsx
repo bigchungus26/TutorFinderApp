@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Discover Page (personalized home feed)
+// Tutr — Discover Page (personalized home feed)
 // ============================================================
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,6 +19,7 @@ import {
   PenTool,
   Atom,
   Landmark,
+  Sparkles,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -126,10 +127,11 @@ function useNewTutors(universityId: string) {
 // ── Section wrapper component ─────────────────────────────────
 interface SectionProps {
   title: string;
+  overline?: string;
   children: React.ReactNode;
 }
 
-function Section({ title, children }: SectionProps) {
+function Section({ title, overline, children }: SectionProps) {
   return (
     <motion.div
       variants={variants.staggerChildren}
@@ -137,11 +139,54 @@ function Section({ title, children }: SectionProps) {
       animate="visible"
       className="mb-8"
     >
+      {overline && (
+        <motion.p variants={variants.staggerItem} className="text-overline text-ink-muted mb-1">
+          {overline}
+        </motion.p>
+      )}
       <motion.h2 variants={variants.staggerItem} className="text-display-sm mb-3">
         {title}
       </motion.h2>
       {children}
     </motion.div>
+  );
+}
+
+// ── Subject tile component ────────────────────────────────────
+interface SubjectTileProps {
+  subject: string;
+  onNavigate: () => void;
+}
+
+function SubjectTile({ subject, onNavigate }: SubjectTileProps) {
+  const [pressing, setPressing] = useState(false);
+  const Icon = subjectIcons[subject] ?? BookOpen;
+
+  const handleTap = () => {
+    setPressing(true);
+    setTimeout(() => {
+      setPressing(false);
+      onNavigate();
+    }, 200);
+  };
+
+  return (
+    <motion.button
+      variants={variants.staggerItem}
+      whileTap={{ scale: 0.96 }}
+      onClick={handleTap}
+      className={`rounded-xl border border-hairline p-4 flex flex-col justify-between text-left h-28 transition-colors duration-150 ${
+        pressing ? "bg-accent-soft" : "bg-surface"
+      }`}
+      aria-label={`Browse ${subject}`}
+    >
+      <Icon size={32} className="text-accent flex-shrink-0" />
+      <div>
+        <span className="font-display font-medium text-[18px] leading-snug line-clamp-1 block">
+          {subject}
+        </span>
+      </div>
+    </motion.button>
   );
 }
 
@@ -195,7 +240,7 @@ const DiscoverPage = () => {
     .sort((a, b) => (b.tutor_stats?.rating ?? 0) - (a.tutor_stats?.rating ?? 0))
     .slice(0, 5);
 
-  const firstName = profile?.full_name?.split(" ")[0] ?? "there";
+  const timeOfDay = getGreeting();
 
   // ── Pull-to-refresh handlers ──────────────────────────────
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
@@ -288,14 +333,22 @@ const DiscoverPage = () => {
             variants={variants.fadeSlideDown}
             initial="hidden"
             animate="visible"
-            className="flex items-center justify-between mb-1"
+            className="flex items-start justify-between mb-1"
           >
             <div className="flex-1 min-w-0">
-              <h1 className="text-display-md truncate">
-                Good {getGreeting()}, {firstName}
+              <h1 className="text-display-hero leading-tight">
+                Good {timeOfDay},{" "}
+                <span style={{ fontStyle: "italic" }}>
+                  {profile?.full_name?.split(" ")[0] ?? "there"}
+                </span>
               </h1>
+              {uni?.short_name && (
+                <p className="text-caption text-ink-muted mt-1">
+                  240+ tutors at {uni.short_name}
+                </p>
+              )}
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+            <div className="flex items-center gap-2 flex-shrink-0 ml-3 mt-1">
               {/* Notification bell with dot */}
               <div className="relative">
                 <button
@@ -336,16 +389,49 @@ const DiscoverPage = () => {
             animate="visible"
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/search")}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg border border-hairline bg-surface mb-8 text-left"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg border border-hairline bg-surface mb-6 text-left"
             aria-label="Open search"
           >
             <Search size={18} className="text-ink-subtle flex-shrink-0" />
             <span className="text-body-sm text-ink-subtle">Search courses, tutors…</span>
           </motion.button>
 
-          {/* ── 4. Tutors for your courses ──────────────────── */}
+          {/* ── 4. Contextual hero card ─────────────────────── */}
+          <motion.div
+            variants={variants.fadeSlideUp}
+            initial="hidden"
+            animate="visible"
+            className="mb-8"
+          >
+            <motion.button
+              whileTap={{ scale: 0.99 }}
+              onClick={() => navigate("/search")}
+              className="w-full bg-surface rounded-xl border border-hairline p-5 text-left flex items-center gap-4 transition-shadow hover:shadow-[0_0_0_2px_hsl(152_60%_42%_/_0.15)]"
+              aria-label="Find a tutor"
+            >
+              {/* Icon circle */}
+              <div className="w-12 h-12 rounded-full bg-accent-soft flex items-center justify-center flex-shrink-0">
+                <Sparkles size={24} className="text-accent" />
+              </div>
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <p className="text-label leading-snug mb-0.5">
+                  Your next session starts here.
+                </p>
+                <p className="text-body-sm text-ink-muted">
+                  Browse top-rated tutors at your university.
+                </p>
+              </div>
+              {/* CTA */}
+              <span className="text-body-sm font-medium text-accent flex-shrink-0">
+                Find a tutor
+              </span>
+            </motion.button>
+          </motion.div>
+
+          {/* ── 5. Tutors for your courses ──────────────────── */}
           {(hasEnrolledCourses || studentCoursesLoading || tutorsForCoursesLoading) && (
-            <Section title="Tutors for your courses">
+            <Section title="Tutors for your courses" overline="FOR YOU">
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
                 {tutorsForCoursesLoading ? (
                   <>
@@ -378,8 +464,11 @@ const DiscoverPage = () => {
             </Section>
           )}
 
-          {/* ── 5. Top-rated at [uni] ───────────────────────── */}
-          <Section title={`Top-rated at ${uni?.short_name ?? "your university"}`}>
+          {/* ── 6. Top-rated at [uni] ───────────────────────── */}
+          <Section
+            title={`Top-rated at ${uni?.short_name ?? "your university"}`}
+            overline="TOP RATED"
+          >
             {tutorsLoading ? (
               <div className="space-y-3">
                 <SkeletonList count={4} component={TutorCardSkeleton} />
@@ -399,9 +488,9 @@ const DiscoverPage = () => {
             )}
           </Section>
 
-          {/* ── 6. Trending this week ────────────────────────── */}
+          {/* ── 7. Trending this week ────────────────────────── */}
           {trendingTutors.length > 0 && (
-            <Section title="Trending this week">
+            <Section title="Trending this week" overline="TRENDING">
               <div className="space-y-3">
                 {trendingTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
@@ -412,9 +501,9 @@ const DiscoverPage = () => {
             </Section>
           )}
 
-          {/* ── 7. New tutors at [uni] ──────────────────────── */}
+          {/* ── 8. New tutors at [uni] ──────────────────────── */}
           {newTutors.length > 0 && (
-            <Section title={`New tutors at ${uni?.short_name ?? "your university"}`}>
+            <Section title={`New tutors at ${uni?.short_name ?? "your university"}`} overline="NEW">
               <div className="space-y-3">
                 {newTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
@@ -425,8 +514,8 @@ const DiscoverPage = () => {
             </Section>
           )}
 
-          {/* ── 8. Popular courses ──────────────────────────── */}
-          <Section title="Popular courses">
+          {/* ── 9. Popular courses ──────────────────────────── */}
+          <Section title="Popular courses" overline="BROWSE">
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
               {coursesLoading ? (
                 <>
@@ -465,33 +554,24 @@ const DiscoverPage = () => {
             </div>
           </Section>
 
-          {/* ── 9. Browse by subject ────────────────────────── */}
+          {/* ── 10. Browse by subject ───────────────────────── */}
           {(subjects.length > 0 || subjectsLoading) && (
-            <Section title="Browse by subject">
+            <Section title="Browse by subject" overline="EXPLORE">
               {subjectsLoading ? (
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-2 gap-3">
                   <SkeletonList count={6} component={SubjectTileSkeleton} />
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-2.5">
-                  {subjects.map((subject) => {
-                    const Icon = subjectIcons[subject] ?? BookOpen;
-                    return (
-                      <motion.button
-                        key={subject}
-                        variants={variants.staggerItem}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() =>
-                          navigate(`/search?subject=${encodeURIComponent(subject)}`)
-                        }
-                        className="bg-surface rounded-xl border border-hairline p-4 flex items-center gap-3 text-left"
-                        aria-label={`Browse ${subject}`}
-                      >
-                        <Icon size={20} className="text-ink-muted flex-shrink-0" />
-                        <span className="text-label truncate">{subject}</span>
-                      </motion.button>
-                    );
-                  })}
+                <div className="grid grid-cols-2 gap-3">
+                  {subjects.map((subject) => (
+                    <SubjectTile
+                      key={subject}
+                      subject={subject}
+                      onNavigate={() =>
+                        navigate(`/search?subject=${encodeURIComponent(subject)}`)
+                      }
+                    />
+                  ))}
                 </div>
               )}
             </Section>

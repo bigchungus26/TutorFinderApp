@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — BookingSheet (C3)
+// Tutr — BookingSheet (C3)
 // End-to-end booking bottom sheet: 3-step flow.
 //   Step 1: Pick details (slot, course, duration, location)
 //   Step 2: Optional message to tutor

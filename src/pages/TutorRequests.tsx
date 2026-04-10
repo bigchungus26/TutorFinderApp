@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — TutorRequests (Tutor view)
+// Tutr — TutorRequests (Tutor view)
 // Pending session requests from students. Accept / Decline with
 // CardSuccessOverlay, stagger animation, pull-to-refresh.
 // ============================================================

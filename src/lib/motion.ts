@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Motion Primitives
+// Tutr — Motion Primitives
 // Reusable Framer Motion variants and transitions.
 // All values derived from DESIGN_SYSTEM.md tokens.
 // Every variant respects prefers-reduced-motion via a runtime check.

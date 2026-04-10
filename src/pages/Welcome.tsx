@@ -1,9 +1,11 @@
-// ── Welcome — Marketing Landing Page (Part K2) ─────────────────
+// ── Welcome — Landing Page (Part 3 of polish pass) ───────────
 // Shown only to logged-out users. Route guards redirect authed users.
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { variants } from "@/lib/motion";
+import { AmbientBackground } from "@/components/AmbientBackground";
 
 // ── Static mock tutor data ─────────────────────────────────────
 const MOCK_TUTORS = [
@@ -34,27 +36,18 @@ const MOCK_TUTORS = [
     courses: ["ECON201", "BUSN301", "STAT202"],
     hourly_rate: 20,
   },
-];
-
-const HOW_IT_WORKS = [
   {
-    number: "1",
-    label: "Find a tutor",
-    body: "Search by course, subject, or university. Filter by grade and rate.",
-  },
-  {
-    number: "2",
-    label: "Book a session",
-    body: "Pick a time that works for both of you. In-person or online.",
-  },
-  {
-    number: "3",
-    label: "Learn and grow",
-    body: "Have your session, leave a review, and keep improving.",
+    id: "4",
+    name: "Sara Frem",
+    university: "AUB",
+    rating: 4.9,
+    reviews: 27,
+    courses: ["BIOL301", "CHEM201", "STAT101"],
+    hourly_rate: 24,
   },
 ];
 
-// ── University badge color ─────────────────────────────────────
+// ── University badge styling ───────────────────────────────────
 function uniBadgeClass(uni: string) {
   if (uni === "AUB") return "bg-red-50 text-red-700 border border-red-100";
   if (uni === "LAU") return "bg-blue-50 text-blue-700 border border-blue-100";
@@ -62,40 +55,52 @@ function uniBadgeClass(uni: string) {
 }
 
 // ── Mock Tutor Card ────────────────────────────────────────────
-function MockTutorCard({ tutor }: { tutor: typeof MOCK_TUTORS[0] }) {
+function MockTutorCard({ tutor }: { tutor: (typeof MOCK_TUTORS)[0] }) {
   const initials = tutor.name
     .split(" ")
-    .map(w => w[0])
+    .map((w) => w[0])
     .slice(0, 2)
     .join("")
     .toUpperCase();
 
   return (
-    <div className="bg-surface rounded-2xl border border-hairline p-4 w-56 shrink-0 shadow-sm">
+    <div
+      className="bg-surface rounded-2xl border border-hairline p-4 shrink-0 shadow-sm"
+      style={{ width: 220 }}
+      aria-hidden="true"
+    >
       {/* Avatar + name */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-11 h-11 rounded-full bg-accent-soft flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-full bg-accent-soft flex items-center justify-center shrink-0">
           <span className="text-label font-semibold text-accent">{initials}</span>
         </div>
-        <div>
-          <p className="text-label font-semibold text-ink leading-tight">{tutor.name}</p>
-          <span className={`text-caption px-2 py-0.5 rounded-pill ${uniBadgeClass(tutor.university)}`}>
+        <div className="min-w-0">
+          <p className="text-label font-semibold text-ink leading-tight truncate">
+            {tutor.name}
+          </p>
+          <span
+            className={`text-caption px-2 py-0.5 rounded-pill inline-block mt-0.5 ${uniBadgeClass(tutor.university)}`}
+          >
             {tutor.university}
           </span>
         </div>
       </div>
 
-      {/* Rating */}
+      {/* Rating + rate */}
       <div className="flex items-center gap-1.5 mb-3">
-        <Star size={13} className="text-amber-400 fill-amber-400" />
-        <span className="text-label font-semibold text-ink">{tutor.rating.toFixed(1)}</span>
+        <Star size={12} className="text-amber-400 fill-amber-400 shrink-0" />
+        <span className="text-label font-semibold text-ink">
+          {tutor.rating.toFixed(1)}
+        </span>
         <span className="text-caption text-ink-muted">({tutor.reviews})</span>
-        <span className="text-caption text-ink-muted ml-auto">${tutor.hourly_rate}/hr</span>
+        <span className="text-caption text-ink-muted ml-auto whitespace-nowrap">
+          ${tutor.hourly_rate}/hr
+        </span>
       </div>
 
-      {/* Courses */}
+      {/* Course chips */}
       <div className="flex flex-wrap gap-1.5">
-        {tutor.courses.map(c => (
+        {tutor.courses.slice(0, 3).map((c) => (
           <span
             key={c}
             className="text-caption bg-accent-soft text-accent px-2 py-0.5 rounded-pill font-medium"
@@ -108,27 +113,59 @@ function MockTutorCard({ tutor }: { tutor: typeof MOCK_TUTORS[0] }) {
   );
 }
 
-// ── How-it-works step ─────────────────────────────────────────
-function HowStep({ number, label, body, delay }: {
-  number: string;
-  label: string;
-  body: string;
-  delay: number;
-}) {
+// ── Autoplaying carousel ───────────────────────────────────────
+// Uses CSS keyframe animation on a duplicated list for a seamless loop.
+function TutorCarousel() {
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const pauseAnimation = () => {
+    if (trackRef.current) {
+      trackRef.current.style.animationPlayState = "paused";
+    }
+  };
+
+  const resumeAnimation = () => {
+    if (trackRef.current) {
+      trackRef.current.style.animationPlayState = "running";
+    }
+  };
+
+  // Duplicate list for seamless looping
+  const items = [...MOCK_TUTORS, ...MOCK_TUTORS];
+
   return (
-    <motion.div
-      variants={variants.fadeSlideUp}
-      custom={delay}
-      className="flex items-start gap-4"
+    <div
+      className="relative overflow-hidden"
+      style={{ maskImage: "linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)" }}
     >
-      <div className="w-10 h-10 rounded-full bg-accent-soft flex items-center justify-center shrink-0">
-        <span className="text-label font-bold text-accent">{number}</span>
+      <style>{`
+        @keyframes scrollLeft {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        .carousel-track {
+          animation: scrollLeft 20s linear infinite;
+          will-change: transform;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .carousel-track {
+            animation: none;
+          }
+        }
+      `}</style>
+
+      <div
+        ref={trackRef}
+        className="carousel-track flex"
+        style={{ gap: 12, width: "max-content" }}
+        onTouchStart={pauseAnimation}
+        onTouchEnd={resumeAnimation}
+      >
+        {items.map((tutor, i) => (
+          <MockTutorCard key={`${tutor.id}-${i}`} tutor={tutor} />
+        ))}
       </div>
-      <div className="pt-1">
-        <p className="text-label font-semibold text-ink mb-0.5">{label}</p>
-        <p className="text-body-sm text-ink-muted">{body}</p>
-      </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -138,143 +175,147 @@ const WelcomePage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
-      {/* Abstract SVG background — top-right */}
-      <svg
-        className="absolute top-0 right-0 pointer-events-none"
-        width="220"
-        height="220"
-        viewBox="0 0 220 220"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle cx="180" cy="40" r="80" fill="hsl(152 50% 93%)" fillOpacity="0.55" />
-        <circle cx="220" cy="120" r="50" fill="hsl(152 50% 93%)" fillOpacity="0.3" />
-        <circle cx="140" cy="10" r="30" fill="hsl(152 50% 93%)" fillOpacity="0.4" />
-      </svg>
+      {/* Ambient animated background blobs */}
+      <AmbientBackground />
 
-      {/* ── Logo ──────────────────────────────────────────────── */}
-      <div className="px-5 pt-12 relative z-10">
+      {/* ── Logo wordmark ────────────────────────────────────── */}
+      <div className="px-6 pt-12 relative z-10">
         <motion.span
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: [0.2, 0, 0, 1] }}
-          className="text-display-sm text-ink"
+          transition={{ duration: 0.28, ease: [0.2, 0, 0, 1] }}
+          className="text-display-sm text-ink select-none"
         >
-          Teachme
+          Tutr
         </motion.span>
       </div>
 
-      {/* ── Hero ──────────────────────────────────────────────── */}
-      <motion.div
-        variants={variants.staggerChildren}
-        initial="hidden"
-        animate="visible"
-        className="px-5 pt-8 pb-6 relative z-10"
+      {/* ── Hero zone — top 60% of viewport ─────────────────── */}
+      {/*
+        Flex column that occupies roughly the top 60vh,
+        with the headline anchored toward the bottom of that zone.
+      */}
+      <div
+        className="relative z-10 flex flex-col justify-end px-6"
+        style={{ minHeight: "calc(60vh - 64px)", paddingBottom: "2rem" }}
       >
-        <motion.h1
-          variants={variants.fadeSlideUp}
-          className="text-display-xl text-ink mb-3 max-w-xs"
-        >
-          Learn from students who've been there.
-        </motion.h1>
-        <motion.p
-          variants={variants.fadeSlideUp}
-          className="text-body-sm text-ink-muted mb-4 max-w-xs"
-        >
-          Teachme connects you with peer tutors at AUB, LAU, and NDU.
-        </motion.p>
-
-        {/* Social proof */}
         <motion.div
-          variants={variants.fadeSlideUp}
-          className="flex items-center gap-2 text-caption text-ink-muted flex-wrap"
+          variants={variants.staggerChildren}
+          initial="hidden"
+          animate="visible"
         >
-          <span>240+ tutors</span>
-          <span>·</span>
-          <span>3 universities</span>
-          <span>·</span>
-          <span>Built in Lebanon</span>
-        </motion.div>
-      </motion.div>
+          {/* Headline */}
+          <motion.h1
+            variants={variants.fadeSlideUp}
+            className="text-ink mb-4"
+            style={{ maxWidth: 360 }}
+          >
+            {/*
+              Use text-display-hero (48px/52px Fraunces 400 -0.02em) on md+.
+              Fall back to text-display-xl on very small screens.
+              The <em> phrase is italic Fraunces.
+            */}
+            <span className="block text-display-xl sm:text-display-hero leading-tight">
+              Learn from students
+            </span>
+            <span className="block text-display-xl sm:text-display-hero leading-tight">
+              who've{" "}
+              <em
+                className="text-display-xl sm:text-display-hero"
+                style={{
+                  fontStyle: "italic",
+                  fontFamily: "'Fraunces', serif",
+                }}
+              >
+                been there.
+              </em>
+            </span>
+          </motion.h1>
 
-      {/* ── Sample tutor cards (horizontal scroll) ─────────────── */}
+          {/* Sub-headline — max 12 words */}
+          <motion.p
+            variants={variants.fadeSlideUp}
+            className="text-body text-ink-muted"
+            style={{ maxWidth: 320 }}
+          >
+            Peer tutors at AUB, LAU, and NDU. Students only.
+          </motion.p>
+        </motion.div>
+      </div>
+
+      {/* ── Tutor carousel ───────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.18, ease: [0.2, 0, 0, 1] }}
-        className="relative z-10 mb-8"
+        transition={{ duration: 0.32, delay: 0.2, ease: [0.2, 0, 0, 1] }}
+        className="relative z-10 py-6"
       >
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1">
-          {MOCK_TUTORS.map(tutor => (
-            <MockTutorCard key={tutor.id} tutor={tutor} />
-          ))}
-        </div>
-        {/* Fade-out right edge */}
-        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+        <TutorCarousel />
       </motion.div>
 
-      {/* ── How it works ───────────────────────────────────────── */}
-      <motion.div
-        variants={variants.staggerChildren}
-        initial="hidden"
-        animate="visible"
-        className="px-5 pb-8 relative z-10"
-      >
-        <motion.p
-          variants={variants.fadeSlideUp}
-          className="text-caption text-ink-muted uppercase tracking-wider mb-5 font-semibold"
-        >
-          How it works
-        </motion.p>
-
-        <div className="space-y-5">
-          {HOW_IT_WORKS.map((step, i) => (
-            <HowStep key={step.number} {...step} delay={i * 0.06} />
-          ))}
-        </div>
-      </motion.div>
-
-      {/* ── Footer ─────────────────────────────────────────────── */}
+      {/* ── Footer — minimal ─────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="px-5 pb-44 relative z-10"
+        transition={{ delay: 0.45, duration: 0.3 }}
+        className="relative z-10 px-6 pb-52 mt-auto"
       >
         <div className="flex items-center gap-2 text-caption text-ink-muted">
           <span>Made in Beirut</span>
-          <span>·</span>
-          <Link to="/privacy" className="hover:text-accent transition-colors">Privacy</Link>
-          <span>·</span>
-          <Link to="/terms" className="hover:text-accent transition-colors">Terms</Link>
+          <span aria-hidden="true">·</span>
+          <Link
+            to="/privacy"
+            className="hover:text-accent transition-colors"
+          >
+            Privacy
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link
+            to="/terms"
+            className="hover:text-accent transition-colors"
+          >
+            Terms
+          </Link>
         </div>
       </motion.div>
 
       {/* ── Sticky bottom action zone ──────────────────────────── */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-surface border-t border-hairline px-5 py-4 z-50">
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate("/signup?intent=student")}
-          className="w-full h-14 rounded-xl bg-accent text-accent-foreground text-label font-semibold"
-        >
-          Find a tutor
-        </motion.button>
-
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate("/signup?intent=tutor")}
-          className="w-full h-12 mt-2 rounded-xl border border-hairline bg-surface text-ink text-label font-semibold"
-        >
-          Become a tutor
-        </motion.button>
-
-        <div className="mt-3 text-center">
-          <Link
-            to="/login"
-            className="text-body-sm text-accent"
+      <div
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] z-50"
+        style={{
+          background:
+            "linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 28%)",
+          paddingTop: "2rem",
+        }}
+      >
+        <div className="px-5 pb-safe" style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}>
+          {/* Primary CTA */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/signup?intent=student")}
+            className="w-full h-14 rounded-xl bg-accent text-accent-foreground font-display font-medium text-base tracking-[-0.01em] transition-opacity active:opacity-90"
           >
-            Already have an account? Sign in
-          </Link>
+            Find a tutor
+          </motion.button>
+
+          {/* Secondary CTA — ghost text with arrow */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/signup?intent=tutor")}
+            className="w-full h-12 mt-2 text-center text-body text-ink-muted hover:text-ink transition-colors"
+          >
+            Become a tutor →
+          </motion.button>
+
+          {/* Sign-in link */}
+          <div className="mt-1 text-center">
+            <Link
+              to="/login"
+              className="text-caption text-accent hover:underline transition-colors"
+            >
+              Already have an account? Sign in
+            </Link>
+          </div>
         </div>
       </div>
     </div>

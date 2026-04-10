@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — RequireRole Guard
+// Tutr — RequireRole Guard
 // Enforces role-based access on top of RequireAuth.
 // If the authenticated user's role doesn't match the required
 // role, shows a toast and redirects to their correct home.

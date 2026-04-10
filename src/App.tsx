@@ -15,6 +15,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { TutorCardSkeleton } from "@/components/skeletons";
 import { initAuthListener } from "@/lib/authListener";
 import { useTheme } from "@/hooks/useTheme";
+import { AmbientBackground } from "@/components/AmbientBackground";
 
 // ── Lazy-load all pages for performance (J4) ─────────────────
 const WelcomePage = lazy(() => import("@/pages/Welcome"));
@@ -197,6 +198,8 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
+        {/* Ambient background sits behind everything at z-0 */}
+        <AmbientBackground />
         <OfflineBanner />
         <Sonner />
         <UniversityProvider>

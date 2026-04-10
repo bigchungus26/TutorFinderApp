@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Auth State Listener
+// Tutr — Auth State Listener
 // Call initAuthListener() once at app mount (inside BrowserRouter)
 // to wire up global sign-out handling.
 //

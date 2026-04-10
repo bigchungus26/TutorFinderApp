@@ -12,7 +12,7 @@ import { toast } from "@/components/ui/sonner";
 import { variants } from "@/lib/motion";
 
 // ── Constants ──────────────────────────────────────────────────
-const STORAGE_KEY = "teachme:onboarding:tutor";
+const STORAGE_KEY = "tutr:onboarding:tutor";
 
 const MAJORS = [
   "Computer Science", "Business", "Engineering", "Pre-med",

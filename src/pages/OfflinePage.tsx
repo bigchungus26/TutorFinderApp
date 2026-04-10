@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — OfflinePage
+// Tutr — OfflinePage
 // Shown when the device has no network connectivity.
 // Auto-retries every 5 seconds; navigates to "/" when online.
 // ============================================================
@@ -60,7 +60,7 @@ const OfflinePage = () => {
 
         {/* Body */}
         <p className="text-body-sm text-ink-muted">
-          Teachme needs a connection to find tutors for you.
+          Tutr needs a connection to find tutors for you.
         </p>
 
         {/* Try again button */}

@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — Supabase Data Access Hooks
+// Tutr — Supabase Data Access Hooks
 // These hooks wrap Supabase queries with React Query for
 // caching, loading states, and error handling.
 //

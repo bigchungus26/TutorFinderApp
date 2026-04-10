@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — RequireAuth Guard
+// Tutr — RequireAuth Guard
 // Wraps all routes that require an authenticated user.
 // If unauthenticated: saves current path as "pendingRoute" in
 // sessionStorage and redirects to /welcome.

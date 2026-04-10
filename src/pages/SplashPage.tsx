@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — SplashPage
+// Tutr — SplashPage
 // Handles app-boot resolution: checks network, session, profile,
 // then navigates to the correct destination.
 // Displays minimum 900ms, maximum 2500ms.
@@ -125,55 +125,28 @@ const SplashPage = () => {
           variants={exitVariants}
           className="min-h-screen bg-background flex flex-col items-center justify-center"
         >
-          {/* Wordmark */}
+          {/* Pulsing wordmark */}
           <motion.h1
-            initial="hidden"
-            animate="visible"
-            variants={variants.fadeSlideUp}
-            className="text-display-xl text-ink select-none"
-            style={{ fontFamily: "'Fraunces', serif" }}
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+            className="select-none"
+            style={{
+              fontFamily: "'Fraunces', serif",
+              fontSize: "2.25rem",
+              fontWeight: 500,
+              letterSpacing: "-0.02em",
+              color: "hsl(var(--ink))",
+            }}
           >
-            Teachme
+            Tutr
           </motion.h1>
 
-          {/* Pulsing accent dots */}
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: {
-                transition: { delayChildren: 0.35, staggerChildren: 0.04 },
-              },
-            }}
-            className="flex items-center gap-1.5 mt-6"
-          >
-            {[0, 150, 300].map((delay, i) => (
-              <motion.span
-                key={i}
-                variants={{
-                  hidden: { opacity: 0, scale: 0.6 },
-                  visible: {
-                    opacity: 1,
-                    scale: 1,
-                    transition: { ...transitions.standard, delay: delay / 1000 },
-                  },
-                }}
-                className="block w-2 h-2 rounded-full bg-accent"
-                style={{
-                  animation: `bounce 1s ease-in-out ${delay}ms infinite`,
-                }}
-              />
-            ))}
-          </motion.div>
-
-          {/* Inject bounce keyframes inline so they work without a custom Tailwind plugin */}
-          <style>{`
-            @keyframes bounce {
-              0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-6px); }
-            }
-          `}</style>
+          {/* Accent dot below */}
+          <motion.span
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+            className="block w-1.5 h-1.5 rounded-full bg-accent mt-4"
+          />
         </motion.div>
       )}
     </AnimatePresence>

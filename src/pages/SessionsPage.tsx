@@ -1,5 +1,5 @@
 // ============================================================
-// Teachme — SessionsPage (Student)
+// Tutr — SessionsPage (Student)
 // Shows upcoming and past sessions with a review prompt (C5).
 // Pull-to-refresh, skeleton loading, empty states.
 // ============================================================
@@ -38,7 +38,7 @@ type SessionWithDetails = {
 };
 
 // ── localStorage helpers ───────────────────────────────────────
-const DISMISS_PREFIX = "teachme:dismissed-review-";
+const DISMISS_PREFIX = "tutr:dismissed-review-";
 
 function isDismissed(sessionId: string): boolean {
   return localStorage.getItem(DISMISS_PREFIX + sessionId) === "1";
