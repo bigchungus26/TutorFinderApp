@@ -146,7 +146,7 @@ const WelcomePage = () => {
                       key={uni.id}
                       type="button"
                       onClick={() => navigate("/search")}
-                      className="rounded-3xl border border-hairline bg-white px-4 py-4 text-left transition hover:border-accent"
+                      className="rounded-3xl border border-hairline bg-surface-elevated px-4 py-4 text-left transition hover:border-accent hover:bg-accent-soft/40"
                     >
                       <p className="font-display text-sm font-semibold text-ink">{uni.short_name}</p>
                       <p className="text-body-sm text-ink-muted">{uni.name}</p>
@@ -165,7 +165,7 @@ const WelcomePage = () => {
               <div className="grid gap-3">
                 {popularCourses.length ? (
                   popularCourses.map((course) => (
-                    <div key={course.id} className="rounded-3xl border border-hairline bg-white px-4 py-3">
+                    <div key={course.id} className="rounded-3xl border border-hairline bg-surface-elevated px-4 py-3">
                       <p className="text-sm font-semibold text-ink">{course.code}</p>
                       <p className="text-caption text-ink-muted truncate">{course.name}</p>
                     </div>
