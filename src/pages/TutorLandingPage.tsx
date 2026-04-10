@@ -58,7 +58,7 @@ const TutorLandingPage = () => {
               TutorFinder
             </span>
 
-            <div className="flex items-center gap-3 text-sm">
+            <div className="hidden items-center gap-3 text-sm sm:flex">
               <button
                 type="button"
                 onClick={handleSwitchRole}
@@ -77,6 +77,16 @@ const TutorLandingPage = () => {
               </Link>
             </div>
           </header>
+
+          <div className="mt-5 sm:hidden">
+            <button
+              type="button"
+              onClick={handleSwitchRole}
+              className="inline-flex items-center rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-ink shadow-[0_10px_25px_rgba(26,26,26,0.04)] transition-all hover:border-primary hover:text-primary"
+            >
+              Switch role
+            </button>
+          </div>
 
           <section className="grid gap-8 pb-12 pt-10 lg:grid-cols-[1.03fr_0.97fr] lg:gap-12 lg:pt-16">
             <motion.div
