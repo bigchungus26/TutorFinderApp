@@ -1,20 +1,18 @@
-import { motion } from "framer-motion";
-import { getTutor } from "@/data/tutors";
-import { getCourse } from "@/data/courses";
-
-const completedSessions = [
-  { id: "e1", studentName: "Sara M.", courseId: "c1", date: "2026-04-08", amount: 15 },
-  { id: "e2", studentName: "Ali K.", courseId: "c2", date: "2026-04-06", amount: 15 },
-  { id: "e3", studentName: "Mia R.", courseId: "c1", date: "2026-04-04", amount: 15 },
-  { id: "e4", studentName: "Fadi N.", courseId: "c9", date: "2026-04-02", amount: 15 },
-  { id: "e5", studentName: "Hana S.", courseId: "c2", date: "2026-03-30", amount: 15 },
-  { id: "e6", studentName: "George A.", courseId: "c1", date: "2026-03-28", amount: 15 },
-  { id: "e7", studentName: "Tarek B.", courseId: "c26", date: "2026-03-25", amount: 15 },
-];
-
-const totalThisMonth = completedSessions.filter(s => s.date.startsWith("2026-04")).reduce((sum, s) => sum + s.amount, 0);
+import { useAuth } from "@/contexts/AuthContext";
+import { useSessions } from "@/hooks/useSupabaseQuery";
 
 const TutorEarnings = () => {
+  const { user } = useAuth();
+  const { data: allSessions = [], isLoading } = useSessions(user?.id ?? "", "tutor");
+
+  const completed = allSessions.filter((s: any) => s.status === "completed");
+  const now = new Date();
+  const thisMonth = completed.filter((s: any) => {
+    const d = new Date(s.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const totalThisMonth = thisMonth.reduce((sum: number, s: any) => sum + Number(s.price), 0);
+
   return (
     <div className="px-5 pt-14 pb-4">
       <h1 className="font-display text-[22px] font-medium mb-5">Earnings</h1>
@@ -22,21 +20,31 @@ const TutorEarnings = () => {
         <div className="text-sm text-muted-ink mb-1">This month</div>
         <div className="font-display text-4xl font-medium">${totalThisMonth}</div>
       </div>
-      <h2 className="font-display text-base font-medium mb-3">Recent sessions</h2>
-      <div className="bg-surface rounded-xl border border-hairline divide-y divide-hairline">
-        {completedSessions.map(s => {
-          const course = getCourse(s.courseId);
-          return (
-            <div key={s.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <div className="text-sm font-medium">{s.studentName}</div>
-                <div className="text-xs text-muted-ink">{course?.code} · {new Date(s.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-8">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : completed.length > 0 ? (
+        <>
+          <h2 className="font-display text-base font-medium mb-3">Recent sessions</h2>
+          <div className="bg-surface rounded-xl border border-hairline divide-y divide-hairline">
+            {completed.slice(0, 10).map((s: any) => (
+              <div key={s.id} className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium">{s.student?.full_name || "Student"}</div>
+                  <div className="text-xs text-muted-ink">{s.course?.code} · {new Date(s.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                </div>
+                <span className="font-display font-medium text-success">+${Number(s.price)}</span>
               </div>
-              <span className="font-display font-medium text-success">+${s.amount}</span>
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-sm text-muted-ink">No completed sessions yet. Your earnings will appear here.</p>
+        </div>
+      )}
     </div>
   );
 };

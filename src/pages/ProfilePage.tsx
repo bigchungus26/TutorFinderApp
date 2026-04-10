@@ -1,48 +1,49 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useUniversity } from "@/contexts/UniversityContext";
-import { getUniversity } from "@/data/universities";
+import { useUniversities } from "@/hooks/useSupabaseQuery";
+import { supabase } from "@/lib/supabase";
 import { GraduationCap, Heart, CreditCard, Bell, ArrowRightLeft, HelpCircle, Info, LogOut, ChevronRight } from "lucide-react";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { setRole, setHasOnboarded } = useRole();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const { selectedUniversity } = useUniversity();
-  const uni = getUniversity(selectedUniversity);
+  const { data: universities = [] } = useUniversities();
+  const uni = universities.find(u => u.id === (profile?.university_id || selectedUniversity));
 
-  const switchToTutor = () => {
-    setRole("tutor");
+  const switchToTutor = async () => {
+    if (!user) return;
+    await supabase.from("profiles").update({ role: "tutor" }).eq("id", user.id);
+    await refreshProfile();
     navigate("/tutor/requests");
   };
 
-  const signOut = () => {
-    setRole(null);
-    setHasOnboarded(false);
-    localStorage.removeItem("teachme_role");
-    localStorage.removeItem("teachme_onboarded");
+  const handleSignOut = async () => {
+    await signOut();
     navigate("/welcome");
   };
 
   const rows = [
-    { icon: GraduationCap, label: "My university", sublabel: uni?.shortName },
+    { icon: GraduationCap, label: "My university", sublabel: uni?.short_name },
     { icon: Heart, label: "Saved tutors" },
     { icon: CreditCard, label: "Payment methods" },
     { icon: Bell, label: "Notifications" },
     { icon: ArrowRightLeft, label: "Switch to tutor mode", action: switchToTutor, highlight: true },
     { icon: HelpCircle, label: "Help & support" },
     { icon: Info, label: "About" },
-    { icon: LogOut, label: "Sign out", action: signOut, destructive: true },
+    { icon: LogOut, label: "Sign out", action: handleSignOut, destructive: true },
   ];
 
   return (
     <div className="px-5 pt-14 pb-4">
       <div className="flex flex-col items-center mb-8">
-        <img src="https://i.pravatar.cc/100?img=68" alt="Profile" className="w-20 h-20 rounded-full mb-3" />
-        <h1 className="font-display text-xl font-medium mb-1">Andrew Khoury</h1>
+        <img src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"} alt="Profile" className="w-20 h-20 rounded-full mb-3" />
+        <h1 className="font-display text-xl font-medium mb-1">{profile?.full_name || "User"}</h1>
         {uni && (
           <span className="text-xs px-2.5 py-0.5 rounded-pill font-medium mb-3" style={{ backgroundColor: uni.color + "15", color: uni.color }}>
-            {uni.shortName}
+            {uni.short_name}
           </span>
         )}
         <motion.button whileTap={{ scale: 0.96 }} className="px-4 py-2 rounded-lg border border-hairline text-sm font-medium">

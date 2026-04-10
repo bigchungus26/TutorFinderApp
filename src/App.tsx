@@ -3,11 +3,13 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UniversityProvider } from "@/contexts/UniversityContext";
-import { RoleProvider, useRole } from "@/contexts/RoleContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { StudentLayout } from "@/components/StudentLayout";
 import { TutorLayout } from "@/components/TutorLayout";
 
 import WelcomePage from "@/pages/Welcome";
+import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
 import StudentOnboarding from "@/pages/StudentOnboarding";
 import TutorOnboarding from "@/pages/TutorOnboarding";
 import DiscoverPage from "@/pages/Discover";
@@ -21,35 +23,82 @@ import TutorSchedule from "@/pages/TutorSchedule";
 import TutorEarnings from "@/pages/TutorEarnings";
 import TutorProfileSettings from "@/pages/TutorProfileSettings";
 import NotFound from "@/pages/NotFound";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import TermsOfUse from "@/pages/TermsOfUse";
 
 const queryClient = new QueryClient();
 
 const AppRoutes = () => {
-  const { role, hasOnboarded } = useRole();
+  const { user, profile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const isLoggedIn = !!user;
+  const hasOnboarded = !!profile?.onboarded_at;
+  const role = profile?.role ?? "student";
 
   return (
     <Routes>
-      <Route path="/welcome" element={<WelcomePage />} />
-      <Route path="/onboarding/student" element={<StudentOnboarding />} />
-      <Route path="/onboarding/tutor" element={<TutorOnboarding />} />
+      {/* Public routes */}
+      <Route path="/welcome" element={isLoggedIn ? <Navigate to="/" replace /> : <WelcomePage />} />
+      <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <LoginPage />} />
+      <Route path="/signup" element={isLoggedIn ? <Navigate to="/" replace /> : <SignupPage />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfUse />} />
+
+      {/* Onboarding (must be logged in) */}
+      <Route path="/onboarding/student" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> : <StudentOnboarding />
+      } />
+      <Route path="/onboarding/tutor" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> : <TutorOnboarding />
+      } />
 
       {/* Student routes */}
       <Route path="/" element={
+        !isLoggedIn ? <Navigate to="/welcome" replace /> :
         !hasOnboarded ? <Navigate to="/welcome" replace /> :
         role === "tutor" ? <Navigate to="/tutor/requests" replace /> :
         <StudentLayout><DiscoverPage /></StudentLayout>
       } />
-      <Route path="/search" element={<StudentLayout><SearchPage /></StudentLayout>} />
+      <Route path="/search" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> :
+        <StudentLayout><SearchPage /></StudentLayout>
+      } />
       <Route path="/course/:id" element={<CourseDetail />} />
       <Route path="/tutor/:id" element={<TutorProfilePage />} />
-      <Route path="/sessions" element={<StudentLayout><SessionsPage /></StudentLayout>} />
-      <Route path="/profile" element={<StudentLayout><ProfilePage /></StudentLayout>} />
+      <Route path="/sessions" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> :
+        <StudentLayout><SessionsPage /></StudentLayout>
+      } />
+      <Route path="/profile" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> :
+        <StudentLayout><ProfilePage /></StudentLayout>
+      } />
 
       {/* Tutor routes */}
-      <Route path="/tutor/requests" element={<TutorLayout><TutorRequests /></TutorLayout>} />
-      <Route path="/tutor/schedule" element={<TutorLayout><TutorSchedule /></TutorLayout>} />
-      <Route path="/tutor/earnings" element={<TutorLayout><TutorEarnings /></TutorLayout>} />
-      <Route path="/tutor/profile" element={<TutorLayout><TutorProfileSettings /></TutorLayout>} />
+      <Route path="/tutor/requests" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> :
+        <TutorLayout><TutorRequests /></TutorLayout>
+      } />
+      <Route path="/tutor/schedule" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> :
+        <TutorLayout><TutorSchedule /></TutorLayout>
+      } />
+      <Route path="/tutor/earnings" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> :
+        <TutorLayout><TutorEarnings /></TutorLayout>
+      } />
+      <Route path="/tutor/profile" element={
+        !isLoggedIn ? <Navigate to="/login" replace /> :
+        <TutorLayout><TutorProfileSettings /></TutorLayout>
+      } />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -61,11 +110,11 @@ const App = () => (
     <TooltipProvider>
       <Sonner />
       <UniversityProvider>
-        <RoleProvider>
+        <AuthProvider>
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
-        </RoleProvider>
+        </AuthProvider>
       </UniversityProvider>
     </TooltipProvider>
   </QueryClientProvider>

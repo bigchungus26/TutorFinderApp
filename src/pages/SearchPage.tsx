@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search as SearchIcon, SlidersHorizontal, X } from "lucide-react";
 import { useUniversity } from "@/contexts/UniversityContext";
-import { getCoursesByUniversity } from "@/data/courses";
-import { getTutorsByUniversity } from "@/data/tutors";
+import { useCourses, useTutors } from "@/hooks/useSupabaseQuery";
 import { TutorCard } from "@/components/TutorCard";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
@@ -22,8 +21,8 @@ const SearchPage = () => {
   const [priceRange, setPriceRange] = useState([5, 50]);
   const [minRating, setMinRating] = useState(0);
 
-  const courses = getCoursesByUniversity(selectedUniversity);
-  const tutors = getTutorsByUniversity(selectedUniversity);
+  const { data: courses = [] } = useCourses(selectedUniversity);
+  const { data: tutors = [] } = useTutors(selectedUniversity);
 
   const filteredCourses = useMemo(() => {
     if (!query) return courses;
@@ -32,13 +31,13 @@ const SearchPage = () => {
   }, [query, courses]);
 
   const filteredTutors = useMemo(() => {
-    let result = tutors;
+    let result = [...tutors];
     if (query) {
       const q = query.toLowerCase();
-      result = result.filter(t => t.name.toLowerCase().includes(q) || t.major.toLowerCase().includes(q));
+      result = result.filter(t => t.full_name.toLowerCase().includes(q) || t.major.toLowerCase().includes(q));
     }
-    result = result.filter(t => t.hourlyRate >= priceRange[0] && t.hourlyRate <= priceRange[1]);
-    if (minRating > 0) result = result.filter(t => t.rating >= minRating);
+    result = result.filter(t => (t.hourly_rate ?? 0) >= priceRange[0] && (t.hourly_rate ?? 50) <= priceRange[1]);
+    if (minRating > 0) result = result.filter(t => (t.tutor_stats?.rating ?? 0) >= minRating);
     return result;
   }, [query, tutors, priceRange, minRating]);
 
@@ -61,7 +60,6 @@ const SearchPage = () => {
         </motion.button>
       </div>
 
-      {/* Filters panel */}
       <AnimatePresence>
         {filtersOpen && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
@@ -87,7 +85,6 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* Tabs */}
       <div className="flex gap-1 mb-5">
         {filterTabs.map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
@@ -97,7 +94,6 @@ const SearchPage = () => {
         ))}
       </div>
 
-      {/* Results */}
       {(activeTab === "All" || activeTab === "Courses") && filteredCourses.length > 0 && (
         <div className="mb-6">
           {activeTab === "All" && <h3 className="font-display text-sm font-medium text-muted-ink mb-2 uppercase tracking-wide">Courses</h3>}
@@ -109,7 +105,6 @@ const SearchPage = () => {
                   <div className="font-display font-medium text-sm">{c.code}</div>
                   <div className="text-xs text-muted-ink">{c.name}</div>
                 </div>
-                <div className="text-xs text-muted-ink">{c.tutorCount} tutors</div>
               </motion.button>
             ))}
           </div>
@@ -120,7 +115,7 @@ const SearchPage = () => {
         <div className="mb-6">
           {activeTab === "All" && <h3 className="font-display text-sm font-medium text-muted-ink mb-2 uppercase tracking-wide">Tutors</h3>}
           <div className="space-y-3">
-            {filteredTutors.slice(0, activeTab === "All" ? 3 : undefined).map(t => <TutorCard key={t.id} tutor={t} />)}
+            {filteredTutors.slice(0, activeTab === "All" ? 3 : undefined).map(t => <TutorCard key={t.id} tutor={t as any} />)}
           </div>
         </div>
       )}
@@ -132,9 +127,6 @@ const SearchPage = () => {
           </div>
           <p className="font-display text-lg font-medium mb-1">No results found</p>
           <p className="text-sm text-muted-ink mb-4">No tutors yet for that course. Be the first to request one.</p>
-          <motion.button whileTap={{ scale: 0.98 }} className="px-6 py-2.5 rounded-lg border border-accent text-accent font-medium text-sm">
-            Request a tutor
-          </motion.button>
         </div>
       )}
 

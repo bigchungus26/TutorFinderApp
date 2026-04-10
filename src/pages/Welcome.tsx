@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
+import { Footer } from "@/components/Footer";
 
 const WelcomePage = () => {
   const navigate = useNavigate();
@@ -25,35 +26,30 @@ const WelcomePage = () => {
         <div className="space-y-3 flex-1">
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/onboarding/student")}
+            onClick={() => navigate("/signup")}
             className="w-full bg-surface border-2 border-accent rounded-xl p-5 text-left flex items-center gap-4"
           >
             <div className="flex-1">
-              <div className="font-display font-medium text-lg mb-0.5">I'm a student</div>
-              <div className="text-sm text-muted-ink">Find tutors for your courses</div>
+              <div className="font-display font-medium text-lg mb-0.5">Get started</div>
+              <div className="text-sm text-muted-ink">Create a free account</div>
             </div>
             <ChevronRight size={20} className="text-accent" />
           </motion.button>
 
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/onboarding/tutor")}
+            onClick={() => navigate("/login")}
             className="w-full bg-surface border border-hairline rounded-xl p-5 text-left flex items-center gap-4"
           >
             <div className="flex-1">
-              <div className="font-display font-medium text-lg mb-0.5 text-muted-ink">I'm a tutor</div>
-              <div className="text-sm text-muted-ink">Share what you've aced and earn</div>
+              <div className="font-display font-medium text-lg mb-0.5 text-muted-ink">Sign in</div>
+              <div className="text-sm text-muted-ink">I already have an account</div>
             </div>
             <ChevronRight size={20} className="text-muted-ink" />
           </motion.button>
         </div>
-
-        <div className="text-center mt-8">
-          <button className="text-sm text-muted-ink underline underline-offset-2" onClick={() => navigate("/")}>
-            Already have an account? Sign in
-          </button>
-        </div>
       </div>
+      <Footer />
     </div>
   );
 };

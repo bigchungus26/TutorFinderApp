@@ -1,26 +1,27 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useUniversity } from "@/contexts/UniversityContext";
-import { getUniversity } from "@/data/universities";
+import { useUniversities } from "@/hooks/useSupabaseQuery";
+import { supabase } from "@/lib/supabase";
 import { BadgeCheck, Star, ArrowRightLeft, Settings, HelpCircle, LogOut, ChevronRight } from "lucide-react";
 
 const TutorProfilePage = () => {
   const navigate = useNavigate();
-  const { setRole, setHasOnboarded } = useRole();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const { selectedUniversity } = useUniversity();
-  const uni = getUniversity(selectedUniversity);
+  const { data: universities = [] } = useUniversities();
+  const uni = universities.find(u => u.id === (profile?.university_id || selectedUniversity));
 
-  const switchToStudent = () => {
-    setRole("student");
+  const switchToStudent = async () => {
+    if (!user) return;
+    await supabase.from("profiles").update({ role: "student" }).eq("id", user.id);
+    await refreshProfile();
     navigate("/");
   };
 
-  const signOut = () => {
-    setRole(null);
-    setHasOnboarded(false);
-    localStorage.removeItem("teachme_role");
-    localStorage.removeItem("teachme_onboarded");
+  const handleSignOut = async () => {
+    await signOut();
     navigate("/welcome");
   };
 
@@ -28,41 +29,41 @@ const TutorProfilePage = () => {
     { icon: Settings, label: "Edit profile" },
     { icon: ArrowRightLeft, label: "Switch to student mode", action: switchToStudent, highlight: true },
     { icon: HelpCircle, label: "Help & support" },
-    { icon: LogOut, label: "Sign out", action: signOut, destructive: true },
+    { icon: LogOut, label: "Sign out", action: handleSignOut, destructive: true },
   ];
 
   return (
     <div className="px-5 pt-14 pb-4">
       <div className="flex flex-col items-center mb-6">
-        <img src="https://i.pravatar.cc/100?img=11" alt="Profile" className="w-20 h-20 rounded-full mb-3" />
+        <img src={profile?.avatar_url || "https://i.pravatar.cc/100?img=11"} alt="Profile" className="w-20 h-20 rounded-full mb-3" />
         <div className="flex items-center gap-1.5 mb-1">
-          <h1 className="font-display text-xl font-medium">Karim Haddad</h1>
-          <BadgeCheck size={18} className="text-accent" />
+          <h1 className="font-display text-xl font-medium">{profile?.full_name || "Tutor"}</h1>
+          {profile?.verified && <BadgeCheck size={18} className="text-accent" />}
         </div>
         {uni && (
           <span className="text-xs px-2.5 py-0.5 rounded-pill font-medium mb-1" style={{ backgroundColor: uni.color + "15", color: uni.color }}>
-            {uni.shortName}
+            {uni.short_name}
           </span>
         )}
-        <p className="text-sm text-muted-ink">Computer Science, Senior</p>
+        <p className="text-sm text-muted-ink">{profile?.major}, {profile?.year}</p>
       </div>
 
       <div className="flex items-center justify-around bg-surface rounded-xl border border-hairline p-4 mb-6">
         <div className="text-center">
           <div className="flex items-center justify-center gap-1 mb-0.5">
             <Star size={14} className="text-accent fill-accent" />
-            <span className="font-display font-medium text-lg">4.9</span>
+            <span className="font-display font-medium text-lg">—</span>
           </div>
           <span className="text-xs text-muted-ink">rating</span>
         </div>
         <div className="w-px h-8 bg-hairline" />
         <div className="text-center">
-          <div className="font-display font-medium text-lg mb-0.5">245</div>
+          <div className="font-display font-medium text-lg mb-0.5">0</div>
           <span className="text-xs text-muted-ink">sessions</span>
         </div>
         <div className="w-px h-8 bg-hairline" />
         <div className="text-center">
-          <div className="font-display font-medium text-lg mb-0.5">$15</div>
+          <div className="font-display font-medium text-lg mb-0.5">${profile?.hourly_rate ?? 0}</div>
           <span className="text-xs text-muted-ink">per hour</span>
         </div>
       </div>

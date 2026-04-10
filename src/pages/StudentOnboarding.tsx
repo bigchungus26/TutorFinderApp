@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useUniversity } from "@/contexts/UniversityContext";
-import { useRole } from "@/contexts/RoleContext";
-import { universities } from "@/data/universities";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { ChevronRight } from "lucide-react";
+import { Footer } from "@/components/Footer";
+import { useUniversities } from "@/hooks/useSupabaseQuery";
 
 const majors = ["Computer Science", "Business", "Engineering", "Pre-med", "Economics", "Architecture", "Biology", "Mathematics", "Psychology", "Languages"];
 const years = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
@@ -12,21 +14,43 @@ const years = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
 const StudentOnboarding = () => {
   const navigate = useNavigate();
   const { setSelectedUniversity } = useUniversity();
-  const { setRole, setHasOnboarded } = useRole();
+  const { user, refreshProfile } = useAuth();
+  const { data: universities = [] } = useUniversities();
   const [step, setStep] = useState(0);
   const [selectedUni, setSelectedUni] = useState("");
   const [selectedMajors, setSelectedMajors] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState("");
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const toggleMajor = (m: string) => {
     setSelectedMajors(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
   };
 
-  const finish = () => {
-    setSelectedUniversity(selectedUni || "aub");
-    setRole("student");
-    setHasOnboarded(true);
-    navigate("/");
+  const finish = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          role: "student",
+          university_id: selectedUni || "aub",
+          major: selectedMajors[0] || "",
+          year: selectedYear,
+          agreed_terms_at: new Date().toISOString(),
+          onboarded_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+      if (error) throw error;
+      setSelectedUniversity(selectedUni || "aub");
+      await refreshProfile();
+      navigate("/");
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const slides = [
@@ -54,10 +78,9 @@ const StudentOnboarding = () => {
           >
             <div className="w-1 h-10 rounded-full" style={{ backgroundColor: uni.color }} />
             <div className="flex-1">
-              <div className="font-display font-medium text-base">{uni.shortName}</div>
+              <div className="font-display font-medium text-base">{uni.short_name}</div>
               <div className="text-sm text-muted-ink">{uni.name}</div>
             </div>
-            <div className="text-xs text-muted-ink">{uni.tutorCount}+ tutors</div>
           </motion.button>
         ))}
       </div>
@@ -91,6 +114,20 @@ const StudentOnboarding = () => {
           {years.map(y => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
+      <label className="flex items-start gap-3 mt-6 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={agreedTerms}
+          onChange={e => setAgreedTerms(e.target.checked)}
+          className="mt-0.5 w-4 h-4 accent-accent rounded"
+        />
+        <span className="text-xs text-muted-ink leading-relaxed">
+          I agree to the{" "}
+          <Link to="/terms" className="text-accent underline" target="_blank">Terms of Use</Link>
+          {" "}and{" "}
+          <Link to="/privacy" className="text-accent underline" target="_blank">Privacy Policy</Link>.
+        </span>
+      </label>
     </div>,
   ];
 
@@ -130,9 +167,10 @@ const StudentOnboarding = () => {
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={finish}
-            className="w-full h-14 rounded-lg bg-accent text-accent-foreground font-body font-semibold text-base"
+            disabled={!agreedTerms || saving}
+            className="w-full h-14 rounded-lg bg-accent text-accent-foreground font-body font-semibold text-base disabled:opacity-40"
           >
-            Get started
+            {saving ? "Saving…" : "Get started"}
           </motion.button>
         )}
         {step > 0 && (
@@ -141,6 +179,7 @@ const StudentOnboarding = () => {
           </button>
         )}
       </div>
+      <Footer />
     </div>
   );
 };

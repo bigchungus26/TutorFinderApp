@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link } from "react-router-dom";
 import { Inbox, CalendarDays, DollarSign, User } from "lucide-react";
 import { ReactNode } from "react";
+import { Footer } from "@/components/Footer";
 
 const tabs = [
   { path: "/tutor/requests", icon: Inbox, label: "Requests" },
@@ -26,6 +27,7 @@ export const TutorLayout = ({ children }: { children: ReactNode }) => {
           {children}
         </motion.div>
       </AnimatePresence>
+      <Footer />
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[392px]">
         <nav className="bg-surface rounded-[20px] shadow-float border border-hairline flex items-center justify-around px-2 py-2" aria-label="Tutor navigation">
           {tabs.map(tab => {

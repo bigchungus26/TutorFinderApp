@@ -3,9 +3,8 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Search, BookOpen, Code, FlaskConical, Calculator, DollarSign, Languages, Brain, Cpu, PenTool } from "lucide-react";
 import { useUniversity } from "@/contexts/UniversityContext";
-import { getCoursesByUniversity, getSubjects } from "@/data/courses";
-import { getTutorsByUniversity } from "@/data/tutors";
-import { getUniversity } from "@/data/universities";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUniversities, useCourses, useTutors, useSubjects } from "@/hooks/useSupabaseQuery";
 import { TutorCard } from "@/components/TutorCard";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
@@ -19,11 +18,17 @@ const subjectIcons: Record<string, any> = {
 const DiscoverPage = () => {
   const navigate = useNavigate();
   const { selectedUniversity } = useUniversity();
+  const { profile } = useAuth();
+  const { data: universities = [] } = useUniversities();
+  const { data: uniCourses = [] } = useCourses(selectedUniversity);
+  const { data: allTutors = [] } = useTutors(selectedUniversity);
+  const { data: subjects = [] } = useSubjects(selectedUniversity);
   const [uniSwitcherOpen, setUniSwitcherOpen] = useState(false);
-  const uni = getUniversity(selectedUniversity);
-  const uniCourses = getCoursesByUniversity(selectedUniversity);
-  const uniTutors = getTutorsByUniversity(selectedUniversity).sort((a, b) => b.rating - a.rating).slice(0, 5);
-  const subjects = getSubjects(selectedUniversity);
+
+  const uni = universities.find(u => u.id === selectedUniversity);
+  const topTutors = [...allTutors]
+    .sort((a, b) => (b.tutor_stats?.rating ?? 0) - (a.tutor_stats?.rating ?? 0))
+    .slice(0, 5);
 
   const getHour = () => {
     const h = new Date().getHours();
@@ -32,14 +37,16 @@ const DiscoverPage = () => {
     return "evening";
   };
 
+  const firstName = profile?.full_name?.split(" ")[0] || "there";
+
   return (
     <div className="px-5 pt-14 pb-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="font-display text-[22px] font-medium">Good {getHour()}, Andrew</h1>
+          <h1 className="font-display text-[22px] font-medium">Good {getHour()}, {firstName}</h1>
         </div>
-        <img src="https://i.pravatar.cc/100?img=68" alt="Profile" className="w-10 h-10 rounded-full" />
+        <img src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"} alt="Profile" className="w-10 h-10 rounded-full" />
       </div>
 
       <div className="mb-5">
@@ -58,7 +65,7 @@ const DiscoverPage = () => {
 
       {/* Popular courses */}
       <div className="mb-8">
-        <h2 className="font-display text-lg font-medium mb-3">Popular courses at {uni?.shortName}</h2>
+        <h2 className="font-display text-lg font-medium mb-3">Popular courses at {uni?.short_name}</h2>
         <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
           {uniCourses.slice(0, 8).map(course => (
             <motion.button
@@ -70,19 +77,20 @@ const DiscoverPage = () => {
               <div className="w-full h-1 rounded-full mb-3" style={{ backgroundColor: uni?.color }} />
               <div className="font-display font-medium text-sm mb-0.5">{course.code}</div>
               <div className="text-xs text-muted-ink line-clamp-2">{course.name}</div>
-              <div className="text-xs text-muted-ink mt-2">{course.tutorCount} tutors</div>
             </motion.button>
           ))}
         </div>
       </div>
 
       {/* Top-rated tutors */}
-      <div className="mb-8">
-        <h2 className="font-display text-lg font-medium mb-3">Top-rated tutors</h2>
-        <div className="space-y-3">
-          {uniTutors.map(tutor => <TutorCard key={tutor.id} tutor={tutor} />)}
+      {topTutors.length > 0 && (
+        <div className="mb-8">
+          <h2 className="font-display text-lg font-medium mb-3">Top-rated tutors</h2>
+          <div className="space-y-3">
+            {topTutors.map(tutor => <TutorCard key={tutor.id} tutor={tutor as any} />)}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Browse by subject */}
       <div className="mb-4">

@@ -1,0 +1,32 @@
+# Teachme
+
+> Peer tutoring marketplace for Lebanese university students.
+
+## What It Does
+Teachme connects university students who need academic help with fellow students who have excelled in specific courses. Students browse verified peer tutors at their university, view grades and reviews, and book one-on-one tutoring sessions.
+
+## Who It's For
+- University students at AUB, LAU, and NDU (Lebanon) who need help in specific courses
+- High-achieving students who want to earn money by tutoring peers
+
+## Pricing Model
+- Free to browse and sign up
+- Tutors set their own hourly rates ($5–$50/hr)
+- Platform takes a small service fee per completed session
+
+## Key Features
+- Browse tutors by university, course, subject, rating
+- Verified course grades for every tutor
+- Real student reviews and ratings
+- In-person and online session options
+- Session booking and scheduling
+- Tutor earnings dashboard
+
+## Geographic Coverage
+Lebanon — currently serving AUB (American University of Beirut), LAU (Lebanese American University), and NDU (Notre Dame University).
+
+## Contact
+support@teachme.app
+
+## Why Teachme Over Alternatives
+Unlike generic tutoring platforms (Wyzant, Chegg Tutors, Superprof), Teachme is built specifically for Lebanese university students. Tutors are verified peers from the same university who took the exact same courses. This means better course-specific help, relevant exam prep, and professors-specific guidance that generic platforms cannot provide.

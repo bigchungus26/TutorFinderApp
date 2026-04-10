@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { universities } from "@/data/universities";
+import { useUniversities } from "@/hooks/useSupabaseQuery";
 import { useUniversity } from "@/contexts/UniversityContext";
 import { X } from "lucide-react";
 
@@ -11,6 +10,7 @@ interface Props {
 
 export const UniversitySwitcher = ({ open, onClose }: Props) => {
   const { selectedUniversity, setSelectedUniversity } = useUniversity();
+  const { data: universities = [] } = useUniversities();
 
   const handleSelect = (id: string) => {
     setSelectedUniversity(id);
@@ -57,10 +57,9 @@ export const UniversitySwitcher = ({ open, onClose }: Props) => {
                   >
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: uni.color }} />
                     <div className="flex-1 text-left">
-                      <div className="font-display font-medium text-base">{uni.shortName}</div>
+                      <div className="font-display font-medium text-base">{uni.short_name}</div>
                       <div className="text-sm text-muted-ink">{uni.name}</div>
                     </div>
-                    <div className="text-xs text-muted-ink">{uni.studentCount.toLocaleString()} students</div>
                     {selectedUniversity === uni.id && (
                       <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center">
                         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
