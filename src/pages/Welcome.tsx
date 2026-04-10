@@ -174,7 +174,7 @@ const WelcomePage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col relative overflow-hidden"
+    <div className="h-[100dvh] bg-transparent flex flex-col relative overflow-hidden"
       style={{ maxHeight: "100dvh" }}
     >
 
@@ -244,8 +244,8 @@ const WelcomePage = () => {
         <TutorCarousel />
       </motion.div>
 
-      {/* ── Spacer for fixed bottom CTA (160px) ──────────────── */}
-      <div className="shrink-0" style={{ height: 164 }} />
+      {/* ── Spacer for fixed bottom CTA ──────────────────────── */}
+      <div className="shrink-0" style={{ height: 110 }} />
 
       {/* ── Sticky bottom action zone ──────────────────────────── */}
       <div
@@ -256,38 +256,15 @@ const WelcomePage = () => {
           paddingTop: "2rem",
         }}
       >
-        <div className="px-5 pb-safe" style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}>
-          {/* Primary CTA */}
+        <div className="px-5" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}>
           <motion.button
             whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/signup?intent=student")}
+            onClick={() => navigate("/signup")}
             className="w-full h-14 rounded-xl bg-accent text-accent-foreground font-display font-medium text-base tracking-[-0.01em] transition-opacity active:opacity-90"
           >
-            Find a tutor
+            Get started
           </motion.button>
-
-          {/* Secondary CTA — ghost text with arrow */}
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate("/signup?intent=tutor")}
-            className="w-full h-12 mt-2 text-center text-body text-ink-muted hover:text-ink transition-colors"
-          >
-            Become a tutor →
-          </motion.button>
-
-          {/* Sign-in link */}
-          <div className="mt-1 text-center">
-            <Link
-              to="/login"
-              className="text-caption text-accent hover:underline transition-colors"
-            >
-              Already have an account? Sign in
-            </Link>
-          </div>
-          {/* Footer */}
-          <div className="flex items-center justify-center gap-2 mt-3" style={{ color: "#6b6b6b", fontSize: "0.75rem" }}>
-            <span>Made in Beirut</span>
-            <span aria-hidden="true">·</span>
+          <div className="flex items-center justify-center gap-2 mt-4" style={{ color: "#6b6b6b", fontSize: "0.75rem" }}>
             <Link to="/privacy" className="hover:text-accent transition-colors">Privacy</Link>
             <span aria-hidden="true">·</span>
             <Link to="/terms" className="hover:text-accent transition-colors">Terms</Link>
