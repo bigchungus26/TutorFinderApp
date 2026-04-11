@@ -67,8 +67,8 @@ function initials(name: string): string {
 }
 
 function statusColor(status: string) {
-  if (status === "upcoming") return "bg-accent-soft text-accent";
-  if (status === "completed") return "bg-surface text-ink-muted border border-hairline";
+  if (status === "upcoming") return "bg-accent-light text-accent";
+  if (status === "completed") return "bg-surface text-ink-muted border border-border";
   if (status === "cancelled") return "bg-red-50 text-red-500";
   return "bg-surface text-ink-muted";
 }
@@ -79,7 +79,7 @@ function Avatar({ name, url }: { name: string; url?: string | null }) {
     return <img src={url} alt={name} className="w-11 h-11 rounded-full object-cover" />;
   }
   return (
-    <div className="w-11 h-11 rounded-full bg-accent-soft flex items-center justify-center">
+    <div className="w-11 h-11 rounded-full bg-accent-light flex items-center justify-center">
       <span className="text-label font-semibold text-accent">{initials(name)}</span>
     </div>
   );
@@ -97,7 +97,7 @@ function SessionCard({ session, onMarkCompleted }: {
   return (
     <motion.div
       variants={variants.staggerItem}
-      className="bg-surface border border-hairline rounded-xl p-4 relative overflow-hidden"
+      className="bg-surface border border-border rounded-xl p-4 relative overflow-hidden"
     >
       {/* Subtle accent strip for upcoming */}
       {isUpcoming && (
@@ -108,9 +108,9 @@ function SessionCard({ session, onMarkCompleted }: {
         <Avatar name={studentName} url={session.student?.avatar_url} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-label font-semibold text-ink truncate">{studentName}</span>
+            <span className="text-label font-semibold text-foreground truncate">{studentName}</span>
             <span
-              className={`text-caption px-2 py-0.5 rounded-pill font-medium ${statusColor(session.status)}`}
+              className={`text-caption px-2 py-0.5 rounded-full font-medium ${statusColor(session.status)}`}
             >
               {session.status}
             </span>
@@ -126,12 +126,12 @@ function SessionCard({ session, onMarkCompleted }: {
               </span>
             )}
             {session.location === "online" ? (
-              <span className="flex items-center gap-1 bg-accent-soft text-accent px-2 py-0.5 rounded-pill">
+              <span className="flex items-center gap-1 bg-accent-light text-accent px-2 py-0.5 rounded-full">
                 <Video size={11} />
                 Online
               </span>
             ) : (
-              <span className="flex items-center gap-1 bg-surface border border-hairline px-2 py-0.5 rounded-pill">
+              <span className="flex items-center gap-1 bg-surface border border-border px-2 py-0.5 rounded-full">
                 <MapPin size={11} />
                 In-person
               </span>
@@ -144,7 +144,7 @@ function SessionCard({ session, onMarkCompleted }: {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={() => onMarkCompleted(session.id)}
-          className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-accent-soft text-accent text-label font-semibold border border-accent/20"
+          className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-accent-light text-accent text-label font-semibold border border-accent/20"
         >
           <CheckCircle2 size={15} />
           Mark completed
@@ -236,7 +236,7 @@ function AvailabilityGrid({ tutorId }: { tutorId: string }) {
 
       {/* Section title + slot count summary */}
       <div className="flex items-baseline justify-between mb-4">
-        <h2 className="text-body font-semibold text-ink">Weekly schedule</h2>
+        <h2 className="text-body font-semibold text-foreground">Weekly schedule</h2>
         <p className="text-caption text-ink-muted">
           {activeCount} available slot{activeCount !== 1 ? "s" : ""} this week
         </p>
@@ -251,12 +251,12 @@ function AvailabilityGrid({ tutorId }: { tutorId: string }) {
           return (
             <div
               key={day}
-              className={`min-w-[80px] flex flex-col gap-2 ${todayCol ? "bg-accent-soft rounded-xl p-2" : "p-2"}`}
+              className={`min-w-[80px] flex flex-col gap-2 ${todayCol ? "bg-accent-light rounded-xl p-2" : "p-2"}`}
             >
               {/* Column header */}
               <div className="text-center mb-1">
                 <p className="text-overline text-ink-muted">{day}</p>
-                <p className={`font-display text-2xl font-medium leading-tight ${todayCol ? "text-accent" : "text-ink"}`}>
+                <p className={`font-display text-2xl font-medium leading-tight ${todayCol ? "text-accent" : "text-foreground"}`}>
                   {date.getDate()}
                 </p>
               </div>
@@ -276,7 +276,7 @@ function AvailabilityGrid({ tutorId }: { tutorId: string }) {
                     className={
                       active
                         ? "bg-accent text-accent-foreground rounded-lg py-2 px-2 text-center cursor-pointer text-xs font-medium font-display"
-                        : "border border-hairline rounded-lg py-2 px-2 text-center cursor-pointer text-xs text-ink-subtle"
+                        : "border border-border rounded-lg py-2 px-2 text-center cursor-pointer text-xs text-foreground-subtle"
                     }
                   >
                     {label}
@@ -320,13 +320,13 @@ const TutorSchedule = () => {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
-        <h1 className="text-display-md text-ink">Schedule</h1>
+        <h1 className="text-h1 font-display text-foreground">Schedule</h1>
         <p className="text-body-sm text-ink-muted mt-1">Manage your sessions and weekly availability</p>
       </div>
 
       {/* Tab bar */}
       <div className="px-5 mb-5">
-        <div className="flex bg-surface border border-hairline rounded-xl p-1 gap-1">
+        <div className="flex bg-surface border border-border rounded-xl p-1 gap-1">
           {(["sessions", "availability"] as const).map(tab => (
             <button
               key={tab}
@@ -357,12 +357,12 @@ const TutorSchedule = () => {
             {isLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-surface border border-hairline rounded-xl p-4 animate-pulse h-24" />
+                  <div key={i} className="bg-surface border border-border rounded-xl p-4 animate-pulse h-24" />
                 ))}
               </div>
             ) : sessions.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-16 h-16 rounded-full bg-accent-soft mx-auto mb-4 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-accent-light mx-auto mb-4 flex items-center justify-center">
                   <Clock size={28} className="text-accent" />
                 </div>
                 <p className="text-body-sm text-ink-muted">No sessions yet. Students will appear here once they book you.</p>

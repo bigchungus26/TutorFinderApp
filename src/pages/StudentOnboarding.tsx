@@ -1,18 +1,23 @@
-// ── StudentOnboarding — Multi-step Wizard (Part G) ────────────
+// ============================================================
+// StudentOnboarding — Part 2.7
+// 3-step wizard: university → major/year → courses
+// Filling pill progress bar, horizontal slide, spring CTA
+// ============================================================
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Search, X } from "lucide-react";
+import { ArrowLeft, Search, X, Check } from "lucide-react";
 import { useUniversity } from "@/contexts/UniversityContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUniversities, useCourses, useUpdateProfile } from "@/hooks/useSupabaseQuery";
 import { useSetStudentCourses } from "@/hooks/useStudentCourses";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
 import { toast } from "@/components/ui/sonner";
-import { variants } from "@/lib/motion";
+import { springs } from "@/lib/motion";
 
-// ── Constants ──────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────
 const STORAGE_KEY = "tutr:onboarding:student";
+const TOTAL_STEPS = 3;
 
 const MAJORS = [
   "Computer Science", "Business", "Engineering", "Pre-med",
@@ -20,15 +25,12 @@ const MAJORS = [
   "Psychology", "Languages",
 ];
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
-const TOTAL_STEPS = 4;
 
-// ── Draft shape ────────────────────────────────────────────────
 interface Draft {
   step: number;
   selectedUni: string;
   selectedMajor: string;
   selectedYear: string;
-  bio: string;
   mode: "online" | "in-person" | "both";
   selectedCourseIds: string[];
   semester: string;
@@ -39,86 +41,32 @@ const defaultDraft: Draft = {
   selectedUni: "",
   selectedMajor: "",
   selectedYear: "",
-  bio: "",
   mode: "both",
   selectedCourseIds: [],
   semester: "",
 };
 
-// ── Slide variants factory ─────────────────────────────────────
-function slideVariants(direction: "forward" | "back") {
-  return direction === "forward" ? variants.slideInFromRight : variants.slideInFromLeft;
-}
-
-// ── Step Indicator ─────────────────────────────────────────────
-function StepIndicator({ current, total }: { current: number; total: number }) {
+// ── Progress bar ─────────────────────────────────────────────
+function ProgressBar({ step, total }: { step: number; total: number }) {
+  const pct = Math.round(((step + 1) / total) * 100);
   return (
-    <div className="flex items-center justify-center gap-0 pt-6 pb-2 px-8">
-      {Array.from({ length: total }).map((_, i) => (
-        <div key={i} className="flex items-center flex-1 last:flex-none">
-          <div
-            className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${
-              i < current
-                ? "bg-accent border-accent"
-                : i === current
-                ? "bg-accent border-accent"
-                : "bg-surface border-hairline"
-            }`}
-          >
-            {i < current ? (
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : (
-              <span
-                className={`text-caption font-semibold ${
-                  i === current ? "text-accent-foreground" : "text-ink-muted"
-                }`}
-              >
-                {i + 1}
-              </span>
-            )}
-          </div>
-          {i < total - 1 && (
-            <div
-              className={`h-px flex-1 mx-1 transition-all duration-300 ${
-                i < current ? "bg-accent" : "bg-hairline"
-              }`}
-            />
-          )}
-        </div>
-      ))}
+    <div className="px-5 pt-14 pb-0">
+      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+        <motion.div
+          className="h-full bg-accent rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={springs.smooth}
+        />
+      </div>
+      <p className="text-caption text-ink-muted mt-1.5 text-right">
+        Step {step + 1} of {total}
+      </p>
     </div>
   );
 }
 
-// ── Decorative SVG shapes per step ────────────────────────────
-function StepDecoration({ step }: { step: number }) {
-  const shapes = [
-    // Step 0: university — large circle + small circle
-    <svg key={0} className="absolute -top-8 -right-8 pointer-events-none" width="160" height="160" viewBox="0 0 160 160" fill="none" aria-hidden="true">
-      <circle cx="120" cy="40" r="60" fill="hsl(152 50% 93%)" fillOpacity="0.7" />
-      <circle cx="60" cy="110" r="28" fill="hsl(152 50% 93%)" fillOpacity="0.4" />
-    </svg>,
-    // Step 1: major/year — triangle-ish polygon
-    <svg key={1} className="absolute -top-6 -right-6 pointer-events-none" width="140" height="140" viewBox="0 0 140 140" fill="none" aria-hidden="true">
-      <ellipse cx="110" cy="30" rx="55" ry="45" fill="hsl(152 50% 93%)" fillOpacity="0.6" />
-      <rect x="20" y="90" width="50" height="50" rx="16" fill="hsl(152 50% 93%)" fillOpacity="0.35" />
-    </svg>,
-    // Step 2: bio — soft hexagon-like shape
-    <svg key={2} className="absolute -top-4 -right-4 pointer-events-none" width="120" height="120" viewBox="0 0 120 120" fill="none" aria-hidden="true">
-      <path d="M90 10 L120 55 L100 105 L50 115 L10 75 L20 20 Z" fill="hsl(152 50% 93%)" fillOpacity="0.5" />
-    </svg>,
-    // Step 3: courses — overlapping circles
-    <svg key={3} className="absolute -top-6 -right-6 pointer-events-none" width="150" height="150" viewBox="0 0 150 150" fill="none" aria-hidden="true">
-      <circle cx="100" cy="50" r="50" fill="hsl(152 50% 93%)" fillOpacity="0.55" />
-      <circle cx="130" cy="110" r="30" fill="hsl(152 50% 93%)" fillOpacity="0.3" />
-    </svg>,
-  ];
-  return <>{shapes[step] ?? null}</>;
-}
-
-// ── Main Component ─────────────────────────────────────────────
+// ── Main component ───────────────────────────────────────────
 const StudentOnboarding = () => {
   const navigate = useNavigate();
   const { setSelectedUniversity } = useUniversity();
@@ -128,74 +76,60 @@ const StudentOnboarding = () => {
   const setStudentCourses = useSetStudentCourses();
 
   const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState<"forward" | "back">("forward");
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Form state
   const [selectedUni, setSelectedUni] = useState("");
   const [selectedMajor, setSelectedMajor] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
-  const [bio, setBio] = useState("");
   const [mode, setMode] = useState<"online" | "in-person" | "both">("both");
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [semester, setSemester] = useState("");
   const [courseSearch, setCourseSearch] = useState("");
 
-  // Hooks for courses (step 3)
   const { data: allCourses = [] } = useCourses(selectedUni || undefined);
   const filteredCourses = allCourses.filter(c =>
     c.code.toLowerCase().includes(courseSearch.toLowerCase()) ||
     c.name.toLowerCase().includes(courseSearch.toLowerCase())
   );
 
-  // ── localStorage persistence ──────────────────────────────
+  // Restore draft
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const saved: Draft = JSON.parse(raw);
-      setStep(saved.step ?? 0);
+      setStep(Math.min(saved.step ?? 0, TOTAL_STEPS - 1));
       setSelectedUni(saved.selectedUni ?? "");
       setSelectedMajor(saved.selectedMajor ?? "");
       setSelectedYear(saved.selectedYear ?? "");
-      setBio(saved.bio ?? "");
       setMode(saved.mode ?? "both");
       setSelectedCourseIds(saved.selectedCourseIds ?? []);
       setSemester(saved.semester ?? "");
-      if (saved.step > 0) {
-        toast("Picking up where you left off", { duration: 3000 });
-      }
-    } catch {
-      /* ignore parse errors */
-    }
+      if (saved.step > 0) toast("Picking up where you left off");
+    } catch { /* ignore */ }
   }, []);
 
-  const persistDraft = useCallback((patch: Partial<Draft> & { step: number }) => {
+  const persistDraft = useCallback((nextStep: number) => {
     const draft: Draft = {
-      step: patch.step,
-      selectedUni,
-      selectedMajor,
-      selectedYear,
-      bio,
-      mode,
-      selectedCourseIds,
-      semester,
-      ...patch,
+      step: nextStep,
+      selectedUni, selectedMajor, selectedYear,
+      mode, selectedCourseIds, semester,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-  }, [selectedUni, selectedMajor, selectedYear, bio, mode, selectedCourseIds, semester]);
+  }, [selectedUni, selectedMajor, selectedYear, mode, selectedCourseIds, semester]);
 
   const goForward = () => {
     const next = step + 1;
-    setDirection("forward");
-    persistDraft({ step: next });
+    setDirection(1);
+    persistDraft(next);
     setStep(next);
   };
 
   const goBack = () => {
     const prev = step - 1;
-    setDirection("back");
-    persistDraft({ step: prev });
+    setDirection(-1);
+    persistDraft(prev);
     setStep(prev);
   };
 
@@ -205,7 +139,6 @@ const StudentOnboarding = () => {
     );
   };
 
-  // ── Save & finish ─────────────────────────────────────────
   const finish = async () => {
     if (!user) return;
     try {
@@ -215,7 +148,6 @@ const StudentOnboarding = () => {
         university_id: selectedUni || "aub",
         major: selectedMajor,
         year: selectedYear,
-        bio,
         onboarded_at: new Date().toISOString(),
       });
 
@@ -233,24 +165,152 @@ const StudentOnboarding = () => {
       setShowSuccess(true);
     } catch (err) {
       console.error("Failed to save student profile:", err);
+      toast("Something went wrong. Please try again.");
     }
   };
 
   const saving = updateProfile.isPending || setStudentCourses.isPending;
-  const currentVariant = slideVariants(direction);
 
-  // ── Step content ───────────────────────────────────────────
   const canContinue = [
-    !!selectedUni,                   // step 0
-    !!selectedMajor && !!selectedYear, // step 1
-    true,                            // step 2 bio optional
-    true,                            // step 3 courses optional
+    !!selectedUni,
+    !!selectedMajor && !!selectedYear,
+    true,
   ][step] ?? true;
 
-  const stepContent = [
-    // ── Step 0: University ──────────────────────────────────
-    <div key="s0" className="px-5 pt-10 pb-6 flex-1">
-      <h1 className="text-display-md mb-2 text-ink">Pick your university</h1>
+  const slideVariants = {
+    enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
+    center: { x: 0, opacity: 1, transition: springs.smooth },
+    exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 0, transition: { duration: 0.15 } }),
+  };
+
+  return (
+    <div className="min-h-svh bg-background flex flex-col overflow-x-hidden">
+      <SuccessOverlay
+        visible={showSuccess}
+        title="You're all set!"
+        description="Welcome to TUTR. Let's find you a tutor."
+        onDismiss={() => navigate("/")}
+      />
+
+      <ProgressBar step={step} total={TOTAL_STEPS} />
+
+      {/* Step slides */}
+      <div className="flex-1 flex flex-col relative overflow-hidden">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={step}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="absolute inset-0 flex flex-col"
+          >
+            {step === 0 && (
+              <Step0
+                universities={universities}
+                selectedUni={selectedUni}
+                onSelect={setSelectedUni}
+              />
+            )}
+            {step === 1 && (
+              <Step1
+                selectedMajor={selectedMajor}
+                selectedYear={selectedYear}
+                mode={mode}
+                onMajor={setSelectedMajor}
+                onYear={setSelectedYear}
+                onMode={setMode}
+              />
+            )}
+            {step === 2 && (
+              <Step2
+                allCourses={allCourses}
+                filteredCourses={filteredCourses}
+                selectedCourseIds={selectedCourseIds}
+                semester={semester}
+                courseSearch={courseSearch}
+                selectedUni={selectedUni}
+                onSearch={setCourseSearch}
+                onToggle={toggleCourse}
+                onSemester={setSemester}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom nav */}
+      <div className="px-5 pb-10 pt-4 space-y-3 bg-background z-10">
+        {step > 0 && (
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            transition={springs.snappy}
+            onClick={goBack}
+            className="flex items-center gap-1.5 text-ink-muted text-body-sm"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </motion.button>
+        )}
+
+        {step < TOTAL_STEPS - 1 ? (
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            transition={springs.snappy}
+            onClick={goForward}
+            disabled={!canContinue}
+            className="w-full h-14 rounded-2xl bg-accent text-white text-label font-semibold disabled:opacity-40 transition-opacity"
+          >
+            Continue
+          </motion.button>
+        ) : (
+          <>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
+              onClick={finish}
+              disabled={saving}
+              className="w-full h-14 rounded-2xl bg-accent text-white text-label font-semibold disabled:opacity-40 transition-opacity flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                  />
+                  Saving…
+                </>
+              ) : "Get started"}
+            </motion.button>
+            <p className="text-caption text-ink-muted text-center">
+              By continuing you agree to our{" "}
+              <Link to="/terms" className="text-accent" target="_blank">Terms</Link>
+              {" & "}
+              <Link to="/privacy" className="text-accent" target="_blank">Privacy Policy</Link>
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── Step 0: University ───────────────────────────────────────
+function Step0({
+  universities, selectedUni, onSelect,
+}: {
+  universities: any[];
+  selectedUni: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="px-5 pt-8 pb-4 flex-1 overflow-y-auto">
+      <p className="text-overline text-accent mb-2">Step 1</p>
+      <h1 className="text-h1 font-display mb-1">
+        Pick your <em>university</em>
+      </h1>
       <p className="text-body-sm text-ink-muted mb-7">
         We'll show you tutors and courses from your school.
       </p>
@@ -259,136 +319,155 @@ const StudentOnboarding = () => {
           <motion.button
             key={uni.id}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setSelectedUni(uni.id)}
+            transition={springs.snappy}
+            onClick={() => onSelect(uni.id)}
             className={`w-full p-4 rounded-xl border text-left flex items-center gap-4 transition-colors ${
               selectedUni === uni.id
-                ? "border-accent bg-accent-soft"
-                : "border-hairline bg-surface"
+                ? "border-accent bg-accent-light"
+                : "border-border bg-surface"
             }`}
           >
-            <div className="w-1 h-10 rounded-full" style={{ backgroundColor: uni.color }} />
-            <div className="flex-1">
-              <div className="text-label font-semibold text-ink">{uni.short_name}</div>
-              <div className="text-body-sm text-ink-muted">{uni.name}</div>
+            <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: uni.color }} />
+            <div className="flex-1 min-w-0">
+              <div className="text-label font-semibold text-foreground">{uni.short_name}</div>
+              <div className="text-body-sm text-ink-muted truncate">{uni.name}</div>
             </div>
             {selectedUni === uni.id && (
-              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center shrink-0">
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M2 5L4 7L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                <Check size={10} color="white" strokeWidth={2.5} />
               </div>
             )}
           </motion.button>
         ))}
       </div>
-    </div>,
+    </div>
+  );
+}
 
-    // ── Step 1: Major & Year ────────────────────────────────
-    <div key="s1" className="px-5 pt-10 pb-6 flex-1">
-      <h1 className="text-display-md mb-2 text-ink">What are you studying?</h1>
+// ── Step 1: Major + Year + Mode ──────────────────────────────
+function Step1({
+  selectedMajor, selectedYear, mode, onMajor, onYear, onMode,
+}: {
+  selectedMajor: string;
+  selectedYear: string;
+  mode: "online" | "in-person" | "both";
+  onMajor: (v: string) => void;
+  onYear: (v: string) => void;
+  onMode: (v: "online" | "in-person" | "both") => void;
+}) {
+  return (
+    <div className="px-5 pt-8 pb-4 flex-1 overflow-y-auto">
+      <p className="text-overline text-accent mb-2">Step 2</p>
+      <h1 className="text-h1 font-display mb-1">
+        What are you <em>studying?</em>
+      </h1>
       <p className="text-body-sm text-ink-muted mb-6">
         Pick your major and year. You can update these later.
       </p>
-      <div className="flex flex-wrap gap-2 mb-7">
+
+      <p className="text-label text-ink-muted mb-2">Major</p>
+      <div className="flex flex-wrap gap-2 mb-6">
         {MAJORS.map(m => (
           <motion.button
             key={m}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setSelectedMajor(m)}
-            className={`px-4 py-2 rounded-pill text-label transition-colors ${
+            transition={springs.snappy}
+            onClick={() => onMajor(m)}
+            className={`px-4 py-2 rounded-full text-label transition-colors ${
               selectedMajor === m
-                ? "bg-accent text-accent-foreground"
-                : "bg-surface border border-hairline text-ink"
+                ? "bg-accent text-white"
+                : "bg-surface border border-border text-foreground"
             }`}
           >
             {m}
           </motion.button>
         ))}
       </div>
-      <label className="text-label text-ink-muted mb-2 block">Year</label>
+
+      <p className="text-label text-ink-muted mb-2">Year</p>
       <select
         value={selectedYear}
-        onChange={e => setSelectedYear(e.target.value)}
-        className="w-full p-3.5 rounded-lg border border-hairline bg-surface text-body text-ink"
+        onChange={e => onYear(e.target.value)}
+        style={{ fontSize: "16px" }}
+        className="w-full p-3.5 rounded-xl border border-border bg-surface text-foreground mb-6 focus:outline-none focus:border-accent transition-colors"
       >
         <option value="">Select your year</option>
         {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
       </select>
-      <div className="mt-6">
-        <label className="text-label text-ink-muted mb-3 block">Learning preference</label>
-        <div className="flex gap-2">
-          {(["online", "in-person", "both"] as const).map(m => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`flex-1 py-2.5 rounded-lg text-label capitalize transition-colors border ${
-                mode === m
-                  ? "bg-accent-soft border-accent text-accent"
-                  : "bg-surface border-hairline text-ink-muted"
-              }`}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>,
 
-    // ── Step 2: Bio ─────────────────────────────────────────
-    <div key="s2" className="px-5 pt-10 pb-6 flex-1">
-      <h1 className="text-display-md mb-2 text-ink">Tell us about yourself</h1>
-      <p className="text-body-sm text-ink-muted mb-6">
-        Optional — tutors will see this on your profile.
-      </p>
-      <textarea
-        value={bio}
-        onChange={e => setBio(e.target.value)}
-        rows={5}
-        placeholder="e.g. Second-year CS major at AUB. Love math and always down to study in groups."
-        className="w-full p-4 rounded-xl border border-hairline bg-surface text-body text-ink resize-none focus:outline-none focus:border-accent transition-colors"
-        maxLength={300}
-      />
-      <div className="flex justify-end mt-1.5">
-        <span className="text-caption text-ink-muted">{bio.length}/300</span>
+      <p className="text-label text-ink-muted mb-2">Learning preference</p>
+      <div className="flex gap-2">
+        {(["online", "in-person", "both"] as const).map(m => (
+          <button
+            key={m}
+            onClick={() => onMode(m)}
+            className={`flex-1 py-3 rounded-xl text-label capitalize transition-colors border ${
+              mode === m
+                ? "bg-accent-light border-accent text-accent font-medium"
+                : "bg-surface border-border text-ink-muted"
+            }`}
+          >
+            {m}
+          </button>
+        ))}
       </div>
-    </div>,
+    </div>
+  );
+}
 
-    // ── Step 3: My Courses ──────────────────────────────────
-    <div key="s3" className="px-5 pt-10 pb-6 flex-1 flex flex-col">
-      <h1 className="text-display-md mb-2 text-ink">My courses</h1>
+// ── Step 2: Courses ──────────────────────────────────────────
+function Step2({
+  allCourses, filteredCourses, selectedCourseIds, semester,
+  courseSearch, selectedUni, onSearch, onToggle, onSemester,
+}: {
+  allCourses: any[];
+  filteredCourses: any[];
+  selectedCourseIds: string[];
+  semester: string;
+  courseSearch: string;
+  selectedUni: string;
+  onSearch: (v: string) => void;
+  onToggle: (id: string) => void;
+  onSemester: (v: string) => void;
+}) {
+  return (
+    <div className="px-5 pt-8 pb-4 flex-1 flex flex-col overflow-hidden">
+      <p className="text-overline text-accent mb-2">Step 3</p>
+      <h1 className="text-h1 font-display mb-1">
+        Your <em>courses</em>
+      </h1>
       <p className="text-body-sm text-ink-muted mb-4">
         Add the courses you're taking so tutors can find you.
       </p>
 
-      {/* Semester input */}
       <input
         value={semester}
-        onChange={e => setSemester(e.target.value)}
+        onChange={e => onSemester(e.target.value)}
         placeholder="Semester (e.g. Spring 2026)"
-        className="w-full mb-4 p-3.5 rounded-lg border border-hairline bg-surface text-body text-ink focus:outline-none focus:border-accent transition-colors"
+        style={{ fontSize: "16px" }}
+        className="w-full mb-3 px-4 py-3.5 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent transition-colors"
       />
 
-      {/* Search */}
       <div className="relative mb-3">
-        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted" />
+        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
         <input
           value={courseSearch}
-          onChange={e => setCourseSearch(e.target.value)}
+          onChange={e => onSearch(e.target.value)}
           placeholder="Search courses…"
-          className="w-full pl-10 pr-4 py-3 rounded-lg border border-hairline bg-surface text-body text-ink focus:outline-none focus:border-accent transition-colors"
+          style={{ fontSize: "16px" }}
+          className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent transition-colors"
         />
       </div>
 
-      {/* Selected courses */}
       {selectedCourseIds.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
           {selectedCourseIds.map(id => {
             const c = allCourses.find(x => x.id === id);
             if (!c) return null;
             return (
-              <div key={id} className="flex items-center gap-1.5 bg-accent-soft border border-accent/30 rounded-pill px-3 py-1.5">
+              <div key={id} className="flex items-center gap-1.5 bg-accent-light border border-accent/20 rounded-full px-3 py-1.5">
                 <span className="text-label text-accent">{c.code}</span>
-                <button onClick={() => toggleCourse(id)} className="text-accent/70 hover:text-accent">
+                <button onClick={() => onToggle(id)} className="text-accent/70 hover:text-accent" aria-label={`Remove ${c.code}`}>
                   <X size={12} />
                 </button>
               </div>
@@ -397,110 +476,29 @@ const StudentOnboarding = () => {
         </div>
       )}
 
-      {/* Course list */}
-      <div className="flex-1 overflow-auto space-y-1 max-h-52">
+      <div className="flex-1 overflow-y-auto space-y-0.5">
         {filteredCourses
           .filter(c => !selectedCourseIds.includes(c.id))
           .map(c => (
             <motion.button
               key={c.id}
               whileTap={{ scale: 0.98 }}
-              onClick={() => toggleCourse(c.id)}
-              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent-soft transition-colors flex items-center gap-3"
+              transition={springs.snappy}
+              onClick={() => onToggle(c.id)}
+              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent-light transition-colors flex items-center gap-3"
             >
-              <span className="text-label text-ink font-medium">{c.code}</span>
+              <span className="text-label text-foreground font-medium w-20 flex-shrink-0">{c.code}</span>
               <span className="text-body-sm text-ink-muted truncate">{c.name}</span>
             </motion.button>
           ))}
         {filteredCourses.filter(c => !selectedCourseIds.includes(c.id)).length === 0 && (
-          <p className="text-body-sm text-ink-muted text-center py-6">
+          <p className="text-body-sm text-ink-muted text-center py-8">
             {selectedUni ? "No courses found." : "Select a university first."}
           </p>
         )}
       </div>
-    </div>,
-  ];
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-x-hidden">
-      {/* Success Overlay */}
-      <SuccessOverlay
-        visible={showSuccess}
-        title="You're all set!"
-        description="Welcome to Tutr. Let's find you a tutor."
-        onDismiss={() => navigate("/")}
-      />
-
-      {/* Step indicator */}
-      <StepIndicator current={step} total={TOTAL_STEPS} />
-
-      {/* Step card */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={step}
-          variants={currentVariant}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="flex-1 flex flex-col relative overflow-hidden"
-        >
-          {/* Background decoration */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <StepDecoration step={step} />
-          </div>
-          <div className="relative z-10 flex-1 flex flex-col">
-            {stepContent[step]}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Bottom action zone */}
-      <div className="px-5 pb-10 pt-2">
-        {/* Back button */}
-        {step > 0 && (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={goBack}
-            className="flex items-center gap-1.5 text-ink-muted mb-4 text-body-sm"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </motion.button>
-        )}
-
-        {/* Continue / Finish */}
-        {step < TOTAL_STEPS - 1 ? (
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={goForward}
-            disabled={!canContinue}
-            className="w-full h-14 rounded-xl bg-accent text-accent-foreground text-label font-semibold disabled:opacity-40 transition-opacity"
-          >
-            Continue
-          </motion.button>
-        ) : (
-          <>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={finish}
-              disabled={saving}
-              className="w-full h-14 rounded-xl bg-accent text-accent-foreground text-label font-semibold disabled:opacity-40 transition-opacity"
-            >
-              {saving ? "Saving…" : "Get started"}
-            </motion.button>
-            <div className="mt-3 text-center">
-              <span className="text-body-sm text-ink-muted">
-                I agree to the{" "}
-                <Link to="/terms" className="text-accent" target="_blank">Terms</Link>
-                {" "}and{" "}
-                <Link to="/privacy" className="text-accent" target="_blank">Privacy Policy</Link>
-              </span>
-            </div>
-          </>
-        )}
-      </div>
     </div>
   );
-};
+}
 
 export default StudentOnboarding;

@@ -26,20 +26,20 @@ const TutorEarnings = () => {
     <div className="px-5 pt-14 pb-8 relative z-10">
       {/* Header */}
       <p className="text-overline text-ink-muted mb-1">OVERVIEW</p>
-      <h1 className="text-display-md text-ink mb-6">Earnings</h1>
+      <h1 className="text-h1 font-display text-foreground mb-6">Earnings</h1>
 
       {/* Hero stat */}
-      <div className="bg-surface rounded-xl border border-hairline p-6 text-center mb-4 relative overflow-hidden">
+      <div className="bg-surface rounded-xl border border-border p-6 text-center mb-4 relative overflow-hidden">
         {/* Accent gradient wash */}
         <div className="absolute inset-0 bg-gradient-to-b from-accent-soft/30 to-transparent pointer-events-none" />
         <p className="text-caption text-ink-muted mb-2 relative">This month</p>
         <div className="flex items-baseline justify-center gap-1 relative">
-          <span className="text-display-md text-ink-muted font-display">$</span>
+          <span className="text-h2 text-ink-muted font-display">$</span>
           <CountUp
             value={totalThisMonth}
             decimals={0}
             duration={800}
-            className="text-display-hero text-ink font-display font-tabular"
+            className="text-display text-foreground font-tabular"
           />
         </div>
         {totalAllTime > 0 && (
@@ -51,12 +51,12 @@ const TutorEarnings = () => {
 
       {/* Quick stats row */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-surface rounded-xl border border-hairline p-4 text-center">
-          <CountUp value={completed.length} className="text-display-sm text-ink font-semibold font-tabular" />
+        <div className="bg-surface rounded-xl border border-border p-4 text-center">
+          <CountUp value={completed.length} className="text-h2 font-display text-foreground font-semibold font-tabular" />
           <p className="text-caption text-ink-muted mt-0.5">Sessions done</p>
         </div>
-        <div className="bg-surface rounded-xl border border-hairline p-4 text-center">
-          <CountUp value={thisMonth.length} className="text-display-sm text-ink font-semibold font-tabular" />
+        <div className="bg-surface rounded-xl border border-border p-4 text-center">
+          <CountUp value={thisMonth.length} className="text-h2 font-display text-foreground font-semibold font-tabular" />
           <p className="text-caption text-ink-muted mt-0.5">This month</p>
         </div>
       </div>
@@ -76,7 +76,7 @@ const TutorEarnings = () => {
             variants={variants.staggerChildren}
             initial="hidden"
             animate="visible"
-            className="bg-surface rounded-xl border border-hairline divide-y divide-hairline"
+            className="bg-surface rounded-xl border border-border divide-y divide-border"
           >
             {completed.slice(0, 10).map((s: any) => (
               <motion.div
@@ -85,7 +85,7 @@ const TutorEarnings = () => {
                 className="flex items-center justify-between px-4 py-3.5"
               >
                 <div>
-                  <p className="text-label font-medium text-ink">
+                  <p className="text-label font-medium text-foreground">
                     {s.student?.full_name || "Student"}
                   </p>
                   <p className="text-caption text-ink-muted mt-0.5">

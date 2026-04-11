@@ -25,7 +25,7 @@ import {
 import { SessionCardSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { CardSuccessOverlay } from "@/components/SuccessOverlay";
-import { variants, transitions } from "@/lib/motion";
+import { variants, springs } from "@/lib/motion";
 import { toast, toastError } from "@/components/ui/sonner";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ function RequestCard({ req, onAccept, onDecline, actionPending }: RequestCardPro
     <motion.div
       variants={variants.staggerItem}
       layout
-      className="relative bg-surface rounded-xl border border-hairline p-4"
+      className="relative bg-surface rounded-xl border border-border p-4"
     >
       {/* Card success overlay */}
       <CardSuccessOverlay
@@ -95,7 +95,7 @@ function RequestCard({ req, onAccept, onDecline, actionPending }: RequestCardPro
           className="w-10 h-10 rounded-full object-cover flex-shrink-0"
         />
         <div className="flex-1 min-w-0">
-          <p className="text-body font-medium text-ink truncate">
+          <p className="text-body font-medium text-foreground truncate">
             {req.student?.full_name ?? "Student"}
           </p>
           <p className="text-body-sm text-ink-muted truncate">
@@ -170,7 +170,7 @@ function RequestCard({ req, onAccept, onDecline, actionPending }: RequestCardPro
           whileTap={{ scale: 0.96 }}
           onClick={() => onDecline(req.id)}
           disabled={actionPending}
-          className="flex-1 h-11 rounded-lg border border-hairline text-ink-muted text-label font-medium flex items-center justify-center gap-1.5 disabled:opacity-50 hover:bg-muted transition-colors"
+          className="flex-1 h-11 rounded-lg border border-border text-ink-muted text-label font-medium flex items-center justify-center gap-1.5 disabled:opacity-50 hover:bg-muted transition-colors"
         >
           <X size={15} />
           Decline
@@ -270,7 +270,7 @@ const TutorRequests = () => {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <h1 className="text-display-md text-ink mb-5">Requests</h1>
+      <h1 className="text-h1 font-display text-foreground mb-5">Requests</h1>
 
       {isLoading ? (
         <div className="space-y-3">

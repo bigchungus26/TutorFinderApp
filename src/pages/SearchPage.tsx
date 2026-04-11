@@ -1,20 +1,12 @@
 // ============================================================
-// SearchPage — Upgraded (Part F, Polish Pass 11)
-// Tutr app
-// Features: debounced input, recent searches, advanced filter
-// sheet, active filter pills, empty state with course request,
-// stagger animation on results.
+// SearchPage — Part 2.10
+// Debounced search, recent searches, filter sheet,
+// active filter pills, stagger results.
 // ============================================================
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import {
-  Search as SearchIcon,
-  SlidersHorizontal,
-  X,
-  Star,
-  Clock,
-} from "lucide-react";
+import { Search as SearchIcon, SlidersHorizontal, X, Star, Clock } from "lucide-react";
 import { useUniversity } from "@/contexts/UniversityContext";
 import { useCourses, useTutors, useUniversities } from "@/hooks/useSupabaseQuery";
 import { TutorCard } from "@/components/TutorCard";
@@ -22,15 +14,10 @@ import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
 import { EmptyState } from "@/components/EmptyState";
 import { supabase } from "@/lib/supabase";
-import { variants } from "@/lib/motion";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { springs, variants } from "@/lib/motion";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-// ── Constants ──────────────────────────────────────────────────
+// ── Constants ────────────────────────────────────────────────
 const RECENT_KEY = "tutr:recent-searches";
 const MAX_RECENT = 8;
 
@@ -47,11 +34,7 @@ interface Filters {
 }
 
 const DEFAULT_FILTERS: Filters = {
-  minPrice: "",
-  maxPrice: "",
-  minRating: 0,
-  location: "both",
-  sortBy: "rating",
+  minPrice: "", maxPrice: "", minRating: 0, location: "both", sortBy: "rating",
 };
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
@@ -67,49 +50,33 @@ const LOCATION_OPTIONS: { value: LocationFilter; label: string }[] = [
   { value: "both", label: "Both" },
 ];
 
-// ── Recent searches helpers ────────────────────────────────────
+// ── Recent searches helpers ──────────────────────────────────
 function loadRecent(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]"); }
+  catch { return []; }
 }
-
-function saveRecent(searches: string[]) {
-  localStorage.setItem(RECENT_KEY, JSON.stringify(searches.slice(0, MAX_RECENT)));
+function saveRecent(s: string[]) {
+  localStorage.setItem(RECENT_KEY, JSON.stringify(s.slice(0, MAX_RECENT)));
 }
-
 function addRecent(term: string) {
   if (!term.trim()) return;
-  const list = loadRecent().filter((s) => s !== term);
-  saveRecent([term, ...list]);
+  saveRecent([term, ...loadRecent().filter(s => s !== term)]);
 }
-
 function removeRecent(term: string) {
-  saveRecent(loadRecent().filter((s) => s !== term));
+  saveRecent(loadRecent().filter(s => s !== term));
 }
 
-// ── Course request sheet ───────────────────────────────────────
-interface CourseRequestSheetProps {
-  open: boolean;
-  onClose: () => void;
-  initialCourse?: string;
-  universityId: string;
-}
-
-function CourseRequestSheet({ open, onClose, initialCourse, universityId }: CourseRequestSheetProps) {
+// ── Course request sheet ─────────────────────────────────────
+function CourseRequestSheet({ open, onClose, initialCourse, universityId }: {
+  open: boolean; onClose: () => void; initialCourse?: string; universityId: string;
+}) {
   const [courseCode, setCourseCode] = useState(initialCourse ?? "");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setCourseCode(initialCourse ?? "");
-      setMessage("");
-      setSubmitted(false);
-    }
+    if (open) { setCourseCode(initialCourse ?? ""); setMessage(""); setSubmitted(false); }
   }, [open, initialCourse]);
 
   const handleSubmit = async () => {
@@ -122,26 +89,22 @@ function CourseRequestSheet({ open, onClose, initialCourse, universityId }: Cour
         university_id: universityId,
       });
       setSubmitted(true);
-    } catch {
-      // silent fail — toast handled elsewhere
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* silent */ }
+    finally { setLoading(false); }
   };
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+      <SheetContent side="bottom" className="rounded-t-2xl pb-10">
         <SheetHeader className="mb-5">
-          <SheetTitle className="text-display-sm text-ink">Request a course</SheetTitle>
+          <SheetTitle className="text-h2 font-display">Request a course</SheetTitle>
         </SheetHeader>
-
         {submitted ? (
           <div className="text-center py-8">
-            <div className="w-14 h-14 rounded-full bg-accent-soft flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-full bg-accent-light flex items-center justify-center mx-auto mb-4">
               <SearchIcon size={22} className="text-accent" />
             </div>
-            <p className="text-body text-ink font-medium mb-1">Request submitted!</p>
+            <p className="text-body font-medium text-foreground mb-1">Request submitted!</p>
             <p className="text-body-sm text-ink-muted">
               We'll notify you when a tutor is available for {courseCode}.
             </p>
@@ -153,28 +116,30 @@ function CourseRequestSheet({ open, onClose, initialCourse, universityId }: Cour
                 <label className="text-label text-ink-muted block mb-1.5">Course code</label>
                 <input
                   value={courseCode}
-                  onChange={(e) => setCourseCode(e.target.value)}
+                  onChange={e => setCourseCode(e.target.value)}
                   placeholder="e.g. CMPS 200"
-                  className="w-full px-4 py-3 rounded-xl border border-hairline bg-surface text-body text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
+                  style={{ fontSize: "16px" }}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors"
                 />
               </div>
               <div>
                 <label className="text-label text-ink-muted block mb-1.5">Message (optional)</label>
                 <textarea
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={e => setMessage(e.target.value)}
                   placeholder="Any specific topics you need help with?"
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl border border-hairline bg-surface text-body-sm text-ink placeholder:text-ink-subtle resize-none focus:outline-none focus:ring-2 focus:ring-accent"
+                  style={{ fontSize: "16px" }}
+                  className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted resize-none focus:outline-none focus:border-accent transition-colors"
                 />
               </div>
             </div>
-
             <motion.button
               whileTap={{ scale: 0.97 }}
+              transition={springs.snappy}
               onClick={handleSubmit}
               disabled={loading || !courseCode.trim()}
-              className="w-full h-12 rounded-lg bg-accent text-accent-foreground text-label font-medium disabled:opacity-60"
+              className="w-full h-13 rounded-xl bg-accent text-white text-label font-semibold disabled:opacity-50"
             >
               {loading ? "Submitting…" : "Submit request"}
             </motion.button>
@@ -185,98 +150,76 @@ function CourseRequestSheet({ open, onClose, initialCourse, universityId }: Cour
   );
 }
 
-// ── Advanced filter sheet ──────────────────────────────────────
-interface FilterSheetProps {
-  open: boolean;
-  onClose: () => void;
-  filters: Filters;
-  onApply: (f: Filters) => void;
-}
-
-function FilterSheet({ open, onClose, filters, onApply }: FilterSheetProps) {
+// ── Filter sheet ─────────────────────────────────────────────
+function FilterSheet({ open, onClose, filters, onApply }: {
+  open: boolean; onClose: () => void; filters: Filters; onApply: (f: Filters) => void;
+}) {
   const [draft, setDraft] = useState<Filters>(filters);
-
-  useEffect(() => {
-    if (open) setDraft(filters);
-  }, [open, filters]);
-
-  const patch = (partial: Partial<Filters>) =>
-    setDraft((prev) => ({ ...prev, ...partial }));
+  useEffect(() => { if (open) setDraft(filters); }, [open, filters]);
+  const patch = (p: Partial<Filters>) => setDraft(prev => ({ ...prev, ...p }));
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto rounded-t-2xl pb-8">
+      <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto rounded-t-2xl pb-10">
         <SheetHeader className="mb-6">
-          <SheetTitle className="text-display-sm text-ink">Filters</SheetTitle>
+          <SheetTitle className="text-h2 font-display">Filters</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-6">
-          {/* Price range */}
           <div>
-            <p className="text-label text-ink mb-2.5">Price range ($/hr)</p>
+            <p className="text-label text-foreground mb-2.5">Price range ($/hr)</p>
             <div className="flex items-center gap-3">
               <input
-                type="number"
-                min={0}
-                placeholder="Min"
+                type="number" min={0} placeholder="Min"
                 value={draft.minPrice}
-                onChange={(e) => patch({ minPrice: e.target.value })}
-                className="flex-1 px-3 py-2.5 rounded-xl border border-hairline bg-surface text-body text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
+                onChange={e => patch({ minPrice: e.target.value })}
+                style={{ fontSize: "16px" }}
+                className="flex-1 px-3 py-2.5 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors"
               />
-              <span className="text-ink-subtle text-body">–</span>
+              <span className="text-ink-muted">–</span>
               <input
-                type="number"
-                min={0}
-                placeholder="Max"
+                type="number" min={0} placeholder="Max"
                 value={draft.maxPrice}
-                onChange={(e) => patch({ maxPrice: e.target.value })}
-                className="flex-1 px-3 py-2.5 rounded-xl border border-hairline bg-surface text-body text-ink placeholder:text-ink-subtle focus:outline-none focus:ring-2 focus:ring-accent"
+                onChange={e => patch({ maxPrice: e.target.value })}
+                style={{ fontSize: "16px" }}
+                className="flex-1 px-3 py-2.5 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors"
               />
             </div>
           </div>
 
-          {/* Min rating */}
           <div>
-            <p className="text-label text-ink mb-2.5">Minimum rating</p>
+            <p className="text-label text-foreground mb-2.5">Minimum rating</p>
             <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((n) => (
+              {[1, 2, 3, 4, 5].map(n => (
                 <motion.button
                   key={n}
                   whileTap={{ scale: 0.9 }}
+                  transition={springs.snappy}
                   onClick={() => patch({ minRating: draft.minRating === n ? 0 : n })}
                   aria-label={`${n} star minimum`}
                 >
-                  <Star
-                    size={28}
-                    className={
-                      n <= draft.minRating
-                        ? "text-accent fill-accent"
-                        : "text-ink-subtle"
-                    }
-                  />
+                  <Star size={28} className={n <= draft.minRating ? "text-accent fill-accent" : "text-ink-muted"} />
                 </motion.button>
               ))}
               {draft.minRating > 0 && (
-                <span className="self-center ml-2 text-body-sm text-ink-muted">
-                  {draft.minRating}+ stars
-                </span>
+                <span className="self-center ml-2 text-body-sm text-ink-muted">{draft.minRating}+ stars</span>
               )}
             </div>
           </div>
 
-          {/* Location */}
           <div>
-            <p className="text-label text-ink mb-2.5">Location</p>
+            <p className="text-label text-foreground mb-2.5">Location</p>
             <div className="flex gap-2 flex-wrap">
               {LOCATION_OPTIONS.map(({ value, label }) => (
                 <motion.button
                   key={value}
                   whileTap={{ scale: 0.96 }}
+                  transition={springs.snappy}
                   onClick={() => patch({ location: value })}
-                  className={`px-4 py-2 rounded-pill text-label transition-colors ${
+                  className={`px-4 py-2 rounded-full text-label transition-colors ${
                     draft.location === value
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-surface border border-hairline text-ink"
+                      ? "bg-accent text-white"
+                      : "bg-surface border border-border text-foreground"
                   }`}
                 >
                   {label}
@@ -285,19 +228,19 @@ function FilterSheet({ open, onClose, filters, onApply }: FilterSheetProps) {
             </div>
           </div>
 
-          {/* Sort by */}
           <div>
-            <p className="text-label text-ink mb-2.5">Sort by</p>
+            <p className="text-label text-foreground mb-2.5">Sort by</p>
             <div className="flex gap-2 flex-wrap">
               {SORT_OPTIONS.map(({ value, label }) => (
                 <motion.button
                   key={value}
                   whileTap={{ scale: 0.96 }}
+                  transition={springs.snappy}
                   onClick={() => patch({ sortBy: value })}
-                  className={`px-4 py-2 rounded-pill text-label transition-colors ${
+                  className={`px-4 py-2 rounded-full text-label transition-colors ${
                     draft.sortBy === value
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-surface border border-hairline text-ink"
+                      ? "bg-accent text-white"
+                      : "bg-surface border border-border text-foreground"
                   }`}
                 >
                   {label}
@@ -307,28 +250,22 @@ function FilterSheet({ open, onClose, filters, onApply }: FilterSheetProps) {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-3 mt-7">
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              patch(DEFAULT_FILTERS);
-              onApply(DEFAULT_FILTERS);
-              onClose();
-            }}
-            className="flex-1 h-12 rounded-lg border border-hairline bg-surface text-ink text-label font-medium"
+            transition={springs.snappy}
+            onClick={() => { patch(DEFAULT_FILTERS); onApply(DEFAULT_FILTERS); onClose(); }}
+            className="flex-1 h-12 rounded-xl border border-border bg-surface text-foreground text-label font-medium"
           >
             Reset
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              onApply(draft);
-              onClose();
-            }}
-            className="flex-1 h-12 rounded-lg bg-accent text-accent-foreground text-label font-medium"
+            transition={springs.snappy}
+            onClick={() => { onApply(draft); onClose(); }}
+            className="flex-1 h-12 rounded-xl bg-accent text-white text-label font-medium"
           >
-            Apply filters
+            Apply
           </motion.button>
         </div>
       </SheetContent>
@@ -336,14 +273,14 @@ function FilterSheet({ open, onClose, filters, onApply }: FilterSheetProps) {
   );
 }
 
-// ── Active filter pill ─────────────────────────────────────────
+// ── Active filter pill ───────────────────────────────────────
 function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
     <motion.span
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-pill bg-accent-soft text-accent text-label"
+      className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-accent-light text-accent text-label"
     >
       {label}
       <button
@@ -357,7 +294,7 @@ function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }
   );
 }
 
-// ── Main page ──────────────────────────────────────────────────
+// ── Main page ────────────────────────────────────────────────
 const FILTER_TABS: FilterTab[] = ["All", "Courses", "Tutors"];
 
 const SearchPage = () => {
@@ -365,7 +302,6 @@ const SearchPage = () => {
   const [searchParams] = useSearchParams();
   const { selectedUniversity } = useUniversity();
 
-  // ── Input state: raw (immediate) + debounced query ─────────
   const [rawQuery, setRawQuery] = useState(searchParams.get("subject") || "");
   const [query, setQuery] = useState(rawQuery);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -379,32 +315,13 @@ const SearchPage = () => {
     }, 250);
   };
 
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);
 
-  // ── Recent searches ────────────────────────────────────────
   const [recentSearches, setRecentSearches] = useState<string[]>(loadRecent);
   const refreshRecent = useCallback(() => setRecentSearches(loadRecent()), []);
 
-  const handleRemoveRecent = (term: string) => {
-    removeRecent(term);
-    refreshRecent();
-  };
-
-  const handlePickRecent = (term: string) => {
-    setRawQuery(term);
-    setQuery(term);
-  };
-
-  const handleClearAllRecent = () => {
-    localStorage.removeItem(RECENT_KEY);
-    setRecentSearches([]);
-  };
-
-  // ── Filter / UI state ──────────────────────────────────────
   const [activeTab, setActiveTab] = useState<FilterTab>(
     searchParams.get("subject") ? "Courses" : "All"
   );
@@ -413,66 +330,47 @@ const SearchPage = () => {
   const [appliedFilters, setAppliedFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [courseRequestOpen, setCourseRequestOpen] = useState(false);
 
-  // ── Data ───────────────────────────────────────────────────
   const { data: courses = [] } = useCourses(selectedUniversity);
   const { data: tutors = [] } = useTutors(selectedUniversity);
   const { data: universities = [] } = useUniversities();
 
-  // ── Filtered courses ───────────────────────────────────────
   const filteredCourses = useMemo(() => {
     if (!query) return courses;
     const q = query.toLowerCase();
-    return courses.filter(
-      (c) =>
-        c.code.toLowerCase().includes(q) ||
-        c.name.toLowerCase().includes(q) ||
-        c.subject.toLowerCase().includes(q)
+    return courses.filter(c =>
+      c.code.toLowerCase().includes(q) ||
+      c.name.toLowerCase().includes(q) ||
+      c.subject?.toLowerCase().includes(q)
     );
   }, [query, courses]);
 
-  // ── Filtered + sorted tutors ───────────────────────────────
   const filteredTutors = useMemo(() => {
     let result = [...tutors];
 
-    // Text search
     if (query) {
       const q = query.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.full_name.toLowerCase().includes(q) ||
-          (t.major ?? "").toLowerCase().includes(q) ||
-          (t.tutor_courses ?? []).some((tc: any) =>
-            tc.course?.code?.toLowerCase().includes(q)
-          )
+      result = result.filter(t =>
+        t.full_name.toLowerCase().includes(q) ||
+        (t.major ?? "").toLowerCase().includes(q) ||
+        (t.tutor_courses ?? []).some((tc: any) => tc.course?.code?.toLowerCase().includes(q))
       );
     }
 
-    // Price filter
     const minP = appliedFilters.minPrice ? Number(appliedFilters.minPrice) : null;
     const maxP = appliedFilters.maxPrice ? Number(appliedFilters.maxPrice) : null;
-    if (minP !== null) result = result.filter((t) => (t.hourly_rate ?? 0) >= minP);
-    if (maxP !== null) result = result.filter((t) => (t.hourly_rate ?? 0) <= maxP);
+    if (minP !== null) result = result.filter(t => (t.hourly_rate ?? 0) >= minP);
+    if (maxP !== null) result = result.filter(t => (t.hourly_rate ?? 0) <= maxP);
 
-    // Rating filter
     if (appliedFilters.minRating > 0) {
-      result = result.filter(
-        (t) => (t.tutor_stats?.rating ?? 0) >= appliedFilters.minRating
-      );
+      result = result.filter(t => (t.stats?.avg_rating ?? t.tutor_stats?.rating ?? 0) >= appliedFilters.minRating);
     }
 
-    // Location filter
-    if (appliedFilters.location === "online") {
-      result = result.filter((t) => t.online);
-    } else if (appliedFilters.location === "in-person") {
-      result = result.filter((t) => t.in_person);
-    }
+    if (appliedFilters.location === "online") result = result.filter(t => t.online);
+    else if (appliedFilters.location === "in-person") result = result.filter(t => t.in_person);
 
-    // Sort
     switch (appliedFilters.sortBy) {
       case "rating":
-        result.sort(
-          (a, b) => (b.tutor_stats?.rating ?? 0) - (a.tutor_stats?.rating ?? 0)
-        );
+        result.sort((a, b) => (b.stats?.avg_rating ?? 0) - (a.stats?.avg_rating ?? 0));
         break;
       case "price_asc":
         result.sort((a, b) => (a.hourly_rate ?? 0) - (b.hourly_rate ?? 0));
@@ -481,103 +379,56 @@ const SearchPage = () => {
         result.sort((a, b) => (b.hourly_rate ?? 0) - (a.hourly_rate ?? 0));
         break;
       case "newest":
-        result.sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
     }
 
     return result;
   }, [query, tutors, appliedFilters]);
 
-  // ── Active filter pills ────────────────────────────────────
   const activeFilterPills = useMemo(() => {
     const pills: { key: string; label: string; remove: () => void }[] = [];
-
     if (appliedFilters.minPrice || appliedFilters.maxPrice) {
       const from = appliedFilters.minPrice ? `$${appliedFilters.minPrice}` : "Any";
       const to = appliedFilters.maxPrice ? `$${appliedFilters.maxPrice}` : "Any";
-      pills.push({
-        key: "price",
-        label: `${from} – ${to}/hr`,
-        remove: () =>
-          setAppliedFilters((f) => ({ ...f, minPrice: "", maxPrice: "" })),
-      });
+      pills.push({ key: "price", label: `${from}–${to}/hr`, remove: () => setAppliedFilters(f => ({ ...f, minPrice: "", maxPrice: "" })) });
     }
-
     if (appliedFilters.minRating > 0) {
-      pills.push({
-        key: "rating",
-        label: `${appliedFilters.minRating}+ stars`,
-        remove: () => setAppliedFilters((f) => ({ ...f, minRating: 0 })),
-      });
+      pills.push({ key: "rating", label: `${appliedFilters.minRating}+ stars`, remove: () => setAppliedFilters(f => ({ ...f, minRating: 0 })) });
     }
-
     if (appliedFilters.location !== "both") {
-      pills.push({
-        key: "location",
-        label:
-          appliedFilters.location === "online" ? "Online only" : "In-person only",
-        remove: () => setAppliedFilters((f) => ({ ...f, location: "both" })),
-      });
+      pills.push({ key: "location", label: appliedFilters.location === "online" ? "Online only" : "In-person only", remove: () => setAppliedFilters(f => ({ ...f, location: "both" })) });
     }
-
     if (appliedFilters.sortBy !== "rating") {
-      const sortLabel =
-        SORT_OPTIONS.find((s) => s.value === appliedFilters.sortBy)?.label ?? "";
-      pills.push({
-        key: "sort",
-        label: `Sort: ${sortLabel}`,
-        remove: () => setAppliedFilters((f) => ({ ...f, sortBy: "rating" })),
-      });
+      const label = SORT_OPTIONS.find(s => s.value === appliedFilters.sortBy)?.label ?? "";
+      pills.push({ key: "sort", label: `Sort: ${label}`, remove: () => setAppliedFilters(f => ({ ...f, sortBy: "rating" })) });
     }
-
     return pills;
   }, [appliedFilters]);
 
   const hasActiveFilters = activeFilterPills.length > 0;
-
-  // ── Counts for tab badges ──────────────────────────────────
   const courseCount = filteredCourses.length;
   const tutorCount = filteredTutors.length;
-  const allCount = courseCount + tutorCount;
+  const tabCount: Record<FilterTab, number> = { All: courseCount + tutorCount, Courses: courseCount, Tutors: tutorCount };
+  const hasResults = courseCount > 0 || tutorCount > 0;
+  const noResults = !hasResults && !!query;
 
-  const tabCount: Record<FilterTab, number> = {
-    All: allCount,
-    Courses: courseCount,
-    Tutors: tutorCount,
-  };
-
-  const hasResults =
-    filteredCourses.length > 0 || filteredTutors.length > 0;
-
-  const noResults =
-    filteredCourses.length === 0 && filteredTutors.length === 0 && !!query;
-
-  // ── Render ─────────────────────────────────────────────────
   return (
     <div className="px-5 pt-14 pb-4">
-
-      {/* ── Search input ────────────────────────────────────── */}
+      {/* Search input */}
       <div className="relative mb-3">
-        <SearchIcon
-          size={20}
-          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
-        />
+        <SearchIcon size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
         <input
           autoFocus
           value={rawQuery}
-          onChange={(e) => handleInputChange(e.target.value)}
-          placeholder="Search tutors, courses..."
-          className="w-full h-14 pl-11 pr-10 rounded-xl border border-hairline bg-surface text-body text-ink placeholder:text-ink-subtle focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors"
+          onChange={e => handleInputChange(e.target.value)}
+          placeholder="Search tutors, courses…"
+          style={{ fontSize: "16px" }}
+          className="w-full h-14 pl-11 pr-10 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors"
         />
         {rawQuery && (
           <button
-            onClick={() => {
-              setRawQuery("");
-              setQuery("");
-            }}
+            onClick={() => { setRawQuery(""); setQuery(""); }}
             className="absolute right-3 top-1/2 -translate-y-1/2"
             aria-label="Clear search"
           >
@@ -586,29 +437,28 @@ const SearchPage = () => {
         )}
       </div>
 
-      {/* ── Row: university pill + filters button ─────────── */}
+      {/* University pill + filters */}
       <div className="flex items-center gap-2 mb-3">
         <UniversityPill onClick={() => setUniSwitcherOpen(true)} />
         <motion.button
           whileTap={{ scale: 0.96 }}
+          transition={springs.snappy}
           onClick={() => setFiltersOpen(true)}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill border text-label font-medium transition-colors ${
-            hasActiveFilters
-              ? "border-accent bg-accent-soft text-accent"
-              : "border-hairline bg-surface text-ink"
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-label font-medium transition-colors ${
+            hasActiveFilters ? "border-accent bg-accent-light text-accent" : "border-border bg-surface text-foreground"
           }`}
         >
           <SlidersHorizontal size={14} />
           Filters
           {hasActiveFilters && (
-            <span className="w-4 h-4 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center">
+            <span className="w-4 h-4 rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center">
               {activeFilterPills.length}
             </span>
           )}
         </motion.button>
       </div>
 
-      {/* ── Active filter pills ──────────────────────────── */}
+      {/* Active filter pills */}
       <AnimatePresence>
         {hasActiveFilters && (
           <motion.div
@@ -619,12 +469,8 @@ const SearchPage = () => {
           >
             <div className="flex flex-wrap gap-2 mb-3">
               <AnimatePresence>
-                {activeFilterPills.map((pill) => (
-                  <FilterPill
-                    key={pill.key}
-                    label={pill.label}
-                    onRemove={pill.remove}
-                  />
+                {activeFilterPills.map(pill => (
+                  <FilterPill key={pill.key} label={pill.label} onRemove={pill.remove} />
                 ))}
               </AnimatePresence>
             </div>
@@ -632,7 +478,7 @@ const SearchPage = () => {
         )}
       </AnimatePresence>
 
-      {/* ── Recent searches (shown when input is empty) ───── */}
+      {/* Recent searches */}
       <AnimatePresence>
         {!rawQuery && recentSearches.length > 0 && (
           <motion.div
@@ -642,190 +488,138 @@ const SearchPage = () => {
             exit="exit"
             className="mb-5"
           >
-            {/* Header row with label + clear button */}
             <div className="flex items-center justify-between mb-2">
-              <p className="text-overline text-ink-muted">RECENT</p>
+              <p className="text-overline text-ink-muted">Recent</p>
               <button
-                onClick={handleClearAllRecent}
-                className="text-caption text-ink-muted hover:text-ink transition-colors"
+                onClick={() => { localStorage.removeItem(RECENT_KEY); setRecentSearches([]); }}
+                className="text-caption text-ink-muted"
               >
                 Clear
               </button>
             </div>
-
-            {/* Staggered chips */}
-            <motion.div
-              variants={variants.staggerChildren}
-              initial="hidden"
-              animate="visible"
-              className="flex flex-wrap gap-2"
-            >
-              {recentSearches.map((term) => (
-                <motion.div
-                  key={term}
-                  variants={variants.staggerItem}
-                  className="inline-flex items-center gap-0.5"
-                >
+            <div className="flex flex-wrap gap-2">
+              {recentSearches.map(term => (
+                <div key={term} className="inline-flex items-center">
                   <motion.button
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => handlePickRecent(term)}
-                    className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-l-pill bg-surface border border-hairline text-body-sm text-ink hover:bg-muted transition-colors"
+                    transition={springs.snappy}
+                    onClick={() => { setRawQuery(term); setQuery(term); }}
+                    className="inline-flex items-center gap-1.5 pl-3 pr-1.5 py-1.5 rounded-l-full bg-surface border border-border text-body-sm text-foreground hover:bg-muted transition-colors"
                   >
                     <Clock size={12} className="text-ink-muted flex-shrink-0" />
                     {term}
                   </motion.button>
                   <button
-                    onClick={() => handleRemoveRecent(term)}
-                    className="pl-1.5 pr-3 py-1.5 rounded-r-pill border border-l-0 border-hairline bg-surface text-ink-subtle hover:text-ink transition-colors"
-                    aria-label={`Remove "${term}" from recent`}
+                    onClick={() => { removeRecent(term); refreshRecent(); }}
+                    className="pl-1.5 pr-3 py-1.5 rounded-r-full border border-l-0 border-border bg-surface text-ink-muted hover:text-foreground transition-colors"
+                    aria-label={`Remove "${term}"`}
                   >
                     <X size={11} />
                   </button>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── RESULTS overline + filter tabs ─────────────────── */}
-      {hasResults && (
-        <p className="text-overline text-ink-muted mb-2">RESULTS</p>
-      )}
-
-      {/* ── Filter tabs with count badges ──────────────────── */}
-      <div className="flex gap-1 mb-5">
-        {FILTER_TABS.map((tab) => {
-          const count = tabCount[tab];
-          return (
-            <motion.button
-              key={tab}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-pill text-label font-medium transition-colors ${
-                activeTab === tab
-                  ? "bg-foreground text-background"
-                  : "text-ink-muted"
-              }`}
-            >
-              {tab}
-              {query && count > 0 && (
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                    activeTab === tab
-                      ? "bg-background/20 text-background"
-                      : "bg-muted text-ink-muted"
-                  }`}
-                >
-                  {count}
-                </span>
-              )}
-            </motion.button>
-          );
-        })}
+      {/* Tab bar */}
+      <div className="flex gap-1 mb-4">
+        {FILTER_TABS.map(tab => (
+          <motion.button
+            key={tab}
+            whileTap={{ scale: 0.96 }}
+            transition={springs.snappy}
+            onClick={() => setActiveTab(tab)}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-label font-medium transition-colors ${
+              activeTab === tab ? "bg-foreground text-background" : "text-ink-muted"
+            }`}
+          >
+            {tab}
+            {query && tabCount[tab] > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                activeTab === tab ? "bg-white/20 text-background" : "bg-muted text-ink-muted"
+              }`}>
+                {tabCount[tab]}
+              </span>
+            )}
+          </motion.button>
+        ))}
       </div>
 
-      {/* ── Courses section ────────────────────────────────── */}
-      {(activeTab === "All" || activeTab === "Courses") &&
-        filteredCourses.length > 0 && (
-          <div className="mb-6">
-            {activeTab === "All" && (
-              <h3 className="text-caption text-ink-muted uppercase tracking-wider mb-2">
-                Courses
-              </h3>
-            )}
-            <motion.div
-              variants={variants.staggerChildren}
-              initial="hidden"
-              animate="visible"
-              className="space-y-2"
-            >
-              {filteredCourses
-                .slice(0, activeTab === "All" ? 4 : undefined)
-                .map((c, i) => {
-                  const uni = universities.find((u) => u.id === c.university_id);
-                  return (
-                    <motion.div key={c.id} variants={variants.staggerItem} custom={i}>
-                      <motion.button
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate(`/course/${c.id}`)}
-                        className="w-full relative overflow-hidden bg-surface rounded-xl border border-hairline p-4 text-left flex items-center gap-3"
-                      >
-                        {/* Left accent bar tinted by university color */}
-                        <div
-                          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-                          style={{ backgroundColor: uni?.color ?? "#2fa86e" }}
-                        />
-                        <div className="flex-1 pl-4">
-                          <div className="text-label text-ink font-medium">{c.code}</div>
-                          <div className="text-body-sm text-ink-muted">{c.name}</div>
-                        </div>
-                      </motion.button>
-                    </motion.div>
-                  );
-                })}
-            </motion.div>
-          </div>
-        )}
+      {/* Courses section */}
+      {(activeTab === "All" || activeTab === "Courses") && filteredCourses.length > 0 && (
+        <div className="mb-6">
+          {activeTab === "All" && (
+            <p className="text-overline text-ink-muted mb-2">Courses</p>
+          )}
+          <motion.div
+            variants={variants.staggerChildren}
+            initial="hidden"
+            animate="visible"
+            className="space-y-2"
+          >
+            {filteredCourses.slice(0, activeTab === "All" ? 4 : undefined).map((c, i) => {
+              const uni = universities.find(u => u.id === c.university_id);
+              return (
+                <motion.div key={c.id} variants={variants.staggerItem} custom={i}>
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    transition={springs.snappy}
+                    onClick={() => navigate(`/course/${c.id}`)}
+                    className="w-full relative overflow-hidden bg-surface rounded-xl border border-border p-4 text-left flex items-center gap-3"
+                  >
+                    <div
+                      className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
+                      style={{ backgroundColor: uni?.color ?? "#2ba66a" }}
+                    />
+                    <div className="flex-1 pl-4">
+                      <div className="text-label text-foreground font-medium">{c.code}</div>
+                      <div className="text-body-sm text-ink-muted">{c.name}</div>
+                    </div>
+                  </motion.button>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
+      )}
 
-      {/* ── Tutors section ─────────────────────────────────── */}
-      {(activeTab === "All" || activeTab === "Tutors") &&
-        filteredTutors.length > 0 && (
-          <div className="mb-6">
-            {activeTab === "All" && (
-              <h3 className="text-caption text-ink-muted uppercase tracking-wider mb-2">
-                Tutors
-              </h3>
-            )}
-            <motion.div
-              variants={variants.staggerChildren}
-              initial="hidden"
-              animate="visible"
-              className="space-y-3"
-            >
-              {filteredTutors
-                .slice(0, activeTab === "All" ? 3 : undefined)
-                .map((t, i) => (
-                  <motion.div key={t.id} variants={variants.staggerItem} custom={i}>
-                    <TutorCard tutor={t as any} />
-                  </motion.div>
-                ))}
-            </motion.div>
-          </div>
-        )}
+      {/* Tutors section */}
+      {(activeTab === "All" || activeTab === "Tutors") && filteredTutors.length > 0 && (
+        <div className="mb-6">
+          {activeTab === "All" && (
+            <p className="text-overline text-ink-muted mb-2">Tutors</p>
+          )}
+          <motion.div
+            variants={variants.staggerChildren}
+            initial="hidden"
+            animate="visible"
+            className="space-y-3"
+          >
+            {filteredTutors.slice(0, activeTab === "All" ? 3 : undefined).map((t, i) => (
+              <motion.div key={t.id} variants={variants.staggerItem} custom={i}>
+                <TutorCard tutor={t as any} />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      )}
 
-      {/* ── Empty state ────────────────────────────────────── */}
+      {/* Empty state */}
       {noResults && (
         <EmptyState
           icon={SearchIcon}
-          title="No tutors found"
+          title="No results found"
           description="Try a different search or adjust your filters"
-          action={{
-            label: "Request this course",
-            onClick: () => setCourseRequestOpen(true),
-          }}
+          action={{ label: "Request this course", onClick: () => setCourseRequestOpen(true) }}
         />
       )}
 
-      {/* ── Modals / Sheets ─────────────────────────────────── */}
-      <UniversitySwitcher
-        open={uniSwitcherOpen}
-        onClose={() => setUniSwitcherOpen(false)}
-      />
-
-      <FilterSheet
-        open={filtersOpen}
-        onClose={() => setFiltersOpen(false)}
-        filters={appliedFilters}
-        onApply={setAppliedFilters}
-      />
-
-      <CourseRequestSheet
-        open={courseRequestOpen}
-        onClose={() => setCourseRequestOpen(false)}
-        initialCourse={rawQuery}
-        universityId={selectedUniversity}
-      />
+      {/* Sheets */}
+      <UniversitySwitcher open={uniSwitcherOpen} onClose={() => setUniSwitcherOpen(false)} />
+      <FilterSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} filters={appliedFilters} onApply={setAppliedFilters} />
+      <CourseRequestSheet open={courseRequestOpen} onClose={() => setCourseRequestOpen(false)} initialCourse={rawQuery} universityId={selectedUniversity} />
     </div>
   );
 };
