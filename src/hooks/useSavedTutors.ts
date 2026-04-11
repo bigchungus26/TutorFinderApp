@@ -61,7 +61,7 @@ export function useSaveTutor() {
       if (error) throw error;
     },
     onSuccess: (_, { studentId, tutorId }) => {
-      queryClient.invalidateQueries({ queryKey: ["saved-tutors"] });
+      queryClient.invalidateQueries({ queryKey: ["saved-tutors", studentId] });
       queryClient.setQueryData(["is-saved", studentId, tutorId], true);
       toast.success("Tutor saved");
     },
@@ -82,7 +82,7 @@ export function useUnsaveTutor() {
       if (error) throw error;
     },
     onSuccess: (_, { studentId, tutorId }) => {
-      queryClient.invalidateQueries({ queryKey: ["saved-tutors"] });
+      queryClient.invalidateQueries({ queryKey: ["saved-tutors", studentId] });
       queryClient.setQueryData(["is-saved", studentId, tutorId], false);
       toast("Tutor removed from saved");
     },

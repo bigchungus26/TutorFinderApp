@@ -34,13 +34,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
-    setProfile(data);
-    return data;
+    if (error && error.code !== "PGRST116") {
+      // PGRST116 = row not found (expected for new users before profile creation)
+      console.warn("fetchProfile error:", error.message);
+    }
+    setProfile(data ?? null);
+    return data ?? null;
   };
 
   const refreshProfile = async () => {

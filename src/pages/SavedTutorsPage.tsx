@@ -31,7 +31,7 @@ const SavedTutorsPage = () => {
         >
           <ArrowLeft size={22} className="text-foreground" />
         </motion.button>
-        <h1 className="font-display text-h1 font-display text-foreground">Saved tutors</h1>
+        <h1 className="font-display text-h1 text-foreground">Saved tutors</h1>
       </div>
 
       {/* Loading state */}

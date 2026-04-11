@@ -39,7 +39,12 @@ export function useUpsertAvailability() {
       tutorId: string;
       slots: Omit<AvailabilitySlot, "id">[];
     }) => {
-      // Delete all existing slots and re-insert
+      // Snapshot existing slots so we can roll back on insert failure
+      const { data: existing } = await supabase
+        .from("availability")
+        .select("day_of_week, start_time, end_time")
+        .eq("tutor_id", tutorId);
+
       const { error: delError } = await supabase
         .from("availability")
         .delete()
@@ -50,7 +55,15 @@ export function useUpsertAvailability() {
         const { error: insError } = await supabase
           .from("availability")
           .insert(slots.map(s => ({ ...s, tutor_id: tutorId })));
-        if (insError) throw insError;
+        if (insError) {
+          // Roll back: restore previous slots so the tutor doesn't become unbookable
+          if (existing?.length) {
+            await supabase.from("availability").insert(
+              existing.map(s => ({ ...s, tutor_id: tutorId }))
+            );
+          }
+          throw insError;
+        }
       }
     },
     onSuccess: (_, { tutorId }) => {

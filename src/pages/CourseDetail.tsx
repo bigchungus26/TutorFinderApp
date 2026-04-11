@@ -10,12 +10,12 @@ const CourseDetail = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"tutors" | "about">("tutors");
   const { data: course, isLoading: courseLoading } = useCourse(id || "");
-  const { data: universities = [] } = useUniversities();
+  const { data: universities = [], isLoading: uniLoading } = useUniversities();
   const { data: courseTutorData = [] } = useTutorsByCourse(id || "");
 
   const uni = universities.find(u => u.id === course?.university_id);
 
-  if (courseLoading) {
+  if (courseLoading || uniLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -23,7 +23,14 @@ const CourseDetail = () => {
     );
   }
 
-  if (!course || !uni) return null;
+  if (!course) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3 px-5 text-center">
+        <p className="text-h2 font-display text-foreground">Course not found</p>
+        <button onClick={() => navigate(-1)} className="text-accent text-body">Go back</button>
+      </div>
+    );
+  }
 
   // Extract tutor profiles from the joined data
   const courseTutors = courseTutorData
@@ -72,7 +79,7 @@ const CourseDetail = () => {
               <div className="border-t border-border" />
               <div className="flex justify-between"><span className="text-sm text-muted-ink">Typical semester</span><span className="text-sm font-medium">{course.typical_semester}</span></div>
               <div className="border-t border-border" />
-              <div className="flex justify-between"><span className="text-sm text-muted-ink">Prerequisites</span><span className="text-sm font-medium">{course.prerequisites.length > 0 ? course.prerequisites.join(", ") : "None"}</span></div>
+              <div className="flex justify-between"><span className="text-sm text-muted-ink">Prerequisites</span><span className="text-sm font-medium">{(course.prerequisites ?? []).length > 0 ? (course.prerequisites ?? []).join(", ") : "None"}</span></div>
               <div className="border-t border-border" />
               <div className="flex justify-between"><span className="text-sm text-muted-ink">University</span><span className="text-sm font-medium">{uni.short_name}</span></div>
             </div>

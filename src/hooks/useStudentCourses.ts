@@ -31,7 +31,12 @@ export function useSetStudentCourses() {
       courseIds: string[];
       semester: string;
     }) => {
-      // Delete existing and re-insert
+      // Snapshot existing rows so we can roll back on insert failure
+      const { data: existing } = await supabase
+        .from("student_courses")
+        .select("course_id, semester")
+        .eq("student_id", studentId);
+
       const { error: delError } = await supabase
         .from("student_courses")
         .delete()
@@ -47,7 +52,15 @@ export function useSetStudentCourses() {
         const { error: insError } = await supabase
           .from("student_courses")
           .insert(rows);
-        if (insError) throw insError;
+        if (insError) {
+          // Roll back: restore previous courses so the student doesn't lose data
+          if (existing?.length) {
+            await supabase.from("student_courses").insert(
+              existing.map(r => ({ student_id: studentId, course_id: r.course_id, semester: r.semester }))
+            );
+          }
+          throw insError;
+        }
       }
     },
     onSuccess: (_, { studentId }) => {
