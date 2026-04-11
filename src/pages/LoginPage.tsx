@@ -31,7 +31,7 @@ const LoginPage = () => {
 
   const handleBackToRolePicker = () => {
     clearSelectedRole();
-    navigate("/");
+    navigate("/welcome");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

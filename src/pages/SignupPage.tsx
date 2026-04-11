@@ -38,7 +38,7 @@ const SignupPage = () => {
 
   const handleBackToRolePicker = () => {
     clearSelectedRole();
-    navigate("/");
+    navigate("/welcome");
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
