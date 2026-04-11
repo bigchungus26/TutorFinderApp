@@ -5,6 +5,7 @@ import React, { Component, ReactNode } from "react";
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { variants } from "@/lib/motion";
+import { getRoleAppPath, getSelectedRole } from "@/lib/rolePreference";
 
 interface Props {
   children: ReactNode;
@@ -52,6 +53,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
 // ── Full-screen recovery ──────────────────────────────────────
 function FullErrorScreen({ onRetry }: { onRetry: () => void }) {
+  const selectedRole = getSelectedRole();
+  const homeHref = selectedRole ? getRoleAppPath(selectedRole) : "/";
+
   return (
     <motion.div
       variants={variants.fadeSlideUp}
@@ -77,7 +81,7 @@ function FullErrorScreen({ onRetry }: { onRetry: () => void }) {
         </motion.button>
         <motion.a
           whileTap={{ scale: 0.97 }}
-          href="/"
+          href={homeHref}
           className="flex items-center gap-2 h-12 px-5 rounded-lg bg-accent text-accent-foreground text-label font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <Home size={16} />
