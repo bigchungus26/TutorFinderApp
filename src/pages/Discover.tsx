@@ -331,7 +331,7 @@ const DiscoverPage = () => {
         {/* ── Gradient header area ─────────────────────────── */}
         <div
           className="px-5 pt-14 pb-6 -mx-0"
-          style={{ background: "linear-gradient(180deg, hsl(152 60% 93%) 0%, transparent 100%)" }}
+          style={{ background: "linear-gradient(180deg, hsl(152 55% 88%) 0%, hsl(152 40% 93%) 50%, transparent 100%)" }}
         >
           {/* ── 1. Greeting header ──────────────────────────── */}
           <motion.div

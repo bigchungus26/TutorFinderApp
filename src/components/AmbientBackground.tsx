@@ -8,8 +8,8 @@ export function AmbientBackground({ universityTint }: { universityTint?: string 
       : false
   );
 
-  const blob1Color = "hsl(152 50% 90%)";
-  const blob2Color = "hsl(35 80% 88%)";
+  const blob1Color = "hsl(152 65% 84%)";
+  const blob2Color = "hsl(35 90% 84%)";
 
   const blob1Animation = reducedMotion.current
     ? {}
@@ -62,11 +62,11 @@ export function AmbientBackground({ universityTint }: { universityTint?: string 
           position: "absolute",
           top: 0,
           left: 0,
-          width: 600,
-          height: 600,
+          width: 700,
+          height: 700,
           borderRadius: "50%",
           background: blob1Color,
-          filter: "blur(120px)",
+          filter: "blur(100px)",
           willChange: "transform",
           x: -100,
           y: -100,
@@ -99,11 +99,11 @@ export function AmbientBackground({ universityTint }: { universityTint?: string 
           position: "absolute",
           bottom: 0,
           right: 0,
-          width: 500,
-          height: 500,
+          width: 600,
+          height: 600,
           borderRadius: "50%",
           background: blob2Color,
-          filter: "blur(120px)",
+          filter: "blur(100px)",
           willChange: "transform",
           x: 100,
           y: 100,
