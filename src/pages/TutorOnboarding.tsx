@@ -165,6 +165,8 @@ const TutorOnboarding = () => {
 
   const finish = async () => {
     if (!user) return;
+
+    // Profile update is required — fail fast
     try {
       await updateProfile.mutateAsync({
         id: user.id,
@@ -176,40 +178,51 @@ const TutorOnboarding = () => {
         hourly_rate: rate,
         onboarded_at: new Date().toISOString(),
       });
+    } catch (err: any) {
+      console.error("Failed to save tutor profile:", err);
+      toast(err?.message || "Failed to save profile. Please try again.");
+      return;
+    }
 
-      if (selectedCourses.length > 0) {
+    // Course saving is optional — don't block completion if it fails
+    if (selectedCourses.length > 0) {
+      try {
         await setTutorCourses.mutateAsync({
           tutorId: user.id,
           courses: selectedCourses.map(sc => ({ course_id: sc.courseId, grade: sc.grade })),
         });
+      } catch (err) {
+        console.warn("Could not save courses (non-blocking):", err);
       }
-
-      const slots = Object.entries(availability)
-        .filter(([, v]) => v)
-        .map(([key]) => {
-          const [dStr, hStr] = key.split("-");
-          const start = HOURS_24[parseInt(hStr, 10)];
-          const endHour = parseInt(start.split(":")[0], 10) + 1;
-          return {
-            tutor_id: user.id,
-            day_of_week: parseInt(dStr, 10),
-            start_time: start,
-            end_time: `${String(endHour).padStart(2, "0")}:00`,
-          };
-        });
-
-      if (slots.length > 0) {
-        await upsertAvailability.mutateAsync({ tutorId: user.id, slots });
-      }
-
-      setSelectedUniversity(selectedUni || "aub");
-      await refreshProfile();
-      localStorage.removeItem(STORAGE_KEY);
-      setShowSuccess(true);
-    } catch (err) {
-      console.error("Failed to save tutor profile:", err);
-      toast("Something went wrong. Please try again.");
     }
+
+    // Availability saving is optional — don't block completion if it fails
+    const slots = Object.entries(availability)
+      .filter(([, v]) => v)
+      .map(([key]) => {
+        const [dStr, hStr] = key.split("-");
+        const start = HOURS_24[parseInt(hStr, 10)];
+        const endHour = parseInt(start.split(":")[0], 10) + 1;
+        return {
+          tutor_id: user.id,
+          day_of_week: parseInt(dStr, 10),
+          start_time: start,
+          end_time: `${String(endHour).padStart(2, "0")}:00`,
+        };
+      });
+
+    if (slots.length > 0) {
+      try {
+        await upsertAvailability.mutateAsync({ tutorId: user.id, slots });
+      } catch (err) {
+        console.warn("Could not save availability (non-blocking):", err);
+      }
+    }
+
+    setSelectedUniversity(selectedUni || "aub");
+    await refreshProfile();
+    localStorage.removeItem(STORAGE_KEY);
+    setShowSuccess(true);
   };
 
   const saving = updateProfile.isPending || setTutorCourses.isPending || upsertAvailability.isPending;
