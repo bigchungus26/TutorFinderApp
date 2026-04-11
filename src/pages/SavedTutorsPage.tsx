@@ -29,9 +29,9 @@ const SavedTutorsPage = () => {
           aria-label="Go back"
           className="p-2 -ml-2 rounded-xl hover:bg-muted transition-colors"
         >
-          <ArrowLeft size={22} className="text-ink" />
+          <ArrowLeft size={22} className="text-foreground" />
         </motion.button>
-        <h1 className="font-display text-display-md text-ink">Saved tutors</h1>
+        <h1 className="font-display text-h1 font-display text-foreground">Saved tutors</h1>
       </div>
 
       {/* Loading state */}
@@ -80,7 +80,7 @@ const SavedTutorsPage = () => {
                     whileHover={{ scale: 1.1 }}
                     onClick={() => handleUnsave(tutor.id)}
                     aria-label={`Remove ${tutor.full_name} from saved`}
-                    className="absolute top-3.5 right-3.5 p-1.5 rounded-full bg-surface border border-hairline shadow-sm"
+                    className="absolute top-3.5 right-3.5 p-1.5 rounded-full bg-surface border border-border shadow-sm"
                   >
                     <Heart size={16} className="text-accent fill-accent" />
                   </motion.button>

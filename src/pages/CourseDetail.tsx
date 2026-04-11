@@ -37,7 +37,7 @@ const CourseDetail = () => {
           <ArrowLeft size={22} />
         </button>
         <div className="w-full h-1.5 rounded-full mb-5" style={{ backgroundColor: uni.color }} />
-        <h1 className="text-display-xl mb-1">{course.code}</h1>
+        <h1 className="text-h1 font-display mb-1">{course.code}</h1>
         <p className="text-lg text-muted-ink mb-2">{course.name}</p>
         <p className="text-sm text-muted-ink leading-relaxed mb-4">{course.description}</p>
         <div className="flex items-center gap-2 text-sm text-muted-ink">
@@ -49,7 +49,7 @@ const CourseDetail = () => {
       <div className="flex gap-1 px-5 mb-4">
         {(["tutors", "about"] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-pill text-sm font-medium capitalize transition-colors ${activeTab === tab ? "bg-foreground text-background" : "text-muted-ink"}`}>
+            className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition-colors ${activeTab === tab ? "bg-foreground text-background" : "text-muted-ink"}`}>
             {tab}
           </button>
         ))}
@@ -67,13 +67,13 @@ const CourseDetail = () => {
         )}
         {activeTab === "about" && (
           <div className="space-y-4">
-            <div className="bg-surface rounded-xl border border-hairline p-4 space-y-3">
+            <div className="bg-surface rounded-xl border border-border p-4 space-y-3">
               <div className="flex justify-between"><span className="text-sm text-muted-ink">Credits</span><span className="text-sm font-medium">{course.credits}</span></div>
-              <div className="border-t border-hairline" />
+              <div className="border-t border-border" />
               <div className="flex justify-between"><span className="text-sm text-muted-ink">Typical semester</span><span className="text-sm font-medium">{course.typical_semester}</span></div>
-              <div className="border-t border-hairline" />
+              <div className="border-t border-border" />
               <div className="flex justify-between"><span className="text-sm text-muted-ink">Prerequisites</span><span className="text-sm font-medium">{course.prerequisites.length > 0 ? course.prerequisites.join(", ") : "None"}</span></div>
-              <div className="border-t border-hairline" />
+              <div className="border-t border-border" />
               <div className="flex justify-between"><span className="text-sm text-muted-ink">University</span><span className="text-sm font-medium">{uni.short_name}</span></div>
             </div>
           </div>

@@ -47,8 +47,8 @@ function ReadonlyStar({
       {/* Filled (accent) clipped to fill% */}
       <path
         d="M10 1.5l2.47 5.01 5.53.8-4 3.9.94 5.49L10 14.1l-4.94 2.6.94-5.49-4-3.9 5.53-.8z"
-        fill="hsl(var(--accent))"
-        stroke="hsl(var(--accent))"
+        fill="var(--accent)"
+        stroke="var(--accent)"
         strokeWidth="0.5"
         clipPath={`url(#${clipId})`}
       />
@@ -94,8 +94,8 @@ function InteractiveStar({
       >
         <path
           d="M10 1.5l2.47 5.01 5.53.8-4 3.9.94 5.49L10 14.1l-4.94 2.6.94-5.49-4-3.9 5.53-.8z"
-          fill={active ? "hsl(var(--accent))" : "hsl(var(--hairline))"}
-          stroke={active ? "hsl(var(--accent))" : "hsl(var(--hairline))"}
+          fill={active ? "var(--accent)" : "hsl(var(--hairline))"}
+          stroke={active ? "var(--accent)" : "hsl(var(--hairline))"}
           strokeWidth="0.5"
           style={{ transition: "fill 0.12s ease, stroke 0.12s ease" }}
         />

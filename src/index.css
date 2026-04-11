@@ -2,270 +2,429 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   TUTR Design Tokens — Part 1.2
+   All colors, radius, shadows as CSS custom properties.
+   Light mode default, dark mode via .dark class or media query.
+   ============================================================ */
+
 @layer base {
   :root {
-    /* ── Backgrounds ── */
-    --background: 150 30% 97%;
-    --surface: 0 0% 100%;
-    --surface-elevated: 0 0% 100%;
+    /* ── Background levels ──────────────────────────────── */
+    --bg-primary:      #FBF9F4;
+    --bg-surface:      #FFFFFF;
+    --bg-surface-raised: #FFFFFF;
+    --bg-muted:        #F3F0EB;
 
-    /* ── Text (ink) ── */
-    --foreground: 0 0% 8%;
-    --ink: 0 0% 8%;
-    --ink-muted: 160 14% 30%;
-    --ink-subtle: 155 12% 44%;
+    /* ── Text ───────────────────────────────────────────── */
+    --text-primary:    #1C1A17;
+    --text-secondary:  #8C8780;
+    --text-tertiary:   #B5B0A8;
 
-    /* ── Borders ── */
-    --hairline: 150 25% 84%;
-    --border: 150 25% 84%;
-    --input: 150 25% 84%;
+    /* ── Accent (brand green) ───────────────────────────── */
+    --accent:          #2ba66a;
+    --accent-hover:    #239b5e;
+    --accent-light:    #ECFDF5;
 
-    /* ── Accent (green) ── */
-    --accent: 158 76% 40%;
-    --accent-foreground: 0 0% 100%;
-    --accent-soft: 150 60% 91%;
+    /* ── Semantic ────────────────────────────────────────── */
+    --success:         #22C55E;
+    --warning:         #F59E0B;
+    --error:           #EF4444;
+    --info:            #3B82F6;
 
-    /* ── Status ── */
-    --success: 155 46% 33%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --danger: 0 84% 60%;
-    --danger-foreground: 0 0% 100%;
+    /* ── Borders ─────────────────────────────────────────── */
+    --border:          #E5E1DB;
+    --border-subtle:   rgba(0,0,0,0.06);
 
-    /* ── University tints ── */
-    --uni-aub: 0 100% 27%;
-    --uni-lau: 220 100% 32%;
-    --uni-ndu: 157 80% 24%;
+    /* ── Focus ring ──────────────────────────────────────── */
+    --ring:            #2ba66a;
 
-    /* ── Mapped aliases (shadcn compat) ── */
-    --primary: 165 72% 24%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 147 24% 70%;
-    --secondary-foreground: 0 0% 10%;
-    --muted: 150 28% 92%;
-    --muted-foreground: 160 14% 30%;
-    --muted-ink: 160 14% 30%;
-    --destructive: 0 84% 56%;
-    --destructive-foreground: 0 0% 100%;
-    --ring: 158 72% 36%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-    --surface-foreground: 0 0% 10%;
+    /* ── University tints ────────────────────────────────── */
+    --uni-aub:         #8B0000;
+    --uni-lau:         #003DA5;
+    --uni-ndu:         #0B6E4F;
 
-    /* ── Sidebar (shadcn) ── */
-    --sidebar-background: 36 24% 96%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 165 59% 30%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 150 28% 89%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 150 18% 82%;
-    --sidebar-ring: 159 61% 47%;
+    /* ── Radius ──────────────────────────────────────────── */
+    --radius-sm:   7px;
+    --radius-md:   10px;
+    --radius-lg:   12px;
+    --radius-xl:   17px;
+    --radius-2xl:  22px;
+    --radius-full: 9999px;
+    --radius:      10px;
 
-    /* ── Radius ── */
-    --radius-sm: 0.5rem;
-    --radius-md: 0.875rem;
-    --radius-lg: 1.25rem;
-    --radius-xl: 1.75rem;
-    --radius-full: 999px;
-    --radius: 0.875rem;
+    /* ── Shadows (light mode only) ───────────────────────── */
+    --shadow-xs: 0 1px 2px rgb(0 0 0 / 0.05);
+    --shadow-sm: 0 1px 3px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    --shadow-float: 0 8px 32px rgba(20,20,20,0.08);
 
-    /* ── Shadows ── */
-    --shadow-float: 0 8px 32px rgba(20, 20, 20, 0.08);
-    --shadow-press: inset 0 1px 2px rgba(20, 20, 20, 0.12);
+    /* ── Legacy / shadcn compatibility aliases ────────────── */
+    --background:           var(--bg-primary);
+    --foreground:           var(--text-primary);
+    --surface:              var(--bg-surface);
+    --surface-elevated:     var(--bg-surface-raised);
+    --surface-foreground:   var(--text-primary);
+    --ink:                  var(--text-primary);
+    --ink-muted:            var(--text-secondary);
+    --ink-subtle:           var(--text-tertiary);
+    --muted-ink:            var(--text-secondary);
+    --hairline:             var(--border);
+    --accent-soft:          var(--accent-light);
+    --accent-foreground:    #FFFFFF;
+    --primary:              var(--accent);
+    --primary-foreground:   #FFFFFF;
+    --secondary:            var(--bg-muted);
+    --secondary-foreground: var(--text-primary);
+    --muted:                var(--bg-muted);
+    --muted-foreground:     var(--text-secondary);
+    --destructive:          var(--error);
+    --destructive-foreground: #FFFFFF;
+    --card:                 var(--bg-surface);
+    --card-foreground:      var(--text-primary);
+    --popover:              var(--bg-surface);
+    --popover-foreground:   var(--text-primary);
+    --input:                var(--border);
+    --sidebar-background:   var(--bg-surface);
+    --sidebar-foreground:   var(--text-primary);
+    --sidebar-primary:      var(--accent);
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent:       var(--accent-light);
+    --sidebar-accent-foreground: var(--text-primary);
+    --sidebar-border:       var(--border);
+    --sidebar-ring:         var(--accent);
+  }
+
+  /* ── Dark mode ────────────────────────────────────────────── */
+  .dark {
+    --bg-primary:       #0f0f0f;
+    --bg-surface:       #1a1a1a;
+    --bg-surface-raised:#242424;
+    --bg-muted:         #2e2e2e;
+
+    --text-primary:     #EEEEEE;
+    --text-secondary:   #9CA3AF;
+    --text-tertiary:    #6B7280;
+
+    --accent:           #3fbd7e;
+    --accent-hover:     #4ADE80;
+    --accent-light:     rgba(43, 166, 106, 0.15);
+
+    --success:          #4ADE80;
+    --warning:          #FCD34D;
+    --error:            #F87171;
+    --info:             #60A5FA;
+
+    --border:           #2e2e2e;
+    --border-subtle:    rgba(255,255,255,0.08);
+    --ring:             #3fbd7e;
+
+    --uni-aub:          #e87070;
+    --uni-lau:          #6fa3e8;
+    --uni-ndu:          #4cc494;
+
+    /* shadows suppressed in dark — use brightness elevation */
+    --shadow-xs: none;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --shadow-xl: none;
+    --shadow-float: none;
+  }
+
+  /* ── Auto dark mode (system) ────────────────────────────── */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg-primary:       #0f0f0f;
+      --bg-surface:       #1a1a1a;
+      --bg-surface-raised:#242424;
+      --bg-muted:         #2e2e2e;
+      --text-primary:     #EEEEEE;
+      --text-secondary:   #9CA3AF;
+      --text-tertiary:    #6B7280;
+      --accent:           #3fbd7e;
+      --accent-hover:     #4ADE80;
+      --accent-light:     rgba(43, 166, 106, 0.15);
+      --success:          #4ADE80;
+      --warning:          #FCD34D;
+      --error:            #F87171;
+      --info:             #60A5FA;
+      --border:           #2e2e2e;
+      --border-subtle:    rgba(255,255,255,0.08);
+      --ring:             #3fbd7e;
+      --uni-aub:          #e87070;
+      --uni-lau:          #6fa3e8;
+      --uni-ndu:          #4cc494;
+      --shadow-xs: none; --shadow-sm: none; --shadow-md: none;
+      --shadow-lg: none; --shadow-xl: none; --shadow-float: none;
+    }
   }
 }
+
+/* ============================================================
+   TYPOGRAPHY — Part 1.3
+   ============================================================ */
 
 @layer base {
-  * {
-    @apply border-border;
+  * { @apply border-border; }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
   }
+
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  h1, h2, h3 {
-    font-family: 'Fraunces', serif;
+
+  /* Dark mode typography boost: +50 weight, +0.01em tracking */
+  .dark body, .dark * {
+    letter-spacing: 0.01em;
+  }
+  .dark h1, .dark h2, .dark h3 {
+    font-weight: 700;
   }
 }
 
-/* ── Typography utilities ── */
+/* ── Type scale utilities ──────────────────────────────────────── */
 @layer utilities {
+  /* Display — Fraunces 40px, weight 800 */
+  .text-display {
+    font-family: 'Fraunces', serif;
+    font-size: 2.5rem;          /* 40px */
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  /* H1 — Fraunces 32px, weight 700 */
+  .text-h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 2rem;            /* 32px */
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  /* H2 — Fraunces 25px, weight 700 */
+  .text-h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.5625rem;       /* 25px */
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  /* H3 — Inter 20px, weight 600 */
+  .text-h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.25rem;         /* 20px */
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  /* Body lg — Inter 18px */
+  .text-body-lg {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.125rem;        /* 18px */
+    line-height: 1.5;
+    font-weight: 400;
+  }
+  /* Body — Inter 16px */
+  .text-body {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;            /* 16px */
+    line-height: 1.5;
+    font-weight: 400;
+  }
+  /* Body sm — Inter 14px */
+  .text-body-sm {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;        /* 14px */
+    line-height: 1.45;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+  }
+  /* Caption — Inter 13px, weight 500 */
+  .text-caption {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8125rem;       /* 13px */
+    line-height: 1.4;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  /* Label — Inter 12px, weight 500 */
+  .text-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;         /* 12px */
+    line-height: 1.33;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  /* Overline — Inter 11px, weight 600, uppercase */
+  .text-overline {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.6875rem;       /* 11px */
+    line-height: 1.35;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  /* Data — tabular numeric */
+  .text-data {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;        /* 14px */
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Legacy display aliases (backward compat) ── */
   .text-display-hero {
     font-family: 'Fraunces', serif;
     font-size: 3rem;
-    line-height: 3.25rem;
-    font-weight: 400;
-    letter-spacing: -0.02em;
+    line-height: 1.08;
+    font-weight: 800;
+    letter-spacing: -0.025em;
   }
   .text-display-xl {
     font-family: 'Fraunces', serif;
-    font-size: 2.25rem;
-    line-height: 2.75rem;
-    font-weight: 500;
+    font-size: 2.5rem;
+    line-height: 1.1;
+    font-weight: 700;
     letter-spacing: -0.02em;
   }
   .text-display-lg {
     font-family: 'Fraunces', serif;
-    font-size: 1.75rem;
-    line-height: 2.25rem;
-    font-weight: 500;
+    font-size: 2rem;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.015em;
   }
   .text-display-md {
     font-family: 'Fraunces', serif;
-    font-size: 1.375rem;
-    line-height: 1.875rem;
-    font-weight: 500;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
   .text-display-sm {
     font-family: 'Fraunces', serif;
-    font-size: 1.125rem;
-    line-height: 1.625rem;
-    font-weight: 500;
-  }
-  .text-body-lg {
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    line-height: 1.5rem;
-    font-weight: 400;
-  }
-  .text-body {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.9375rem;
-    line-height: 1.375rem;
-    font-weight: 400;
-  }
-  .text-body-sm {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 400;
-  }
-  .text-caption {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
-  }
-  .text-label {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.8125rem;
-    line-height: 1.125rem;
-    font-weight: 500;
+    font-size: 1.25rem;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.005em;
   }
 
-  /* New typography tokens for polish pass */
-  .text-display-hero-lg {
-    font-family: 'Fraunces', serif;
-    font-size: 3.5rem;     /* 56px */
-    line-height: 3.75rem;  /* 60px */
-    font-weight: 400;
-    letter-spacing: -0.02em;
-  }
-  .text-overline {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.6875rem;  /* 11px */
-    line-height: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+  /* ── Numeric tabular utility ── */
   .font-tabular {
     font-variant-numeric: tabular-nums;
   }
+
+  /* ── Scrollbar hide ── */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 }
 
-/* Paper texture overlay */
-.noise-overlay::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.04;
+/* ============================================================
+   APP SHELL — Part 1.5
+   ============================================================ */
+html, body {
+  overscroll-behavior-y: contain;
+  -webkit-tap-highlight-color: transparent;
+  height: 100%;
 }
 
-/* ── Shimmer animation for skeletons ── */
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ── Scrollbar hide utility ── */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+/* All interactive elements hit 44px minimum */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-/* Desktop layout adjustments */
-@media (min-width: 768px) {
+/* Focus ring system */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--ring);
+}
+
+/* Phone frame on desktop */
+@media (min-width: 480px) {
   body {
-    background: hsl(36 24% 96%);
+    background: #E8E4DF;
   }
   #root {
-    max-width: 100%;
-    margin: 0;
-    min-height: 100vh;
-    background: transparent;
-    box-shadow: none;
+    max-width: 440px;
+    margin: 0 auto;
+    min-height: 100svh;
+    background: var(--bg-primary);
     position: relative;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 24px 48px rgba(0,0,0,0.14);
   }
 }
 
-/* ── Dark mode ── */
-@layer base {
-  .dark {
-    --background: 36 24% 96%;
-    --surface: 0 0% 100%;
-    --surface-elevated: 0 0% 100%;
-    --foreground: 0 0% 10%;
-    --ink: 0 0% 10%;
-    --ink-muted: 160 10% 36%;
-    --ink-subtle: 155 10% 48%;
-    --hairline: 150 18% 82%;
-    --border: 150 18% 82%;
-    --input: 150 18% 82%;
-    --accent: 159 61% 47%;
-    --accent-soft: 150 28% 89%;
-    --accent-foreground: 0 0% 100%;
-    --muted: 36 20% 92%;
-    --muted-foreground: 160 10% 36%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
-    --surface-foreground: 0 0% 10%;
-  }
+/* ============================================================
+   NOISE TEXTURE OVERLAY — Part 1.6
+   Warm paper feel via fixed SVG noise.
+   ============================================================ */
+.noise-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.07;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
 
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --background: 36 24% 96%;
-      --surface: 0 0% 100%;
-      --surface-elevated: 0 0% 100%;
-      --foreground: 0 0% 10%;
-      --ink: 0 0% 10%;
-      --ink-muted: 160 10% 36%;
-      --ink-subtle: 155 10% 48%;
-      --hairline: 150 18% 82%;
-      --border: 150 18% 82%;
-      --input: 150 18% 82%;
-      --accent: 159 61% 47%;
-      --accent-soft: 150 28% 89%;
-      --accent-foreground: 0 0% 100%;
-      --muted: 36 20% 92%;
-      --muted-foreground: 160 10% 36%;
-      --card: 0 0% 100%;
-      --card-foreground: 0 0% 10%;
-      --popover: 0 0% 100%;
-      --popover-foreground: 0 0% 10%;
-      --surface-foreground: 0 0% 10%;
-    }
+/* ── Shimmer animation for skeletons ──────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-muted) 25%,
+    var(--bg-surface) 50%,
+    var(--bg-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
   }
+}
+
+/* ── Pulse animation for empty state icons ─────────────────────── */
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.04); }
+}
+.pulse-gentle {
+  animation: gentle-pulse 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-gentle { animation: none; }
+}
+
+/* ── Content visibility for performance ────────────────────────── */
+.below-fold {
+  content-visibility: auto;
 }

@@ -110,7 +110,7 @@ const TermsOfUse = () => {
         </section>
       </div>
 
-      <div className="mt-10 pt-6 border-t border-hairline flex gap-4 text-xs text-muted-ink">
+      <div className="mt-10 pt-6 border-t border-border flex gap-4 text-xs text-muted-ink">
         <Link to="/terms" className="underline underline-offset-2 text-accent">Terms of Use</Link>
         <Link to="/privacy" className="underline underline-offset-2">Privacy Policy</Link>
       </div>

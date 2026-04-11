@@ -93,21 +93,21 @@ const MessageThreadPage = () => {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-12 pb-3 border-b border-hairline bg-background flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 pt-12 pb-3 border-b border-border bg-background flex-shrink-0">
         <motion.button
           whileTap={{ scale: 0.93 }}
           onClick={() => navigate(-1)}
           aria-label="Go back"
           className="p-1.5 -ml-1.5 rounded-xl hover:bg-muted transition-colors"
         >
-          <ArrowLeft size={21} className="text-ink" />
+          <ArrowLeft size={21} className="text-foreground" />
         </motion.button>
         <img
           src={otherAvatar}
           alt={otherName}
           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
         />
-        <span className="text-body font-medium text-ink truncate">{otherName}</span>
+        <span className="text-body font-medium text-foreground truncate">{otherName}</span>
       </div>
 
       {/* Messages list */}
@@ -141,7 +141,7 @@ const MessageThreadPage = () => {
                 className={`max-w-[75%] px-3 py-2 rounded-xl text-body-sm leading-relaxed ${
                   isOwn
                     ? "bg-accent text-accent-foreground"
-                    : "bg-surface border border-hairline text-ink"
+                    : "bg-surface border border-border text-foreground"
                 }`}
               >
                 {msg.body}
@@ -155,7 +155,7 @@ const MessageThreadPage = () => {
       </div>
 
       {/* Compose bar */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-hairline bg-background flex items-end gap-2">
+      <div className="flex-shrink-0 px-4 py-3 border-t border-border bg-background flex items-end gap-2">
         <textarea
           ref={textareaRef}
           value={body}
@@ -163,7 +163,7 @@ const MessageThreadPage = () => {
           onKeyDown={handleKeyDown}
           placeholder="Message…"
           rows={1}
-          className="flex-1 resize-none rounded-xl border border-hairline bg-surface px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 leading-6"
+          className="flex-1 resize-none rounded-xl border border-border bg-surface px-3 py-2.5 text-body-sm text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1 leading-6"
           style={{ maxHeight: "96px" }}
         />
         <motion.button

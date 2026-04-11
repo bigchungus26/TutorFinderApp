@@ -31,7 +31,7 @@ import {
 } from "@/hooks/useSupabaseQuery";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { ProfileHeaderSkeleton } from "@/components/skeletons";
-import { variants, transitions } from "@/lib/motion";
+import { variants, springs } from "@/lib/motion";
 import { toast, toastError } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -45,23 +45,23 @@ const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: typeof Monitor }[] 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   return (
-    <div className="flex bg-muted rounded-pill p-1 gap-0.5">
+    <div className="flex bg-muted rounded-full p-1 gap-0.5">
       {THEME_OPTIONS.map(({ mode, label }) => (
         <motion.button
           key={mode}
           onClick={() => setTheme(mode)}
-          className="flex-1 py-1.5 rounded-pill text-caption font-medium relative"
+          className="flex-1 py-1.5 rounded-full text-caption font-medium relative"
           whileTap={{ scale: 0.97 }}
         >
           {theme === mode && (
             <motion.div
               layoutId="tutor-theme-pill"
-              className="absolute inset-0 bg-surface rounded-pill shadow-sm"
-              transition={transitions.spring}
+              className="absolute inset-0 bg-surface rounded-full shadow-sm"
+              transition={springs.smooth}
             />
           )}
           <span
-            className={`relative z-10 ${theme === mode ? "text-ink" : "text-ink-muted"}`}
+            className={`relative z-10 ${theme === mode ? "text-foreground" : "text-ink-muted"}`}
           >
             {label}
           </span>
@@ -140,10 +140,10 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
         aria-label="Edit tutor profile"
       >
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-hairline" />
+          <div className="w-10 h-1 rounded-full bg-border" />
         </div>
         <div className="flex items-center justify-between px-5 pt-2 pb-4 flex-shrink-0">
-          <h2 className="text-display-sm text-ink">Edit profile</h2>
+          <h2 className="text-h2 font-display text-foreground">Edit profile</h2>
           <motion.button whileTap={{ scale: 0.96 }} onClick={onClose}
             className="p-2 -mr-2 rounded-xl hover:bg-muted" aria-label="Close">
             <X size={20} className="text-ink-muted" />
@@ -165,7 +165,7 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
                 value={field.value}
                 onChange={(e) => field.onChange(e.target.value)}
                 placeholder={field.placeholder}
-                className="w-full h-11 rounded-lg border border-hairline bg-background px-3 text-body text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                className="w-full h-11 rounded-lg border border-border bg-background px-3 text-body text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
               />
             </div>
           ))}
@@ -177,7 +177,7 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
               onChange={(e) => setBio(e.target.value.slice(0, 500))}
               placeholder="Tell students about your teaching style and experience…"
               rows={4}
-              className="w-full rounded-xl border border-hairline bg-background px-4 py-3 text-body text-ink placeholder:text-ink-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-body text-foreground placeholder:text-ink-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
             />
           </div>
 
@@ -196,17 +196,17 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onChange(!value)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
-                    value ? "border-accent bg-accent-soft" : "border-hairline bg-surface"
+                    value ? "border-accent bg-accent-light" : "border-border bg-surface"
                   }`}
                 >
                   <div
                     className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${
-                      value ? "bg-accent border-accent" : "border-hairline"
+                      value ? "bg-accent border-accent" : "border-border"
                     }`}
                   >
                     {value && <Check size={12} className="text-accent-foreground" />}
                   </div>
-                  <span className={`text-label font-medium ${value ? "text-accent" : "text-ink"}`}>
+                  <span className={`text-label font-medium ${value ? "text-accent" : "text-foreground"}`}>
                     {label}
                   </span>
                 </motion.button>
@@ -215,7 +215,7 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
           </div>
         </div>
 
-        <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-hairline bg-surface">
+        <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-border bg-surface">
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={handleSave}
@@ -317,10 +317,10 @@ function TutorCoursesSheet({
         aria-label="Edit courses taught"
       >
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-hairline" />
+          <div className="w-10 h-1 rounded-full bg-border" />
         </div>
         <div className="flex items-center justify-between px-5 pt-2 pb-3 flex-shrink-0">
-          <h2 className="text-display-sm text-ink">Courses I teach</h2>
+          <h2 className="text-h2 font-display text-foreground">Courses I teach</h2>
           <motion.button whileTap={{ scale: 0.96 }} onClick={onClose}
             className="p-2 -mr-2 rounded-xl hover:bg-muted" aria-label="Close">
             <X size={20} className="text-ink-muted" />
@@ -331,7 +331,7 @@ function TutorCoursesSheet({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search courses…"
-            className="w-full h-10 rounded-lg border border-hairline bg-background px-3 text-body-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+            className="w-full h-10 rounded-lg border border-border bg-background px-3 text-body-sm text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
           />
         </div>
         <div className="flex-1 overflow-y-auto px-5 pb-2">
@@ -347,18 +347,18 @@ function TutorCoursesSheet({
                     whileTap={{ scale: 0.98 }}
                     onClick={() => toggle(course.id)}
                     className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors ${
-                      isSelected ? "bg-accent-soft" : "hover:bg-muted"
+                      isSelected ? "bg-accent-light" : "hover:bg-muted"
                     }`}
                   >
                     <div
                       className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${
-                        isSelected ? "bg-accent border-accent" : "border-hairline"
+                        isSelected ? "bg-accent border-accent" : "border-border"
                       }`}
                     >
                       {isSelected && <Check size={12} className="text-accent-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-label font-medium ${isSelected ? "text-accent" : "text-ink"}`}>
+                      <p className={`text-label font-medium ${isSelected ? "text-accent" : "text-foreground"}`}>
                         {course.code}
                       </p>
                       <p className="text-caption text-ink-muted truncate">{course.name}</p>
@@ -369,7 +369,7 @@ function TutorCoursesSheet({
             </div>
           )}
         </div>
-        <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-hairline bg-surface">
+        <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-border bg-surface">
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={handleSave}
@@ -419,7 +419,7 @@ function SettingsRow({
       <div className="flex-1 min-w-0">
         <p
           className={`text-label font-medium ${
-            destructive ? "text-destructive" : highlight ? "text-accent" : "text-ink"
+            destructive ? "text-destructive" : highlight ? "text-accent" : "text-foreground"
           }`}
         >
           {label}
@@ -459,7 +459,7 @@ const TutorProfilePage = () => {
   const handleSignOut = useCallback(async () => {
     try {
       await signOut();
-        navigate("/");
+      navigate("/welcome");
     } catch (err) {
       toastError(err);
     }
@@ -487,14 +487,14 @@ const TutorProfilePage = () => {
               className="w-24 h-24 rounded-full object-cover mb-3"
             />
             <div className="flex items-center gap-1.5 mb-1">
-              <h1 className="text-display-md text-ink">{profile?.full_name ?? "Tutor"}</h1>
+              <h1 className="text-h1 font-display text-foreground">{profile?.full_name ?? "Tutor"}</h1>
               {profile?.verified && (
                 <BadgeCheck size={18} className="text-accent flex-shrink-0" />
               )}
             </div>
             {uni && (
               <span
-                className="text-caption px-2.5 py-0.5 rounded-pill font-medium mb-1"
+                className="text-caption px-2.5 py-0.5 rounded-full font-medium mb-1"
                 style={{ backgroundColor: uni.color + "18", color: uni.color }}
               >
                 {uni.short_name}
@@ -508,26 +508,26 @@ const TutorProfilePage = () => {
 
         {/* ── Stats row ── */}
         {!loading && (
-          <div className="flex items-center justify-around bg-surface rounded-xl border border-hairline p-4 mb-5">
+          <div className="flex items-center justify-around bg-surface rounded-xl border border-border p-4 mb-5">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 mb-0.5">
                 <Star size={14} className="text-accent fill-accent" />
-                <span className="text-display-sm text-ink font-semibold">
+                <span className="text-h2 font-display text-foreground font-semibold">
                   {tutorStats?.rating ? tutorStats.rating.toFixed(1) : "—"}
                 </span>
               </div>
               <span className="text-caption text-ink-muted">Rating</span>
             </div>
-            <div className="w-px h-8 bg-hairline" />
+            <div className="w-px h-8 bg-border" />
             <div className="text-center">
-              <div className="text-display-sm text-ink font-semibold mb-0.5">
+              <div className="text-h2 font-display text-foreground font-semibold mb-0.5">
                 {tutorStats?.sessions_completed ?? 0}
               </div>
               <span className="text-caption text-ink-muted">Sessions</span>
             </div>
-            <div className="w-px h-8 bg-hairline" />
+            <div className="w-px h-8 bg-border" />
             <div className="text-center">
-              <div className="text-display-sm text-ink font-semibold mb-0.5">
+              <div className="text-h2 font-display text-foreground font-semibold mb-0.5">
                 ${profile?.hourly_rate ?? 0}
               </div>
               <span className="text-caption text-ink-muted">Per hour</span>
@@ -536,9 +536,9 @@ const TutorProfilePage = () => {
         )}
 
         {/* ── Courses I teach ── */}
-        <div className="bg-surface rounded-xl border border-hairline p-4 mb-5">
+        <div className="bg-surface rounded-xl border border-border p-4 mb-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-label font-semibold text-ink flex items-center gap-1.5">
+            <h2 className="text-label font-semibold text-foreground flex items-center gap-1.5">
               <BookOpen size={16} className="text-accent" />
               Courses I teach
             </h2>
@@ -554,7 +554,7 @@ const TutorProfilePage = () => {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={() => setEditCoursesOpen(true)}
-              className="w-full py-3 rounded-lg border border-dashed border-hairline text-body-sm text-ink-muted hover:border-accent hover:text-accent transition-colors"
+              className="w-full py-3 rounded-lg border border-dashed border-border text-body-sm text-ink-muted hover:border-accent hover:text-accent transition-colors"
             >
               + Add courses you can tutor
             </motion.button>
@@ -563,7 +563,7 @@ const TutorProfilePage = () => {
               {tutorCourses.map((tc) => (
                 <span
                   key={tc.course_id}
-                  className="px-3 py-1 rounded-pill bg-accent-soft text-accent text-label font-medium"
+                  className="px-3 py-1 rounded-full bg-accent-light text-accent text-label font-medium"
                 >
                   {tc.course?.code ?? tc.course_id}
                 </span>
@@ -573,7 +573,7 @@ const TutorProfilePage = () => {
         </div>
 
         {/* ── Settings ── */}
-        <div className="bg-surface rounded-xl border border-hairline divide-y divide-hairline mb-5">
+        <div className="bg-surface rounded-xl border border-border divide-y divide-border mb-5">
           <SettingsRow
             icon={PenLine}
             label="Edit profile"
@@ -592,7 +592,7 @@ const TutorProfilePage = () => {
           <div className="flex items-center gap-3 px-4 py-3.5">
             <Monitor size={20} className="text-ink-muted flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-label font-medium text-ink">Appearance</p>
+              <p className="text-label font-medium text-foreground">Appearance</p>
             </div>
             <ThemeToggle />
           </div>
@@ -600,7 +600,6 @@ const TutorProfilePage = () => {
           <SettingsRow
             icon={Settings}
             label="Account settings"
-            onClick={() => setEditProfileOpen(true)}
           />
           <SettingsRow
             icon={ArrowRightLeft}
@@ -611,7 +610,6 @@ const TutorProfilePage = () => {
           <SettingsRow
             icon={HelpCircle}
             label="Help & support"
-            onClick={() => window.open("mailto:support@tutr.app", "_blank")}
           />
           <SettingsRow
             icon={LogOut}
@@ -624,10 +622,10 @@ const TutorProfilePage = () => {
 
         {/* ── Footer ── */}
         <div className="flex justify-center gap-6 pb-4">
-          <button onClick={() => navigate("/privacy")} className="text-caption text-ink-muted hover:text-ink transition-colors">
+          <button className="text-caption text-ink-muted hover:text-foreground transition-colors">
             Privacy
           </button>
-          <button onClick={() => navigate("/terms")} className="text-caption text-ink-muted hover:text-ink transition-colors">
+          <button className="text-caption text-ink-muted hover:text-foreground transition-colors">
             Terms
           </button>
         </div>

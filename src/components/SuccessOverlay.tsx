@@ -37,7 +37,7 @@ export function SuccessOverlay({ visible, title, description, onDismiss }: Succe
             initial={{ scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.05 }}
-            className="w-24 h-24 rounded-full bg-accent-soft flex items-center justify-center mb-6"
+            className="w-24 h-24 rounded-full bg-accent-light flex items-center justify-center mb-6"
           >
             <svg
               width="48"
@@ -109,7 +109,7 @@ export function CardSuccessOverlay({ visible, title, onDismiss }: CardSuccessOve
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.96 }}
           transition={{ duration: 0.2 }}
-          className="absolute inset-0 rounded-xl bg-accent-soft/90 flex flex-col items-center justify-center z-10"
+          className="absolute inset-0 rounded-xl bg-accent-light/90 flex flex-col items-center justify-center z-10"
         >
           <motion.div
             initial={{ scale: 0.5 }}

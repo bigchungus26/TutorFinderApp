@@ -19,6 +19,7 @@ import {
   PenTool,
   Atom,
   Landmark,
+  Sparkles,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -139,11 +140,11 @@ function Section({ title, overline, children }: SectionProps) {
       className="mb-8"
     >
       {overline && (
-        <motion.p variants={variants.staggerItem} className="text-overline mb-1 font-bold tracking-widest" style={{ color: "hsl(158 76% 32%)" }}>
+        <motion.p variants={variants.staggerItem} className="text-overline text-ink-muted mb-1">
           {overline}
         </motion.p>
       )}
-      <motion.h2 variants={variants.staggerItem} className="text-display-sm mb-3 text-ink">
+      <motion.h2 variants={variants.staggerItem} className="text-h2 mb-3">
         {title}
       </motion.h2>
       {children}
@@ -157,40 +158,43 @@ interface SubjectTileProps {
   onNavigate: () => void;
 }
 
-const subjectColors: Record<string, string> = {
-  "Computer Science": "158 72% 36%",
-  "Mathematics":      "221 83% 53%",
-  "Biology":          "142 71% 45%",
-  "Chemistry":        "262 83% 58%",
-  "Economics":        "38 92% 50%",
-  "Languages":        "328 86% 56%",
-  "Psychology":       "291 64% 42%",
-  "Engineering":      "201 96% 32%",
-  "Architecture":     "25 95% 53%",
-  "Business":         "173 80% 36%",
-  "Physics":          "195 100% 35%",
-  "Humanities":       "355 78% 56%",
+// Unique hue per subject for colored tiles
+const subjectHues: Record<string, string> = {
+  "Computer Science": "var(--accent)",
+  "Mathematics":      "#7c3aed",
+  "Biology":          "#059669",
+  "Chemistry":        "#0891b2",
+  "Economics":        "#d97706",
+  "Languages":        "#db2777",
+  "Psychology":       "#7c3aed",
+  "Engineering":      "#ea580c",
+  "Architecture":     "#0284c7",
+  "Business":         "#16a34a",
+  "Physics":          "#6d28d9",
+  "Humanities":       "#b45309",
 };
 
 function SubjectTile({ subject, onNavigate }: SubjectTileProps) {
   const Icon = subjectIcons[subject] ?? BookOpen;
-  const colorHsl = subjectColors[subject] ?? "158 72% 36%";
-  const color = `hsl(${colorHsl})`;
+  const color = subjectHues[subject] ?? "var(--accent)";
 
   return (
     <motion.button
       variants={variants.staggerItem}
-      whileHover={{ y: -3, boxShadow: `0 10px 28px -6px hsl(${colorHsl} / 0.3)` }}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.96 }}
       onClick={onNavigate}
-      className="rounded-2xl p-4 flex flex-col justify-between text-left h-28 border border-hairline overflow-hidden relative"
-      style={{ background: `hsl(${colorHsl} / 0.08)` }}
+      className="rounded-xl border border-border p-4 flex flex-col justify-between text-left h-28 bg-surface transition-colors duration-150 hover:border-accent/30"
       aria-label={`Browse ${subject}`}
     >
-      <Icon size={28} style={{ color }} className="flex-shrink-0" />
-      <span className="font-display font-medium text-[17px] leading-snug line-clamp-1 block" style={{ color }}>
-        {subject}
-      </span>
+      <Icon size={28} style={{ color }} className="flex-shrink-0" aria-hidden="true" />
+      <div>
+        <span
+          className="font-display font-semibold text-[17px] leading-snug line-clamp-1 block"
+          style={{ color: "var(--text-primary)" }}
+        >
+          {subject}
+        </span>
+      </div>
     </motion.button>
   );
 }
@@ -234,6 +238,9 @@ const DiscoverPage = () => {
     isLoading: tutorsForCoursesLoading,
   } = useTutorsForStudentCourses(studentId, selectedUniversity);
 
+  // Trending / new tutors
+  const { data: trendingTutors = [] } = useTrendingTutors(selectedUniversity);
+  const { data: newTutors = [] } = useNewTutors(selectedUniversity);
 
   const uni = universities.find((u) => u.id === selectedUniversity);
 
@@ -319,31 +326,30 @@ const DiscoverPage = () => {
       {/* ── Scrollable container ───────────────────────────── */}
       <div
         ref={scrollRef}
-        className="overflow-y-auto pb-6"
+        className="overflow-y-auto h-full pb-6"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           paddingTop: isRefreshing ? 48 : undefined,
           transition: "padding-top 0.2s",
-          minHeight: "100dvh",
         }}
       >
-        {/* ── Header area ─────────────────────────── */}
-        <div className="px-5 pt-14 pb-5">
+        <div className="px-5 pt-14">
+
           {/* ── 1. Greeting header ──────────────────────────── */}
           <motion.div
             variants={variants.fadeSlideDown}
             initial="hidden"
             animate="visible"
-            className="flex items-start justify-between mb-4"
+            className="flex items-start justify-between mb-1"
           >
             <div className="flex-1 min-w-0">
-              <h1 className="text-display-hero leading-tight">
+              <h1 className="text-display leading-tight">
                 Good {timeOfDay},{" "}
-                <span style={{ fontStyle: "italic", color: "hsl(158 76% 36%)" }}>
+                <em style={{ fontStyle: "italic" }}>
                   {profile?.full_name?.split(" ")[0] ?? "there"}
-                </span>
+                </em>
               </h1>
               {uni?.short_name && (
                 <p className="text-caption text-ink-muted mt-1">
@@ -352,26 +358,36 @@ const DiscoverPage = () => {
               )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 ml-3 mt-1">
+              {/* Notification bell with dot */}
               <div className="relative">
                 <button
                   aria-label="Notifications"
-                  onClick={() => navigate("/messages")}
-                  className="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm"
+                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface"
                 >
                   <Bell size={18} className="text-ink-muted" />
                 </button>
-                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-accent border-2 border-white" aria-hidden="true" />
+                {/* Notification dot — always shown; no handler yet */}
+                <span
+                  className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent border-2 border-background"
+                  aria-hidden="true"
+                />
               </div>
+              {/* Avatar */}
               <img
                 src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
                 alt={profile?.full_name ?? "Profile"}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm flex-shrink-0"
+                className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
               />
             </div>
           </motion.div>
 
           {/* ── 2. University pill ──────────────────────────── */}
-          <motion.div variants={variants.fadeIn} initial="hidden" animate="visible" className="mb-4">
+          <motion.div
+            variants={variants.fadeIn}
+            initial="hidden"
+            animate="visible"
+            className="mb-4 mt-3"
+          >
             <UniversityPill onClick={() => setUniSwitcherOpen(true)} />
           </motion.div>
 
@@ -380,20 +396,47 @@ const DiscoverPage = () => {
             variants={variants.fadeSlideUp}
             initial="hidden"
             animate="visible"
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/search")}
-            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-white text-left"
-            style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg border border-border bg-surface mb-6 text-left"
             aria-label="Open search"
           >
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, hsl(158 76% 44%), hsl(165 80% 30%))" }}>
-              <Search size={16} className="text-white" />
-            </div>
-            <span className="text-body-sm text-ink-muted">Search tutors, courses…</span>
+            <Search size={18} className="text-ink-subtle flex-shrink-0" />
+            <span className="text-body-sm text-ink-subtle">Search courses, tutors…</span>
           </motion.button>
-        </div>
 
-        <div className="px-5">
+          {/* ── 4. Contextual hero card ─────────────────────── */}
+          <motion.div
+            variants={variants.fadeSlideUp}
+            initial="hidden"
+            animate="visible"
+            className="mb-8"
+          >
+            <motion.button
+              whileTap={{ scale: 0.99 }}
+              onClick={() => navigate("/search")}
+              className="w-full bg-surface rounded-xl border border-border p-5 text-left flex items-center gap-4 transition-shadow hover:shadow-[0_0_0_2px_hsl(152_60%_42%_/_0.15)]"
+              aria-label="Find a tutor"
+            >
+              {/* Icon circle */}
+              <div className="w-12 h-12 rounded-full bg-accent-light flex items-center justify-center flex-shrink-0">
+                <Sparkles size={24} className="text-accent" />
+              </div>
+              {/* Text */}
+              <div className="flex-1 min-w-0">
+                <p className="text-label leading-snug mb-0.5">
+                  Your next session starts here.
+                </p>
+                <p className="text-body-sm text-ink-muted">
+                  Browse top-rated tutors at your university.
+                </p>
+              </div>
+              {/* CTA */}
+              <span className="text-body-sm font-medium text-accent flex-shrink-0">
+                Find a tutor
+              </span>
+            </motion.button>
+          </motion.div>
 
           {/* ── 5. Tutors for your courses ──────────────────── */}
           {(hasEnrolledCourses || studentCoursesLoading || tutorsForCoursesLoading) && (
@@ -454,7 +497,33 @@ const DiscoverPage = () => {
             )}
           </Section>
 
-          {/* ── 7. Popular courses ──────────────────────────── */}
+          {/* ── 7. Trending this week ────────────────────────── */}
+          {trendingTutors.length > 0 && (
+            <Section title="Trending this week" overline="TRENDING">
+              <div className="space-y-3">
+                {trendingTutors.map((tutor) => (
+                  <motion.div key={tutor.id} variants={variants.staggerItem}>
+                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
+                  </motion.div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* ── 8. New tutors at [uni] ──────────────────────── */}
+          {newTutors.length > 0 && (
+            <Section title={`New tutors at ${uni?.short_name ?? "your university"}`} overline="NEW">
+              <div className="space-y-3">
+                {newTutors.map((tutor) => (
+                  <motion.div key={tutor.id} variants={variants.staggerItem}>
+                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
+                  </motion.div>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* ── 9. Popular courses ──────────────────────────── */}
           <Section title="Popular courses" overline="BROWSE">
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
               {coursesLoading ? (
@@ -472,7 +541,7 @@ const DiscoverPage = () => {
                     variants={variants.staggerItem}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => navigate(`/course/${course.id}`)}
-                    className="flex-shrink-0 w-[140px] bg-surface rounded-xl border border-hairline p-3.5 text-left"
+                    className="flex-shrink-0 w-[140px] bg-surface rounded-xl border border-border p-3.5 text-left"
                     aria-label={`${course.code} — ${course.name}`}
                   >
                     {/* Uni-color accent bar */}

@@ -2,7 +2,7 @@ import { Skeleton } from "./Skeleton";
 
 export function ReviewSkeleton() {
   return (
-    <div className="bg-surface rounded-xl border border-hairline p-4">
+    <div className="bg-surface rounded-xl border border-border p-4">
       <div className="flex items-start gap-3">
         {/* Avatar */}
         <Skeleton className="w-9 h-9 rounded-full flex-shrink-0" />

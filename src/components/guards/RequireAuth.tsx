@@ -20,7 +20,7 @@ function AuthSkeleton() {
       {Array.from({ length: 3 }).map((_, i) => (
         <div
           key={i}
-          className="h-24 rounded-xl bg-surface border border-hairline overflow-hidden relative"
+          className="h-24 rounded-xl bg-surface border border-border overflow-hidden relative"
         >
           <div
             className="absolute inset-0"

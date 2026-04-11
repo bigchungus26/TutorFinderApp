@@ -1,5 +1,6 @@
 // ── Skeleton primitive ────────────────────────────────────────
-// Subtle shimmer animation. Compose to build skeleton screens.
+// Shimmer animation. Compose to build skeleton screens.
+// Reduced motion: falls back to static muted bg (no animation).
 import { cn } from "@/lib/utils";
 
 interface SkeletonProps {
@@ -9,13 +10,7 @@ interface SkeletonProps {
 export function Skeleton({ className }: SkeletonProps) {
   return (
     <div
-      className={cn(
-        "relative overflow-hidden rounded-md bg-muted",
-        "before:absolute before:inset-0",
-        "before:bg-gradient-to-r before:from-transparent before:via-surface/60 before:to-transparent",
-        "before:animate-[shimmer_1.2s_ease-in-out_infinite]",
-        className
-      )}
+      className={cn("shimmer rounded-lg bg-muted", className)}
       aria-hidden="true"
     />
   );
