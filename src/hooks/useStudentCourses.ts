@@ -5,6 +5,7 @@ import {
   isMissingSupabaseResourceError,
   isSupabaseResourceMissing,
   markSupabaseResourceMissing,
+  clearSupabaseResourceMissing,
 } from "@/lib/supabaseResourceFallback";
 
 export function useStudentCourses(studentId: string) {
@@ -79,6 +80,9 @@ export function useSetStudentCourses() {
       }
     },
     onSuccess: (_, { studentId }) => {
+      // If the mutation succeeded, the table clearly exists — clear any stale missing flag
+      // so the subsequent invalidated re-fetch actually hits the DB instead of short-circuiting.
+      clearSupabaseResourceMissing("student_courses");
       queryClient.invalidateQueries({ queryKey: ["student-courses", studentId] });
     },
     // Don't toast here — callers use mutateAsync and handle errors themselves

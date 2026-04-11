@@ -19,3 +19,7 @@ export function markSupabaseResourceMissing(resource: string) {
 export function isSupabaseResourceMissing(resource: string) {
   return missingResources.has(resource);
 }
+
+export function clearSupabaseResourceMissing(resource: string) {
+  missingResources.delete(resource);
+}
