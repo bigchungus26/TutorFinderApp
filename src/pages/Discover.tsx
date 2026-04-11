@@ -326,7 +326,6 @@ const DiscoverPage = () => {
         style={{
           paddingTop: isRefreshing ? 48 : undefined,
           transition: "padding-top 0.2s",
-          background: "linear-gradient(160deg, hsl(152 60% 88%) 0%, hsl(152 25% 95%) 40%, hsl(35 55% 94%) 100%)",
           minHeight: "100dvh",
         }}
       >

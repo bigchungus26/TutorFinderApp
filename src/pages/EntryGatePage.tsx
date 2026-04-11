@@ -12,7 +12,7 @@ const EntryGatePage = () => {
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}
+      style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "linear-gradient(145deg, hsl(152 58% 90%) 0%, hsl(150 30% 96%) 50%, hsl(35 60% 92%) 100%)" }}
       className="px-5 py-8"
     >
       {/* Wordmark */}

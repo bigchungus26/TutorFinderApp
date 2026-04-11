@@ -28,8 +28,8 @@ const LoginPage = () => {
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}
-      className="px-6 pt-12 pb-8 bg-background"
+      style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "linear-gradient(145deg, hsl(152 58% 90%) 0%, hsl(150 30% 96%) 55%, hsl(35 60% 93%) 100%)" }}
+      className="px-6 pt-12 pb-8"
     >
       <button
         type="button"

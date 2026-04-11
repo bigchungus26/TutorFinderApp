@@ -23,7 +23,7 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
   )?.path ?? "/discover";
 
   return (
-    <div className="min-h-[100dvh] relative overflow-x-hidden bg-background">
+    <div className="min-h-[100dvh] relative overflow-x-hidden" style={{ background: "linear-gradient(145deg, hsl(152 58% 90%) 0%, hsl(150 30% 96%) 45%, hsl(35 60% 93%) 100%)" }}>
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
