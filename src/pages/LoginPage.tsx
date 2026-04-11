@@ -8,6 +8,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { springs, variants } from "@/lib/motion";
+import { clearSelectedRole } from "@/lib/rolePreference";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,11 @@ const LoginPage = () => {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [shakeTick, setShakeTick] = useState(0);
+
+  const handleBackToRolePicker = () => {
+    clearSelectedRole();
+    navigate("/");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +67,7 @@ const LoginPage = () => {
       <motion.button
         whileTap={{ scale: 0.92 }}
         transition={springs.snappy}
-        onClick={() => navigate("/")}
+        onClick={handleBackToRolePicker}
         className="relative z-10 inline-flex items-center gap-2 text-body-sm text-ink-muted mb-8 self-start"
         aria-label="Go back"
       >

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { getSelectedRole, setSelectedRole } from "@/lib/rolePreference";
+import { clearSelectedRole, getSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 import { springs, variants } from "@/lib/motion";
 
 const SignupPage = () => {
@@ -25,6 +25,11 @@ const SignupPage = () => {
   const [shakeTick, setShakeTick]   = useState(0);
 
   useEffect(() => { setSelectedRole(role); }, [role]);
+
+  const handleBackToRolePicker = () => {
+    clearSelectedRole();
+    navigate("/");
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,7 +81,7 @@ const SignupPage = () => {
       <motion.button
         whileTap={{ scale: 0.92 }}
         transition={springs.snappy}
-        onClick={() => navigate("/")}
+        onClick={handleBackToRolePicker}
         className="relative z-10 inline-flex items-center gap-2 text-body-sm text-ink-muted mb-8 self-start"
         aria-label="Go back"
       >
@@ -107,7 +112,7 @@ const SignupPage = () => {
           {role === "tutor" ? "Joining as a tutor ✏️" : "Joining as a student 🎓"}
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={handleBackToRolePicker}
             className="underline underline-offset-2 text-caption opacity-70 ml-1 min-h-0 min-w-0"
           >
             change
