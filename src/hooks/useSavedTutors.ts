@@ -54,11 +54,10 @@ export function useSaveTutor() {
     mutationFn: async ({ studentId, tutorId }: { studentId: string; tutorId: string }) => {
       const { error } = await supabase
         .from("saved_tutors")
-        .upsert(
-          { student_id: studentId, tutor_id: tutorId },
-          { onConflict: "student_id,tutor_id", ignoreDuplicates: true }
-        );
-      if (error) throw error;
+        .insert({ student_id: studentId, tutor_id: tutorId });
+
+      // Saving the same tutor twice should behave like success.
+      if (error && error.code !== "23505") throw error;
     },
     onSuccess: (_, { studentId, tutorId }) => {
       queryClient.invalidateQueries({ queryKey: ["saved-tutors"] });
