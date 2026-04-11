@@ -5,15 +5,18 @@
 // If user already has a stored role, skip directly.
 // ============================================================
 import { motion } from "framer-motion";
+import { Moon, Sun } from "lucide-react";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSelectedRole, getRoleLandingPath, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 import { toast } from "@/components/ui/sonner";
 import { variants, springs } from "@/lib/motion";
+import { useTheme } from "@/hooks/useTheme";
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [searchParams] = useSearchParams();
   const storedRole = getSelectedRole();
   const isSwitchMode = searchParams.get("switch") === "1";
@@ -69,14 +72,15 @@ const EntryGatePage = () => {
         transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 6 }}
       />
 
-      {/* Wordmark */}
       <motion.div
         variants={variants.fadeIn}
         initial="hidden"
         animate="visible"
-        className="relative z-10 text-center shrink-0 mb-5"
+        className="relative z-10 mb-5 flex items-center justify-between gap-3 shrink-0"
       >
+        <div className="w-[90px]" />
         <span
+          className="text-center"
           style={{
             fontFamily: "'Fraunces', serif",
             fontSize: "1.75rem",
@@ -87,6 +91,27 @@ const EntryGatePage = () => {
         >
           tutr
         </span>
+        <div className="flex items-center rounded-full border border-border bg-surface/90 p-1 shadow-sm backdrop-blur-sm">
+          {[
+            { value: "light", label: "Light", icon: Sun },
+            { value: "dark", label: "Dark", icon: Moon },
+          ].map(({ value, label, icon: Icon }) => {
+            const active = theme === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTheme(value)}
+                aria-label={`Switch to ${label.toLowerCase()} mode`}
+                className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                  active ? "bg-accent text-white" : "text-ink-muted hover:text-foreground"
+                }`}
+              >
+                <Icon size={16} />
+              </button>
+            );
+          })}
+        </div>
       </motion.div>
 
       {/* Two role cards */}
