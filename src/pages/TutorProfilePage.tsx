@@ -14,7 +14,7 @@ import { useTutor, useReviews, useUniversities } from "@/hooks/useSupabaseQuery"
 import { useAvailability } from "@/hooks/useAvailability";
 import { useIsTutorSaved, useSaveTutor, useUnsaveTutor } from "@/hooks/useSavedTutors";
 import { useCreateReport, ReportReason } from "@/hooks/useReports";
-import { useGetOrCreateConversation } from "@/hooks/useMessages";
+import { useOpenConversation } from "@/hooks/useOpenConversation";
 import { useAuth } from "@/contexts/AuthContext";
 import { springs, variants } from "@/lib/motion";
 import { Avatar } from "@/components/Avatar";
@@ -143,7 +143,7 @@ const TutorProfilePage = () => {
   const saveTutor = useSaveTutor();
   const unsaveTutor = useUnsaveTutor();
   const createReport = useCreateReport();
-  const getOrCreate = useGetOrCreateConversation();
+  const { openConversation, isPending: isOpeningConversation } = useOpenConversation();
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
@@ -193,8 +193,7 @@ const TutorProfilePage = () => {
 
   const handleMessage = async () => {
     if (!studentId) return;
-    const convId = await getOrCreate.mutateAsync({ studentId, tutorId });
-    navigate(`/messages/${convId}`);
+    await openConversation({ studentId, tutorId });
   };
 
   const handleReport = () => {
@@ -491,7 +490,7 @@ const TutorProfilePage = () => {
             whileTap={{ scale: 0.97 }}
             transition={springs.snappy}
             onClick={handleMessage}
-            disabled={getOrCreate.isPending}
+            disabled={isOpeningConversation}
             className="flex items-center justify-center gap-2 w-12 h-12 rounded-xl border border-border bg-surface text-foreground disabled:opacity-60 flex-shrink-0"
             aria-label="Message tutor"
           >

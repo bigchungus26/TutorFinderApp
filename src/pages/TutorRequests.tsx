@@ -15,8 +15,10 @@ import {
   ChevronDown,
   ChevronUp,
   Inbox,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOpenConversation } from "@/hooks/useOpenConversation";
 import {
   useRequests,
   useUpdateRequest,
@@ -51,10 +53,12 @@ interface RequestCardProps {
   req: RequestWithDetails;
   onAccept: (req: RequestWithDetails) => void;
   onDecline: (id: string) => void;
+  onMessage: (req: RequestWithDetails) => void;
   actionPending: boolean;
+  messagePending: boolean;
 }
 
-function RequestCard({ req, onAccept, onDecline, actionPending }: RequestCardProps) {
+function RequestCard({ req, onAccept, onDecline, onMessage, actionPending, messagePending }: RequestCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [successVisible, setSuccessVisible] = useState(false);
 
@@ -156,7 +160,17 @@ function RequestCard({ req, onAccept, onDecline, actionPending }: RequestCardPro
       </div>
 
       {/* Action buttons */}
-      <div className="flex gap-2">
+      <div className="space-y-2">
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => onMessage(req)}
+          disabled={messagePending}
+          className="w-full h-11 rounded-lg border border-border bg-background text-foreground text-label font-medium flex items-center justify-center gap-1.5 disabled:opacity-50 hover:bg-muted transition-colors"
+        >
+          <MessageCircle size={15} />
+          Message student
+        </motion.button>
+        <div className="flex gap-2">
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={handleAccept}
@@ -175,6 +189,7 @@ function RequestCard({ req, onAccept, onDecline, actionPending }: RequestCardPro
           <X size={15} />
           Decline
         </motion.button>
+        </div>
       </div>
     </motion.div>
   );
@@ -217,6 +232,7 @@ const TutorRequests = () => {
 
   const updateRequest = useUpdateRequest();
   const createSession = useCreateSession();
+  const { openConversation, isPending: messagePending } = useOpenConversation();
 
   const pending = (requests as RequestWithDetails[]).filter(
     (r) => r.status === "pending"
@@ -272,6 +288,13 @@ const TutorRequests = () => {
     [updateRequest]
   );
 
+  const handleMessage = useCallback(
+    async (req: RequestWithDetails) => {
+      await openConversation({ studentId: req.student_id, tutorId: req.tutor_id });
+    },
+    [openConversation]
+  );
+
   const { onTouchStart, onTouchEnd } = usePullToRefresh(() => {
     refetch();
     toast("Refreshed");
@@ -313,7 +336,9 @@ const TutorRequests = () => {
                 req={req}
                 onAccept={handleAccept}
                 onDecline={handleDecline}
+                onMessage={handleMessage}
                 actionPending={actionPending}
+                messagePending={messagePending}
               />
             ))}
           </AnimatePresence>

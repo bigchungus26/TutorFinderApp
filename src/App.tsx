@@ -8,6 +8,7 @@ import { UniversityProvider } from "@/contexts/UniversityContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { StudentLayout } from "@/components/StudentLayout";
 import { TutorLayout } from "@/components/TutorLayout";
+import { RoleAwareLayout } from "@/components/RoleAwareLayout";
 import RequireAuth from "@/components/guards/RequireAuth";
 import RequireRole from "@/components/guards/RequireRole";
 import PublicOnly from "@/components/guards/PublicOnly";
@@ -151,7 +152,7 @@ const AppRoutes = () => {
         } />
         <Route path="/messages" element={
           <RequireAuth>
-            <StudentLayout><MessagesPage /></StudentLayout>
+            <RoleAwareLayout><MessagesPage /></RoleAwareLayout>
           </RequireAuth>
         } />
         <Route path="/messages/:id" element={

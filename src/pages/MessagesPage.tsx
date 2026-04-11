@@ -41,7 +41,11 @@ const MessagesPage = () => {
         <EmptyState
           icon={MessageCircle}
           title="No messages yet"
-          description="Start a conversation by messaging a tutor from their profile"
+          description={
+            profile?.role === "tutor"
+              ? "Students who message you will appear here, and you can also start a thread from a request."
+              : "Start a conversation by messaging a tutor from their profile."
+          }
         />
       )}
 

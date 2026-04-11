@@ -17,6 +17,7 @@ import {
   CalendarDays,
   BookOpen,
   Monitor,
+  MessageCircle,
   X,
   Check,
   PenLine,
@@ -586,6 +587,12 @@ const TutorProfilePage = () => {
             label="Availability"
             sublabel="Set your weekly available slots"
             onClick={() => navigate("/tutor/schedule#availability")}
+          />
+          <SettingsRow
+            icon={MessageCircle}
+            label="Messages"
+            sublabel="Open conversations with students"
+            onClick={() => navigate("/messages")}
           />
 
           {/* Appearance with inline toggle */}
