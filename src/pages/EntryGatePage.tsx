@@ -4,6 +4,7 @@
 // Two large tappable cards: student + tutor.
 // If user already has a stored role, skip directly.
 // ============================================================
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
@@ -18,28 +19,31 @@ const EntryGatePage = () => {
   const { user, profile, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [searchParams] = useSearchParams();
+  const [isStartingFlow, setIsStartingFlow] = useState(false);
   const storedRole = getSelectedRole();
   const isSwitchMode = searchParams.get("switch") === "1";
   const roleFromQuery = searchParams.get("role");
   const activeRole = isSelectedRole(roleFromQuery) ? roleFromQuery : storedRole;
 
-  if (!isSwitchMode && activeRole) {
+  if (!isSwitchMode && activeRole && !isStartingFlow) {
     return <Navigate to={getRoleLandingPath(activeRole)} replace />;
   }
 
   const handleRoleSelect = async (role: "student" | "tutor") => {
+    setIsStartingFlow(true);
     setSelectedRole(role);
 
     if (user && !profile?.onboarded_at) {
       try {
         await signOut();
       } catch (error) {
+        setIsStartingFlow(false);
         toast("We couldn't reset your current session. Please try again.");
         return;
       }
     }
 
-    navigate(`/signup?role=${role}`);
+    navigate(`/signup?role=${role}`, { replace: true });
   };
 
   return (
@@ -127,6 +131,7 @@ const EntryGatePage = () => {
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
           onClick={() => void handleRoleSelect("student")}
+          disabled={isStartingFlow}
           className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
           style={{
             background: "linear-gradient(160deg, rgba(43,166,106,0.12) 0%, rgba(43,166,106,0.05) 100%)",
@@ -156,6 +161,7 @@ const EntryGatePage = () => {
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
           onClick={() => void handleRoleSelect("tutor")}
+          disabled={isStartingFlow}
           className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
           style={{
             background: "linear-gradient(160deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)",
