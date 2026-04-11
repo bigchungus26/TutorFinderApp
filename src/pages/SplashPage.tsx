@@ -163,7 +163,7 @@ const SplashPage = () => {
                 color: "var(--accent)",
               }}
             >
-              tutr
+              TUTR
             </motion.h1>
 
             {/* Tagline */}

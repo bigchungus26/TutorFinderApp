@@ -131,7 +131,7 @@ const LoginPage = () => {
           className="block mb-3"
           style={{ fontFamily: "'Fraunces', serif", fontSize: "1rem", fontWeight: 700, color: "var(--accent)" }}
         >
-          tutr
+          TUTR
         </span>
         <h1 className="text-h1 mb-1">Welcome back.</h1>
         <p className="text-body text-ink-muted mb-8">Sign in to continue.</p>

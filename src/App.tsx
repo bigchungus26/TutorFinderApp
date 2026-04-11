@@ -86,11 +86,12 @@ const AppRoutes = () => {
       <ThemeInit />
       <Routes>
         {/* ── Splash / first landing ───────────────────── */}
+        {/* "/" is the universal entry — always shows splash on cold start */}
+        <Route path="/" element={<SplashPage />} />
         <Route path="/splash" element={<SplashPage />} />
         <Route path="/offline" element={<OfflinePage />} />
 
         {/* ── Public-only routes ───────────────────────── */}
-        <Route path="/" element={<PublicOnly><EntryGatePage /></PublicOnly>} />
         <Route path="/welcome" element={<Navigate to="/student" replace />} />
         <Route path="/student" element={<PublicOnly><StudentLandingPage /></PublicOnly>} />
         <Route path="/tutor" element={<PublicOnly><TutorLandingPage /></PublicOnly>} />

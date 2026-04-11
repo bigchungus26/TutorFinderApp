@@ -116,7 +116,7 @@ const EntryGatePage = () => {
             color: "var(--accent)",
           }}
         >
-          tutr
+          TUTR
         </span>
         <div className="flex items-center rounded-full border border-border bg-surface/90 p-1 shadow-sm backdrop-blur-sm">
           {[
