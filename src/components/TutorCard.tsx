@@ -1,121 +1,144 @@
-import { useState } from "react";
+// ============================================================
+// TutorCard — Part 2.1
+// University-tinted left border. Avatar, name, verified badge,
+// course chips, star rating, hourly rate.
+// ============================================================
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import { Star, BadgeCheck } from "lucide-react";
-import { useUniversities } from "@/hooks/useSupabaseQuery";
+import { useNavigate } from "react-router-dom";
+import { Avatar } from "./Avatar";
+import { springs } from "@/lib/motion";
+import type { TutorWithDetails } from "@/types/database";
+
+// University hex colors (fallback if not in DB)
+const UNI_COLORS: Record<string, string> = {
+  AUB: "#8B0000",
+  LAU: "#003DA5",
+  NDU: "#0B6E4F",
+};
 
 interface TutorCardProps {
-  tutor: {
-    id: string;
-    full_name: string;
-    avatar_url: string;
-    university_id: string | null;
-    major: string;
-    year: string;
-    hourly_rate: number | null;
-    verified: boolean;
-    tutor_stats?: { rating: number; review_count: number } | null;
-    tutor_courses?: { course: { id: string; code: string } }[];
-  };
+  tutor: TutorWithDetails;
+  className?: string;
 }
 
-function TutorAvatar({ avatarUrl, fullName }: { avatarUrl: string; fullName: string }) {
-  const [imgError, setImgError] = useState(false);
+export function TutorCard({ tutor, className = "" }: TutorCardProps) {
+  const navigate = useNavigate();
+  const uniColor =
+    tutor.university?.color ??
+    UNI_COLORS[tutor.university?.short_name ?? ""] ??
+    "#2ba66a";
 
-  const isPravatar = avatarUrl?.includes("pravatar.cc");
-  const hasRealAvatar = avatarUrl && !isPravatar;
+  const courses = tutor.tutor_courses ?? [];
+  const displayCourses = courses.slice(0, 3);
+  const extra = courses.length - displayCourses.length;
 
-  const dicebearUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=e8f5ee,fbeee3,f5e6d3&fontFamily=serif`;
-
-  const initials = fullName
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-  if (imgError) {
-    return (
-      <div className="w-12 h-12 rounded-full flex-shrink-0 bg-accent-soft flex items-center justify-center ring-2 ring-surface ring-offset-0">
-        <span className="text-accent text-sm font-medium leading-none">{initials}</span>
-      </div>
-    );
-  }
+  const rating = tutor.stats?.avg_rating ?? (tutor as any).avg_rating ?? 0;
+  const reviewCount = tutor.stats?.review_count ?? (tutor as any).review_count ?? 0;
 
   return (
-    <img
-      src={hasRealAvatar ? avatarUrl : dicebearUrl}
-      alt={fullName}
-      className="w-12 h-12 rounded-full object-cover flex-shrink-0 ring-2 ring-surface ring-offset-0"
-      onError={() => setImgError(true)}
-    />
-  );
-}
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      transition={springs.snappy}
+      onClick={() => navigate(`/tutor/${tutor.id}`)}
+      className={`w-full flex items-stretch bg-surface border border-border rounded-xl overflow-hidden text-left shadow-xs ${className}`}
+      aria-label={`View ${tutor.full_name}'s tutoring profile`}
+    >
+      {/* University color accent bar */}
+      <div
+        className="w-1.5 flex-shrink-0 rounded-l-xl"
+        style={{ background: uniColor }}
+        aria-hidden="true"
+      />
 
-export const TutorCard = ({ tutor }: TutorCardProps) => {
-  const { data: universities = [] } = useUniversities();
-  const uni = universities.find((u) => u.id === tutor.university_id);
-  const taughtCourses = tutor.tutor_courses ?? [];
-  const visibleCourses = taughtCourses.slice(0, 3);
-  const moreCount = taughtCourses.length - 3;
-  const rating = tutor.tutor_stats?.rating ?? 0;
-  const reviewCount = tutor.tutor_stats?.review_count ?? 0;
-
-  return (
-    <Link to={`/tutor/${tutor.id}`}>
-      <motion.div
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
-        className="bg-surface rounded-xl border border-hairline overflow-hidden hover:shadow-float transition-shadow"
-      >
-        <motion.div
-          whileTap={{ y: 1 }}
-          className="p-4 flex gap-3.5"
-        >
-          <TutorAvatar avatarUrl={tutor.avatar_url} fullName={tutor.full_name} />
-
-          <div className="flex-1 min-w-0">
+      {/* Content */}
+      <div className="flex-1 p-4 min-w-0">
+        {/* Top row: avatar + name + badge */}
+        <div className="flex items-start gap-3 mb-3">
+          <Avatar
+            src={tutor.avatar_url}
+            name={tutor.full_name}
+            size={44}
+            className="flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-center gap-1.5">
-              <span className="font-display font-medium text-body">{tutor.full_name}</span>
-              {tutor.verified && <BadgeCheck size={15} className="text-accent flex-shrink-0" />}
-              <span
-                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ backgroundColor: uni?.color ?? "#2fa86e" }}
-              />
-            </div>
-            <div className="text-sm text-muted-ink">{tutor.major}, {tutor.year}</div>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {visibleCourses.map((ct) => (
-                <span key={ct.course.id} className="text-xs px-2 py-0.5 rounded-pill bg-muted text-foreground font-medium">
-                  {ct.course.code}
-                </span>
-              ))}
-              {moreCount > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-pill bg-muted text-muted-ink">+{moreCount}</span>
+              <span className="text-body font-semibold text-foreground truncate">
+                {tutor.full_name}
+              </span>
+              {tutor.verified && (
+                <BadgeCheck size={15} className="text-accent flex-shrink-0" aria-label="Verified tutor" />
               )}
             </div>
-            {rating > 0 && (
-              <div className="flex items-center gap-1 mt-2 text-sm">
-                <Star size={13} className="text-accent fill-accent" />
-                <span className="font-medium">{rating}</span>
-                <span className="text-muted-ink">· {reviewCount} reviews</span>
-              </div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {tutor.university && (
+                <span
+                  className="text-caption px-1.5 py-0.5 rounded font-medium"
+                  style={{
+                    backgroundColor: uniColor + "18",
+                    color: uniColor,
+                  }}
+                >
+                  {tutor.university.short_name}
+                </span>
+              )}
+              {(tutor.major || tutor.year) && (
+                <span className="text-caption text-ink-muted truncate">
+                  {[tutor.major, tutor.year].filter(Boolean).join(" · ")}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Course chips */}
+        {displayCourses.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {displayCourses.map((tc) => (
+              <span
+                key={tc.course_id}
+                className="text-label px-2 py-0.5 rounded font-medium"
+                style={{
+                  backgroundColor: uniColor + "14",
+                  color: uniColor,
+                }}
+              >
+                {tc.course?.code ?? tc.course_id}
+              </span>
+            ))}
+            {extra > 0 && (
+              <span className="text-label px-2 py-0.5 rounded text-ink-muted bg-muted">
+                +{extra}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Footer: rating + rate */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Star size={12} className="text-accent fill-accent" aria-hidden="true" />
+            <span className="text-caption font-semibold text-foreground">
+              {rating > 0 ? Number(rating).toFixed(1) : "New"}
+            </span>
+            {reviewCount > 0 && (
+              <span className="text-caption text-ink-muted">({reviewCount})</span>
             )}
           </div>
 
-          {tutor.hourly_rate && (
-            <div className="flex-shrink-0 self-start">
-              <span className="font-display font-medium text-body font-tabular">
-                ${tutor.hourly_rate}
-                <span className="text-xs text-muted-ink font-body">/hr</span>
-              </span>
-            </div>
+          {tutor.hourly_rate != null && (
+            <span
+              className="text-caption font-semibold px-2.5 py-1 rounded-lg"
+              style={{
+                backgroundColor: uniColor + "14",
+                color: uniColor,
+              }}
+            >
+              ${tutor.hourly_rate}/hr
+            </span>
           )}
-        </motion.div>
-
-        {/* Micro-gradient bottom divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-hairline to-transparent" />
-      </motion.div>
-    </Link>
+        </div>
+      </div>
+    </motion.button>
   );
-};
+}

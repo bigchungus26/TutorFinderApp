@@ -144,7 +144,7 @@ function Section({ title, overline, children }: SectionProps) {
           {overline}
         </motion.p>
       )}
-      <motion.h2 variants={variants.staggerItem} className="text-display-sm mb-3">
+      <motion.h2 variants={variants.staggerItem} className="text-h2 mb-3">
         {title}
       </motion.h2>
       {children}
@@ -158,31 +158,40 @@ interface SubjectTileProps {
   onNavigate: () => void;
 }
 
-function SubjectTile({ subject, onNavigate }: SubjectTileProps) {
-  const [pressing, setPressing] = useState(false);
-  const Icon = subjectIcons[subject] ?? BookOpen;
+// Unique hue per subject for colored tiles
+const subjectHues: Record<string, string> = {
+  "Computer Science": "var(--accent)",
+  "Mathematics":      "#7c3aed",
+  "Biology":          "#059669",
+  "Chemistry":        "#0891b2",
+  "Economics":        "#d97706",
+  "Languages":        "#db2777",
+  "Psychology":       "#7c3aed",
+  "Engineering":      "#ea580c",
+  "Architecture":     "#0284c7",
+  "Business":         "#16a34a",
+  "Physics":          "#6d28d9",
+  "Humanities":       "#b45309",
+};
 
-  const handleTap = () => {
-    setPressing(true);
-    setTimeout(() => {
-      setPressing(false);
-      onNavigate();
-    }, 200);
-  };
+function SubjectTile({ subject, onNavigate }: SubjectTileProps) {
+  const Icon = subjectIcons[subject] ?? BookOpen;
+  const color = subjectHues[subject] ?? "var(--accent)";
 
   return (
     <motion.button
       variants={variants.staggerItem}
       whileTap={{ scale: 0.96 }}
-      onClick={handleTap}
-      className={`rounded-xl border border-hairline p-4 flex flex-col justify-between text-left h-28 transition-colors duration-150 ${
-        pressing ? "bg-accent-soft" : "bg-surface"
-      }`}
+      onClick={onNavigate}
+      className="rounded-xl border border-border p-4 flex flex-col justify-between text-left h-28 bg-surface transition-colors duration-150 hover:border-accent/30"
       aria-label={`Browse ${subject}`}
     >
-      <Icon size={32} className="text-accent flex-shrink-0" />
+      <Icon size={28} style={{ color }} className="flex-shrink-0" aria-hidden="true" />
       <div>
-        <span className="font-display font-medium text-[18px] leading-snug line-clamp-1 block">
+        <span
+          className="font-display font-semibold text-[17px] leading-snug line-clamp-1 block"
+          style={{ color: "var(--text-primary)" }}
+        >
           {subject}
         </span>
       </div>
@@ -336,11 +345,11 @@ const DiscoverPage = () => {
             className="flex items-start justify-between mb-1"
           >
             <div className="flex-1 min-w-0">
-              <h1 className="text-display-hero leading-tight">
+              <h1 className="text-display leading-tight">
                 Good {timeOfDay},{" "}
-                <span style={{ fontStyle: "italic" }}>
+                <em style={{ fontStyle: "italic" }}>
                   {profile?.full_name?.split(" ")[0] ?? "there"}
-                </span>
+                </em>
               </h1>
               {uni?.short_name && (
                 <p className="text-caption text-ink-muted mt-1">
@@ -353,7 +362,7 @@ const DiscoverPage = () => {
               <div className="relative">
                 <button
                   aria-label="Notifications"
-                  className="w-9 h-9 rounded-full flex items-center justify-center border border-hairline bg-surface"
+                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface"
                 >
                   <Bell size={18} className="text-ink-muted" />
                 </button>
@@ -367,7 +376,7 @@ const DiscoverPage = () => {
               <img
                 src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
                 alt={profile?.full_name ?? "Profile"}
-                className="w-10 h-10 rounded-full object-cover border border-hairline flex-shrink-0"
+                className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
               />
             </div>
           </motion.div>
@@ -389,7 +398,7 @@ const DiscoverPage = () => {
             animate="visible"
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/search")}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg border border-hairline bg-surface mb-6 text-left"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg border border-border bg-surface mb-6 text-left"
             aria-label="Open search"
           >
             <Search size={18} className="text-ink-subtle flex-shrink-0" />
@@ -406,11 +415,11 @@ const DiscoverPage = () => {
             <motion.button
               whileTap={{ scale: 0.99 }}
               onClick={() => navigate("/search")}
-              className="w-full bg-surface rounded-xl border border-hairline p-5 text-left flex items-center gap-4 transition-shadow hover:shadow-[0_0_0_2px_hsl(152_60%_42%_/_0.15)]"
+              className="w-full bg-surface rounded-xl border border-border p-5 text-left flex items-center gap-4 transition-shadow hover:shadow-[0_0_0_2px_hsl(152_60%_42%_/_0.15)]"
               aria-label="Find a tutor"
             >
               {/* Icon circle */}
-              <div className="w-12 h-12 rounded-full bg-accent-soft flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-accent-light flex items-center justify-center flex-shrink-0">
                 <Sparkles size={24} className="text-accent" />
               </div>
               {/* Text */}
@@ -532,7 +541,7 @@ const DiscoverPage = () => {
                     variants={variants.staggerItem}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => navigate(`/course/${course.id}`)}
-                    className="flex-shrink-0 w-[140px] bg-surface rounded-xl border border-hairline p-3.5 text-left"
+                    className="flex-shrink-0 w-[140px] bg-surface rounded-xl border border-border p-3.5 text-left"
                     aria-label={`${course.code} — ${course.name}`}
                   >
                     {/* Uni-color accent bar */}

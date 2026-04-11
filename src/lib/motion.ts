@@ -1,158 +1,131 @@
 // ============================================================
-// Tutr — Motion Primitives
-// Reusable Framer Motion variants and transitions.
-// All values derived from DESIGN_SYSTEM.md tokens.
-// Every variant respects prefers-reduced-motion via a runtime check.
+// Tutr — Motion System (Part 1.4)
+// Single source of truth for all animation values.
+// Every animation respects OS prefers-reduced-motion via MotionConfig.
 // ============================================================
+import type { Variants, Transition } from "framer-motion";
 
-import { Variants, Transition } from "framer-motion";
+// ── Spring presets ─────────────────────────────────────────────
+export const springs = {
+  snappy:  { type: "spring" as const, stiffness: 400, damping: 30 },
+  smooth:  { type: "spring" as const, stiffness: 300, damping: 28 },
+  bouncy:  { type: "spring" as const, stiffness: 500, damping: 25, mass: 0.8 },
+  gentle:  { type: "spring" as const, stiffness: 200, damping: 20 },
+} as const;
 
-// ── Check reduced motion preference ──────────────────────────
-// This is used at render-time. Use the useReducedMotion() hook
-// from framer-motion in components when possible; this export
-// is for constructing variants where hooks can't be called.
+// ── Cubic-bezier easings ───────────────────────────────────────
+export const easings = {
+  standard:  [0.2, 0, 0, 1]   as [number, number, number, number],
+  emphasized:[0.2, 0, 0, 1.2] as [number, number, number, number],
+  enter:     [0, 0, 0.2, 1]   as [number, number, number, number],
+  exit:      [0.4, 0, 1, 1]   as [number, number, number, number],
+} as const;
+
+// ── Duration tokens ────────────────────────────────────────────
+export const durations = {
+  instant: 0.1,
+  fast:    0.15,
+  base:    0.25,
+  slow:    0.35,
+  dramatic: 0.6,
+} as const;
+
+// ── Transition shorthands ──────────────────────────────────────
+export const transitions = {
+  fast:     { duration: durations.fast,    ease: easings.exit }    as Transition,
+  standard: { duration: durations.base,    ease: easings.standard } as Transition,
+  enter:    { duration: durations.base,    ease: easings.enter }    as Transition,
+  slow:     { duration: durations.slow,    ease: easings.enter }    as Transition,
+  spring:   springs.smooth                                          as Transition,
+  snappy:   springs.snappy                                          as Transition,
+  bouncy:   springs.bouncy                                          as Transition,
+  // legacy compat
+  emphasized: { duration: durations.base, ease: easings.emphasized } as Transition,
+  springBouncy: springs.bouncy as Transition,
+} as const;
+
+// ── Reusable Framer Motion variants ───────────────────────────
+export const variants = {
+  // Core fades / slides
+  fadeSlideUp: {
+    hidden:  { opacity: 0, y: 8 },
+    visible: { opacity: 1, y: 0, transition: transitions.enter },
+    show:    { opacity: 1, y: 0, transition: transitions.enter },
+    exit:    { opacity: 0, y: -4, transition: transitions.fast },
+  } as Variants,
+
+  fadeSlideDown: {
+    hidden:  { opacity: 0, y: -8 },
+    visible: { opacity: 1, y: 0, transition: transitions.enter },
+    show:    { opacity: 1, y: 0, transition: transitions.enter },
+    exit:    { opacity: 0, y: -4, transition: transitions.fast },
+  } as Variants,
+
+  fadeIn: {
+    hidden:  { opacity: 0 },
+    visible: { opacity: 1, transition: transitions.standard },
+    show:    { opacity: 1, transition: transitions.standard },
+    exit:    { opacity: 0, transition: transitions.fast },
+  } as Variants,
+
+  scaleIn: {
+    hidden:  { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1, transition: transitions.spring },
+    show:    { opacity: 1, scale: 1, transition: transitions.spring },
+    exit:    { opacity: 0, scale: 0.95, transition: transitions.fast },
+  } as Variants,
+
+  // Onboarding step navigation
+  slideInFromRight: {
+    hidden:  { opacity: 0, x: 32 },
+    visible: { opacity: 1, x: 0, transition: transitions.standard },
+    show:    { opacity: 1, x: 0, transition: transitions.standard },
+    exit:    { opacity: 0, x: -24, transition: transitions.fast },
+  } as Variants,
+
+  slideInFromLeft: {
+    hidden:  { opacity: 0, x: -32 },
+    visible: { opacity: 1, x: 0, transition: transitions.standard },
+    show:    { opacity: 1, x: 0, transition: transitions.standard },
+    exit:    { opacity: 0, x: 24, transition: transitions.fast },
+  } as Variants,
+
+  // Stagger list container
+  staggerChildren: {
+    hidden:  {},
+    visible: { transition: { staggerChildren: 0.05 } },
+    show:    { transition: { staggerChildren: 0.05 } },
+  } as Variants,
+
+  // Individual stagger item
+  staggerItem: {
+    hidden:  { opacity: 0, y: 8 },
+    visible: { opacity: 1, y: 0, transition: transitions.enter },
+  } as Variants,
+
+  // Bottom sheet
+  sheetIn: {
+    hidden:  { y: "100%" },
+    visible: { y: 0, transition: { ...springs.smooth } },
+    exit:    { y: "100%", transition: transitions.fast },
+  } as Variants,
+
+  // SVG path draw (for success checkmark)
+  pathDraw: {
+    hidden:  { pathLength: 0, opacity: 0 },
+    visible: { pathLength: 1, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } },
+  } as Variants,
+} as const;
+
+// ── Tab bar page transition (fade only for smoothness) ─────────
+export const tabVariants: Variants = {
+  hidden:  { opacity: 0 },
+  visible: { opacity: 1, transition: transitions.standard },
+  exit:    { opacity: 0, transition: transitions.fast },
+};
+
+// ── Reduced-motion-safe shimmer ────────────────────────────────
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
-
-// ── Transitions ───────────────────────────────────────────────
-export const transitions = {
-  fast: {
-    duration: 0.15,
-    ease: [0.2, 0, 0, 1],
-  } as Transition,
-
-  standard: {
-    duration: 0.22,
-    ease: [0.2, 0, 0, 1],
-  } as Transition,
-
-  emphasized: {
-    duration: 0.32,
-    ease: [0.2, 0, 0, 1.2],
-  } as Transition,
-
-  spring: {
-    type: "spring",
-    stiffness: 380,
-    damping: 30,
-  } as Transition,
-
-  springBouncy: {
-    type: "spring",
-    stiffness: 500,
-    damping: 28,
-  } as Transition,
-} as const;
-
-// ── Variant factory ───────────────────────────────────────────
-// Returns reduced-motion-safe variants: degrades to plain opacity fade.
-function makeVariant(full: Variants): Variants {
-  if (prefersReducedMotion()) {
-    return {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: transitions.fast },
-      exit: { opacity: 0, transition: transitions.fast },
-    };
-  }
-  return full;
-}
-
-// ── Core Variants ─────────────────────────────────────────────
-export const variants = {
-  fadeIn: makeVariant({
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: transitions.standard },
-    exit: { opacity: 0, transition: transitions.fast },
-  }),
-
-  fadeSlideUp: makeVariant({
-    hidden: { opacity: 0, y: 12 },
-    visible: { opacity: 1, y: 0, transition: transitions.standard },
-    exit: { opacity: 0, y: -8, transition: transitions.fast },
-  }),
-
-  fadeSlideDown: makeVariant({
-    hidden: { opacity: 0, y: -12 },
-    visible: { opacity: 1, y: 0, transition: transitions.standard },
-    exit: { opacity: 0, y: 8, transition: transitions.fast },
-  }),
-
-  scaleIn: makeVariant({
-    hidden: { opacity: 0, scale: 0.96 },
-    visible: { opacity: 1, scale: 1, transition: transitions.emphasized },
-    exit: { opacity: 0, scale: 0.96, transition: transitions.fast },
-  }),
-
-  // For onboarding step forward navigation
-  slideInFromRight: makeVariant({
-    hidden: { opacity: 0, x: 40 },
-    visible: { opacity: 1, x: 0, transition: transitions.standard },
-    exit: { opacity: 0, x: -40, transition: transitions.fast },
-  }),
-
-  // For onboarding step back navigation
-  slideInFromLeft: makeVariant({
-    hidden: { opacity: 0, x: -40 },
-    visible: { opacity: 1, x: 0, transition: transitions.standard },
-    exit: { opacity: 0, x: 40, transition: transitions.fast },
-  }),
-
-  // Parent container for stagger
-  staggerChildren: {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.04,
-      },
-    },
-  } as Variants,
-
-  // Child item for stagger lists
-  staggerItem: makeVariant({
-    hidden: { opacity: 0, y: 8 },
-    visible: { opacity: 1, y: 0, transition: transitions.standard },
-    exit: { opacity: 0, transition: transitions.fast },
-  }),
-
-  // Interactive press/hover (apply via whileTap/whileHover directly)
-  pressable: {
-    whileTap: { scale: 0.97 },
-    whileHover: { scale: 1.01 },
-  },
-
-  // For bottom sheets and modals entering from bottom
-  sheetIn: makeVariant({
-    hidden: { opacity: 0, y: "100%" },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { ...transitions.emphasized, type: "spring", stiffness: 300, damping: 32 },
-    },
-    exit: { opacity: 0, y: "100%", transition: transitions.fast },
-  }),
-
-  // For checkmark SVG path animation
-  pathDraw: {
-    hidden: { pathLength: 0, opacity: 0 },
-    visible: {
-      pathLength: 1,
-      opacity: 1,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  } as Variants,
-} as const;
-
-// ── Tab transition (fade only, no slide, for tab bar) ─────────
-export const tabVariants: Variants = prefersReducedMotion()
-  ? {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: transitions.fast },
-      exit: { opacity: 0, transition: transitions.fast },
-    }
-  : {
-      hidden: { opacity: 0 },
-      visible: { opacity: 1, transition: transitions.standard },
-      exit: { opacity: 0, transition: transitions.fast },
-    };
