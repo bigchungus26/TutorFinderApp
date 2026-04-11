@@ -10,6 +10,7 @@ import { useUpsertAvailability } from "@/hooks/useAvailability";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
 import { toast } from "@/components/ui/sonner";
 import { springs } from "@/lib/motion";
+import { isMissingSupabaseResourceError } from "@/lib/supabaseResourceFallback";
 
 const STORAGE_KEY = "tutr:onboarding:tutor";
 const TOTAL_STEPS = 6;
@@ -550,23 +551,31 @@ function TutorOnboarding() {
         university_id: selectedUni || null,
         major: selectedMajor,
         year: selectedYear,
-        gpa: gpa ? Number(gpa) : null,
         bio: bio.trim(),
-        teaching_styles: teachingStyles,
-        languages,
-        availability_preferences: availabilityPreferences,
         hourly_rate: Number(rate),
-        max_students_per_session: maxStudents ? Number(maxStudents) : null,
         online: mode !== "in-person",
         in_person: mode !== "online",
-        previous_tutoring_experience: previousExperience,
-        years_of_experience: previousExperience && yearsExperience ? Number(yearsExperience) : null,
-        proof_asset_url: proofPreview || "",
-        proof_asset_name: proofFileName || "",
-        subscription_plan: "tutor_monthly",
-        subscription_status: "pending",
         onboarded_at: new Date().toISOString(),
       });
+
+      try {
+        await updateProfile.mutateAsync({
+          id: user.id,
+          gpa: gpa ? Number(gpa) : null,
+          teaching_styles: teachingStyles,
+          languages,
+          availability_preferences: availabilityPreferences,
+          max_students_per_session: maxStudents ? Number(maxStudents) : null,
+          previous_tutoring_experience: previousExperience,
+          years_of_experience: previousExperience && yearsExperience ? Number(yearsExperience) : null,
+          proof_asset_url: proofPreview || "",
+          proof_asset_name: proofFileName || "",
+          subscription_plan: "tutor_monthly",
+          subscription_status: "pending",
+        });
+      } catch (error) {
+        console.warn("Tutor optional profile fields could not be saved yet:", error);
+      }
 
       await setTutorCourses.mutateAsync({
         tutorId: user.id,
@@ -577,10 +586,17 @@ function TutorOnboarding() {
       });
 
       const availabilitySlots = buildAvailabilitySlots(user.id, availabilityPreferences);
-      await upsertAvailability.mutateAsync({
-        tutorId: user.id,
-        slots: availabilitySlots,
-      });
+      try {
+        await upsertAvailability.mutateAsync({
+          tutorId: user.id,
+          slots: availabilitySlots,
+        });
+      } catch (error) {
+        if (!isMissingSupabaseResourceError(error)) {
+          throw error;
+        }
+        console.warn("Tutor availability table is not available yet:", error);
+      }
 
       setSelectedUniversity(selectedUni || "aub");
       await refreshProfile();
