@@ -32,7 +32,13 @@ import {
   useSubjects,
 } from "@/hooks/useSupabaseQuery";
 import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStudentCourses";
+import { useConversations } from "@/hooks/useMessages";
 import { supabase } from "@/lib/supabase";
+import {
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 import { TutorCard } from "@/components/TutorCard";
 import { UniversityPill } from "@/components/UniversityPill";
@@ -75,6 +81,10 @@ function useTrendingTutors(universityId: string) {
   return useQuery({
     queryKey: ["trending-tutors", universityId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("trending_tutors")) {
+        return [] as Profile[];
+      }
+
       const { data, error } = await supabase
         .from("trending_tutors" as never)
         .select(`
@@ -85,8 +95,11 @@ function useTrendingTutors(universityId: string) {
         .eq("university_id", universityId)
         .limit(5);
       if (error) {
-        // View may not exist yet — return empty gracefully
-        console.warn("trending_tutors view not available:", error.message);
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("trending_tutors");
+          console.warn("trending_tutors view not available:", error.message);
+          return [] as Profile[];
+        }
         return [] as Profile[];
       }
       return (data ?? []) as Profile[];
@@ -237,6 +250,7 @@ const DiscoverPage = () => {
     data: tutorsForCourses = [],
     isLoading: tutorsForCoursesLoading,
   } = useTutorsForStudentCourses(studentId, selectedUniversity);
+  const { data: conversations = [] } = useConversations(profile?.id ?? "");
 
   // Trending / new tutors
   const { data: trendingTutors = [] } = useTrendingTutors(selectedUniversity);
@@ -250,6 +264,7 @@ const DiscoverPage = () => {
     .slice(0, 5);
 
   const timeOfDay = getGreeting();
+  const hasUnreadMessages = conversations.some((conversation: any) => (conversation.unreadCount ?? 0) > 0);
 
   // ── Pull-to-refresh handlers ──────────────────────────────
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
@@ -368,11 +383,12 @@ const DiscoverPage = () => {
                 >
                   <Bell size={18} className="text-ink-muted" />
                 </button>
-                {/* Notification dot — always shown; no handler yet */}
-                <span
-                  className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent border-2 border-background"
-                  aria-hidden="true"
-                />
+                {hasUnreadMessages && (
+                  <span
+                    className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent border-2 border-background"
+                    aria-hidden="true"
+                  />
+                )}
               </div>
               {/* Avatar */}
               <button

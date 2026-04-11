@@ -5,6 +5,7 @@ import React, { Component, ReactNode } from "react";
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import { variants } from "@/lib/motion";
+import { getRoleAppPath, getSelectedRole } from "@/lib/rolePreference";
 
 interface Props {
   children: ReactNode;
@@ -19,6 +20,14 @@ interface State {
   error?: Error;
 }
 
+function isChunkLoadError(error: Error) {
+  const message = String(error?.message ?? "");
+  return (
+    message.includes("Failed to fetch dynamically imported module") ||
+    message.includes("Importing a module script failed")
+  );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -31,6 +40,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[ErrorBoundary]", error, info.componentStack);
+
+    if (typeof window === "undefined" || !isChunkLoadError(error)) {
+      return;
+    }
+
+    const reloadKey = `lazy-reload:${window.location.pathname}`;
+    const alreadyReloaded = window.sessionStorage.getItem(reloadKey) === "1";
+
+    if (!alreadyReloaded) {
+      window.sessionStorage.setItem(reloadKey, "1");
+      window.location.reload();
+      return;
+    }
+
+    window.sessionStorage.removeItem(reloadKey);
   }
 
   handleRetry = () => {
@@ -52,6 +76,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
 // ── Full-screen recovery ──────────────────────────────────────
 function FullErrorScreen({ onRetry }: { onRetry: () => void }) {
+  const selectedRole = getSelectedRole();
+  const homeHref = selectedRole ? getRoleAppPath(selectedRole) : "/";
+
   return (
     <motion.div
       variants={variants.fadeSlideUp}
@@ -77,7 +104,7 @@ function FullErrorScreen({ onRetry }: { onRetry: () => void }) {
         </motion.button>
         <motion.a
           whileTap={{ scale: 0.97 }}
-          href="/"
+          href={homeHref}
           className="flex items-center gap-2 h-12 px-5 rounded-lg bg-accent text-accent-foreground text-label font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <Home size={16} />

@@ -19,7 +19,10 @@ export function useOpenConversation() {
       return null;
     }
 
-    if (studentId === tutorId) {
+    const resolvedStudentId =
+      profile?.role === "student" || !studentId ? user.id : studentId;
+
+    if (resolvedStudentId === tutorId) {
       toast("You cannot message your own tutor profile.");
       return null;
     }
@@ -30,7 +33,10 @@ export function useOpenConversation() {
     }
 
     try {
-      const conversationId = await getOrCreateConversation.mutateAsync({ studentId, tutorId });
+      const conversationId = await getOrCreateConversation.mutateAsync({
+        studentId: resolvedStudentId,
+        tutorId,
+      });
       navigate(`/messages/${conversationId}`);
       return conversationId;
     } catch (err) {

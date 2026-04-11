@@ -4,39 +4,69 @@
 // Two large tappable cards: student + tutor.
 // If user already has a stored role, skip directly.
 // ============================================================
+import { useState } from "react";
 import { motion } from "framer-motion";
+import { Moon, Sun } from "lucide-react";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSelectedRole, getRoleLandingPath, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 import { toast } from "@/components/ui/sonner";
 import { variants, springs } from "@/lib/motion";
+import { useTheme } from "@/hooks/useTheme";
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [searchParams] = useSearchParams();
+  const [isStartingFlow, setIsStartingFlow] = useState(false);
   const storedRole = getSelectedRole();
   const isSwitchMode = searchParams.get("switch") === "1";
   const roleFromQuery = searchParams.get("role");
   const activeRole = isSelectedRole(roleFromQuery) ? roleFromQuery : storedRole;
+  const isDarkMode = theme === "dark";
+  const studentCardStyle = isDarkMode
+    ? {
+        background:
+          "linear-gradient(160deg, rgba(43,166,106,0.28) 0%, rgba(43,166,106,0.16) 100%)",
+        boxShadow: "0 10px 30px rgba(7,18,13,0.32), 0 0 0 1px rgba(92,214,154,0.12) inset",
+      }
+    : {
+        background:
+          "linear-gradient(160deg, rgba(43,166,106,0.12) 0%, rgba(43,166,106,0.05) 100%)",
+        boxShadow: "0 4px 24px rgba(43,166,106,0.1)",
+      };
+  const tutorCardStyle = isDarkMode
+    ? {
+        background:
+          "linear-gradient(160deg, rgba(245,158,11,0.24) 0%, rgba(245,158,11,0.14) 100%)",
+        boxShadow: "0 10px 30px rgba(20,14,5,0.32), 0 0 0 1px rgba(255,214,153,0.12) inset",
+      }
+    : {
+        background:
+          "linear-gradient(160deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)",
+        boxShadow: "0 4px 24px rgba(245,158,11,0.1)",
+      };
 
-  if (!isSwitchMode && activeRole) {
+  if (!isSwitchMode && activeRole && !isStartingFlow) {
     return <Navigate to={getRoleLandingPath(activeRole)} replace />;
   }
 
   const handleRoleSelect = async (role: "student" | "tutor") => {
+    setIsStartingFlow(true);
     setSelectedRole(role);
 
     if (user && !profile?.onboarded_at) {
       try {
         await signOut();
       } catch (error) {
+        setIsStartingFlow(false);
         toast("We couldn't reset your current session. Please try again.");
         return;
       }
     }
 
-    navigate(`/signup?role=${role}`);
+    navigate(`/signup?role=${role}`, { replace: true });
   };
 
   return (
@@ -69,14 +99,15 @@ const EntryGatePage = () => {
         transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 6 }}
       />
 
-      {/* Wordmark */}
       <motion.div
         variants={variants.fadeIn}
         initial="hidden"
         animate="visible"
-        className="relative z-10 text-center shrink-0 mb-5"
+        className="relative z-10 mb-5 flex items-center justify-between gap-3 shrink-0"
       >
+        <div className="w-[90px]" />
         <span
+          className="text-center"
           style={{
             fontFamily: "'Fraunces', serif",
             fontSize: "1.75rem",
@@ -87,6 +118,27 @@ const EntryGatePage = () => {
         >
           tutr
         </span>
+        <div className="flex items-center rounded-full border border-border bg-surface/90 p-1 shadow-sm backdrop-blur-sm">
+          {[
+            { value: "light", label: "Light", icon: Sun },
+            { value: "dark", label: "Dark", icon: Moon },
+          ].map(({ value, label, icon: Icon }) => {
+            const active = theme === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setTheme(value)}
+                aria-label={`Switch to ${label.toLowerCase()} mode`}
+                className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                  active ? "bg-accent text-white" : "text-ink-muted hover:text-foreground"
+                }`}
+              >
+                <Icon size={16} />
+              </button>
+            );
+          })}
+        </div>
       </motion.div>
 
       {/* Two role cards */}
@@ -102,11 +154,11 @@ const EntryGatePage = () => {
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
           onClick={() => void handleRoleSelect("student")}
-          className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
-          style={{
-            background: "linear-gradient(160deg, rgba(43,166,106,0.12) 0%, rgba(43,166,106,0.05) 100%)",
-            boxShadow: "0 4px 24px rgba(43,166,106,0.1)",
-          }}
+          disabled={isStartingFlow}
+          className={`flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border transition-colors ${
+            isDarkMode ? "border-white/10" : "border-border"
+          }`}
+          style={studentCardStyle}
           aria-label="I'm a student — find tutors"
         >
           <span style={{ fontSize: "2.5rem" }} aria-hidden="true">🎓</span>
@@ -131,11 +183,11 @@ const EntryGatePage = () => {
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
           onClick={() => void handleRoleSelect("tutor")}
-          className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
-          style={{
-            background: "linear-gradient(160deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)",
-            boxShadow: "0 4px 24px rgba(245,158,11,0.1)",
-          }}
+          disabled={isStartingFlow}
+          className={`flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border transition-colors ${
+            isDarkMode ? "border-white/10" : "border-border"
+          }`}
+          style={tutorCardStyle}
           aria-label="I'm a tutor — teach students"
         >
           <span style={{ fontSize: "2.5rem" }} aria-hidden="true">✏️</span>

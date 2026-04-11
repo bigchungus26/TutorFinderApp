@@ -63,7 +63,7 @@ export function TutorCard({
       return;
     }
 
-    saveTutor.mutate({ studentId, tutorId: tutor.id });
+    saveTutor.mutate({ studentId, tutorId: tutor.id, tutor });
   };
 
   return (

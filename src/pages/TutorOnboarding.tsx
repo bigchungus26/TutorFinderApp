@@ -10,6 +10,7 @@ import { useUpsertAvailability } from "@/hooks/useAvailability";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
 import { toast } from "@/components/ui/sonner";
 import { springs } from "@/lib/motion";
+import { isMissingSupabaseResourceError } from "@/lib/supabaseResourceFallback";
 
 const STORAGE_KEY = "tutr:onboarding:tutor";
 const TOTAL_STEPS = 6;
@@ -29,7 +30,8 @@ const MAJORS = [
 ] as const;
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"] as const;
-const GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+"] as const;
+const GRADES = ["A", "A-", "B+", "B", "B-"] as const;
+const ALLOWED_TUTOR_GRADES = new Set<string>(GRADES);
 const TEACHING_STYLES = [
   { value: "step-by-step", label: "Step-by-step" },
   { value: "exam-focused", label: "Exam-focused" },
@@ -68,6 +70,10 @@ type Draft = {
   yearsExperience: string;
   subscriptionAccepted: boolean;
 };
+
+function sanitizeTutorGrade(grade: string) {
+  return ALLOWED_TUTOR_GRADES.has(grade) ? grade : "A";
+}
 
 const stepContentVariants = {
   enter: (direction: number) => ({ opacity: 0, x: direction > 0 ? 32 : -32 }),
@@ -361,7 +367,12 @@ function TutorOnboarding() {
       setSelectedYear(draft.selectedYear ?? "");
       setAvatarPreview(draft.avatarPreview ?? "");
       setAvatarFileName(draft.avatarFileName ?? "");
-      setSelectedCourses(draft.selectedCourses ?? []);
+      setSelectedCourses(
+        (draft.selectedCourses ?? []).map((course) => ({
+          ...course,
+          grade: sanitizeTutorGrade(course.grade),
+        })),
+      );
       setGpa(draft.gpa ?? "");
       setBio(draft.bio ?? "");
       setTeachingStyles(draft.teachingStyles ?? []);
@@ -498,7 +509,9 @@ function TutorOnboarding() {
 
   const updateCourseGrade = (courseId: string, grade: string) => {
     setSelectedCourses((current) =>
-      current.map((course) => (course.courseId === courseId ? { ...course, grade } : course)),
+      current.map((course) =>
+        course.courseId === courseId ? { ...course, grade: sanitizeTutorGrade(grade) } : course,
+      ),
     );
   };
 
@@ -550,37 +563,52 @@ function TutorOnboarding() {
         university_id: selectedUni || null,
         major: selectedMajor,
         year: selectedYear,
-        gpa: gpa ? Number(gpa) : null,
         bio: bio.trim(),
-        teaching_styles: teachingStyles,
-        languages,
-        availability_preferences: availabilityPreferences,
         hourly_rate: Number(rate),
-        max_students_per_session: maxStudents ? Number(maxStudents) : null,
         online: mode !== "in-person",
         in_person: mode !== "online",
-        previous_tutoring_experience: previousExperience,
-        years_of_experience: previousExperience && yearsExperience ? Number(yearsExperience) : null,
-        proof_asset_url: proofPreview || "",
-        proof_asset_name: proofFileName || "",
-        subscription_plan: "tutor_monthly",
-        subscription_status: "pending",
         onboarded_at: new Date().toISOString(),
       });
+
+      try {
+        await updateProfile.mutateAsync({
+          id: user.id,
+          gpa: gpa ? Number(gpa) : null,
+          teaching_styles: teachingStyles,
+          languages,
+          availability_preferences: availabilityPreferences,
+          max_students_per_session: maxStudents ? Number(maxStudents) : null,
+          previous_tutoring_experience: previousExperience,
+          years_of_experience: previousExperience && yearsExperience ? Number(yearsExperience) : null,
+          proof_asset_url: proofPreview || "",
+          proof_asset_name: proofFileName || "",
+          subscription_plan: "tutor_monthly",
+          subscription_status: "pending",
+        });
+      } catch (error) {
+        console.warn("Tutor optional profile fields could not be saved yet:", error);
+      }
 
       await setTutorCourses.mutateAsync({
         tutorId: user.id,
         courses: selectedCourses.map((course) => ({
           course_id: course.courseId,
-          grade: course.grade,
+          grade: sanitizeTutorGrade(course.grade),
         })),
       });
 
       const availabilitySlots = buildAvailabilitySlots(user.id, availabilityPreferences);
-      await upsertAvailability.mutateAsync({
-        tutorId: user.id,
-        slots: availabilitySlots,
-      });
+      try {
+        await upsertAvailability.mutateAsync({
+          tutorId: user.id,
+          slots: availabilitySlots,
+        });
+      } catch (error) {
+        if (!isMissingSupabaseResourceError(error)) {
+          throw error;
+        }
+        console.warn("Tutor availability table is not available yet:", error);
+      }
 
       setSelectedUniversity(selectedUni || "aub");
       await refreshProfile();
@@ -694,6 +722,7 @@ function TutorOnboarding() {
                         />
                       ))}
                     </div>
+                    <p className="mt-3 text-xs text-ink-muted/80">More fields below</p>
                   </div>
                   <FilePicker
                     label="Profile photo"

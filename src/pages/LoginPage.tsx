@@ -8,7 +8,13 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { springs, variants } from "@/lib/motion";
-import { clearSelectedRole, getSelectedRole, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
+import {
+  clearSelectedRole,
+  getRoleAppPath,
+  getSelectedRole,
+  isSelectedRole,
+  setSelectedRole,
+} from "@/lib/rolePreference";
 import { supabase } from "@/lib/supabase";
 
 const LoginPage = () => {
@@ -50,10 +56,27 @@ const LoginPage = () => {
             .from("profiles")
             .update({ role: preferredRole })
             .eq("id", user.id);
+
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role, onboarded_at")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          const resolvedRole =
+            profile?.role === "tutor" || profile?.role === "student"
+              ? profile.role
+              : preferredRole;
+
+          navigate(
+            profile?.onboarded_at ? getRoleAppPath(resolvedRole) : `/onboarding/${resolvedRole}`,
+            { replace: true },
+          );
+          return;
         }
       }
 
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (err: any) {
       const msg = err.message?.includes("Invalid login")
         ? "Incorrect email or password. Mind double-checking?"
