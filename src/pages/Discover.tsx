@@ -518,7 +518,6 @@ const DiscoverPage = () => {
           )}
 
         </div>
-        </div>
       </div>
 
       {/* ── University switcher sheet ────────────────────── */}
