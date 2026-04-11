@@ -95,7 +95,7 @@ const AppRoutes = () => {
         <Route path="/offline" element={<OfflinePage />} />
 
         {/* ── Public-only routes ───────────────────────── */}
-        <Route path="/welcome" element={<Navigate to="/student" replace />} />
+        <Route path="/welcome" element={<PublicOnly><EntryGatePage /></PublicOnly>} />
         <Route path="/student" element={<PublicOnly><StudentLandingPage /></PublicOnly>} />
         <Route path="/tutor" element={<PublicOnly><TutorLandingPage /></PublicOnly>} />
         <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />

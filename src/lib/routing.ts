@@ -35,10 +35,7 @@ export function resolveDestination({
 
   // 2. Unauthenticated
   if (!user) {
-    if (deepLink) {
-      return `/student?redirect=${encodeURIComponent(deepLink)}`;
-    }
-    return "/student";
+    return "/welcome";
   }
 
   // 3. Authenticated but role not yet selected
