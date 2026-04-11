@@ -5,13 +5,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { springs, variants } from "@/lib/motion";
-import { clearSelectedRole } from "@/lib/rolePreference";
+import { clearSelectedRole, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn } = useAuth();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -19,6 +20,7 @@ const LoginPage = () => {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [shakeTick, setShakeTick] = useState(0);
+  const requestedRole = searchParams.get("role");
 
   const handleBackToRolePicker = () => {
     clearSelectedRole();
@@ -30,6 +32,9 @@ const LoginPage = () => {
     setError("");
     setLoading(true);
     try {
+      if (isSelectedRole(requestedRole)) {
+        setSelectedRole(requestedRole);
+      }
       await signIn(email, password);
       navigate("/");
     } catch (err: any) {
@@ -177,7 +182,7 @@ const LoginPage = () => {
 
         <p className="text-center mt-6 text-body-sm text-ink-muted">
           No account?{" "}
-          <Link to="/signup" className="text-accent font-semibold underline underline-offset-2">
+          <Link to={isSelectedRole(requestedRole) ? `/signup?role=${requestedRole}` : "/signup"} className="text-accent font-semibold underline underline-offset-2">
             Sign up
           </Link>
         </p>

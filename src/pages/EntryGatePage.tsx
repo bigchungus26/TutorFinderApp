@@ -7,7 +7,7 @@
 import { motion } from "framer-motion";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { getSelectedRole, getRoleLandingPath, setSelectedRole } from "@/lib/rolePreference";
+import { getSelectedRole, getRoleLandingPath, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 import { toast } from "@/components/ui/sonner";
 import { variants, springs } from "@/lib/motion";
 
@@ -17,9 +17,11 @@ const EntryGatePage = () => {
   const [searchParams] = useSearchParams();
   const storedRole = getSelectedRole();
   const isSwitchMode = searchParams.get("switch") === "1";
+  const roleFromQuery = searchParams.get("role");
+  const activeRole = isSelectedRole(roleFromQuery) ? roleFromQuery : storedRole;
 
-  if (!isSwitchMode && storedRole) {
-    return <Navigate to={getRoleLandingPath(storedRole)} replace />;
+  if (!isSwitchMode && activeRole) {
+    return <Navigate to={getRoleLandingPath(activeRole)} replace />;
   }
 
   const handleRoleSelect = async (role: "student" | "tutor") => {
@@ -34,7 +36,7 @@ const EntryGatePage = () => {
       }
     }
 
-    navigate("/signup");
+    navigate(`/signup?role=${role}`);
   };
 
   return (

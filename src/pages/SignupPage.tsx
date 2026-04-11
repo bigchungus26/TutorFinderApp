@@ -5,15 +5,18 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { clearSelectedRole, getSelectedRole, setSelectedRole } from "@/lib/rolePreference";
+import { clearSelectedRole, getSelectedRole, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 import { springs, variants } from "@/lib/motion";
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signUp } = useAuth();
-  const [role, setRole]         = useState<"student" | "tutor">(() => getSelectedRole() ?? "student");
+  const requestedRole = searchParams.get("role");
+  const initialRole = isSelectedRole(requestedRole) ? requestedRole : getSelectedRole() ?? "student";
+  const [role, setRole]         = useState<"student" | "tutor">(initialRole);
   const [fullName, setFullName] = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +27,13 @@ const SignupPage = () => {
   const [checkEmail, setCheckEmail] = useState(false);
   const [shakeTick, setShakeTick]   = useState(0);
 
-  useEffect(() => { setSelectedRole(role); }, [role]);
+  useEffect(() => {
+    if (isSelectedRole(requestedRole) && requestedRole !== role) {
+      setRole(requestedRole);
+      return;
+    }
+    setSelectedRole(role);
+  }, [requestedRole, role]);
 
   const handleBackToRolePicker = () => {
     clearSelectedRole();
@@ -62,7 +71,7 @@ const SignupPage = () => {
           <p className="text-body text-ink-muted mb-6">
             We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.
           </p>
-          <button onClick={() => navigate("/login")} className="text-body-sm text-accent underline underline-offset-2">
+          <button onClick={() => navigate(`/login?role=${role}`)} className="text-body-sm text-accent underline underline-offset-2">
             Go to sign in
           </button>
         </div>
@@ -213,7 +222,7 @@ const SignupPage = () => {
 
         <p className="text-center mt-6 text-body-sm text-ink-muted">
           Have an account?{" "}
-          <Link to="/login" className="text-accent font-semibold underline underline-offset-2">Sign in</Link>
+          <Link to={`/login?role=${role}`} className="text-accent font-semibold underline underline-offset-2">Sign in</Link>
         </p>
       </motion.div>
     </div>
