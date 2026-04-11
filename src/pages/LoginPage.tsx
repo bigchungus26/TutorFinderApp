@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Footer } from "@/components/Footer";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -28,38 +27,43 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col px-6 pt-16 pb-8 relative overflow-hidden">
-      <div className="relative z-10 flex-1 flex flex-col">
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-ink shadow-[0_10px_25px_rgba(26,26,26,0.04)] transition-all hover:border-primary hover:text-primary"
-          >
-            <ArrowLeft size={16} />
-            Go back
-          </button>
-        </div>
-        <div className="mb-4">
-          <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
-        </div>
-        <h1 className="text-display-lg mb-2">Welcome back.</h1>
-        <p className="text-muted-ink text-base mb-8">Sign in to continue.</p>
+    <div
+      style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}
+      className="px-6 pt-12 pb-8 bg-background"
+    >
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 text-sm text-ink-muted mb-8 self-start"
+      >
+        <ArrowLeft size={16} />
+        Back
+      </button>
 
-        <form onSubmit={handleSubmit} className="space-y-4 flex-1">
+      <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto">
+        <span
+          className="block mb-3"
+          style={{ fontFamily: "'Fraunces', serif", fontSize: "1rem", fontWeight: 500, color: "hsl(var(--accent))" }}
+        >
+          Tutr
+        </span>
+        <h1 className="text-display-lg mb-1">Welcome back.</h1>
+        <p className="text-ink-muted mb-8">Sign in to continue.</p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-muted-ink mb-1.5 block">Email</label>
+            <label className="text-sm font-medium text-ink-muted mb-1.5 block">Email</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="you@university.edu"
               required
-              className="w-full p-3.5 rounded-lg border border-hairline bg-surface font-body text-sm"
+              className="w-full px-4 py-3.5 rounded-xl border border-hairline bg-surface text-sm outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-ink mb-1.5 block">Password</label>
+            <label className="text-sm font-medium text-ink-muted mb-1.5 block">Password</label>
             <input
               type="password"
               value={password}
@@ -67,31 +71,33 @@ const LoginPage = () => {
               placeholder="••••••••"
               required
               minLength={8}
-              className="w-full p-3.5 rounded-lg border border-hairline bg-surface font-body text-sm"
+              className="w-full px-4 py-3.5 rounded-xl border border-hairline bg-surface text-sm outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-destructive bg-destructive/10 rounded-xl px-4 py-3">{error}</p>
           )}
 
           <motion.button
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.02, boxShadow: "0 12px 36px -4px hsl(158 72% 36% / 0.4)" }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 380, damping: 24 }}
             type="submit"
             disabled={loading}
-            className="w-full h-14 rounded-lg bg-accent text-accent-foreground font-body font-semibold text-base disabled:opacity-40"
+            className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-semibold text-base disabled:opacity-40"
           >
             {loading ? "Signing in…" : "Sign in"}
           </motion.button>
         </form>
 
-        <div className="text-center mt-6">
-          <Link to="/signup" className="text-sm text-muted-ink underline underline-offset-2">
-            Don't have an account? Sign up
+        <p className="text-center mt-6 text-sm text-ink-muted">
+          No account?{" "}
+          <Link to="/signup" className="text-accent font-medium underline underline-offset-2">
+            Sign up
           </Link>
-        </div>
+        </p>
       </div>
-      <Footer />
     </div>
   );
 };

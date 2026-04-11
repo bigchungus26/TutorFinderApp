@@ -19,7 +19,6 @@ import {
   PenTool,
   Atom,
   Landmark,
-  Sparkles,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -158,34 +157,40 @@ interface SubjectTileProps {
   onNavigate: () => void;
 }
 
-function SubjectTile({ subject, onNavigate }: SubjectTileProps) {
-  const [pressing, setPressing] = useState(false);
-  const Icon = subjectIcons[subject] ?? BookOpen;
+const subjectColors: Record<string, string> = {
+  "Computer Science": "158 72% 36%",
+  "Mathematics":      "221 83% 53%",
+  "Biology":          "142 71% 45%",
+  "Chemistry":        "262 83% 58%",
+  "Economics":        "38 92% 50%",
+  "Languages":        "328 86% 56%",
+  "Psychology":       "291 64% 42%",
+  "Engineering":      "201 96% 32%",
+  "Architecture":     "25 95% 53%",
+  "Business":         "173 80% 36%",
+  "Physics":          "195 100% 35%",
+  "Humanities":       "355 78% 56%",
+};
 
-  const handleTap = () => {
-    setPressing(true);
-    setTimeout(() => {
-      setPressing(false);
-      onNavigate();
-    }, 200);
-  };
+function SubjectTile({ subject, onNavigate }: SubjectTileProps) {
+  const Icon = subjectIcons[subject] ?? BookOpen;
+  const colorHsl = subjectColors[subject] ?? "158 72% 36%";
+  const color = `hsl(${colorHsl})`;
 
   return (
     <motion.button
       variants={variants.staggerItem}
-      whileTap={{ scale: 0.96 }}
-      onClick={handleTap}
-      className={`rounded-xl border border-hairline p-4 flex flex-col justify-between text-left h-28 transition-colors duration-150 ${
-        pressing ? "bg-accent-soft" : "bg-surface"
-      }`}
+      whileHover={{ y: -3, boxShadow: `0 10px 28px -6px hsl(${colorHsl} / 0.3)` }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onNavigate}
+      className="rounded-2xl p-4 flex flex-col justify-between text-left h-28 border border-hairline overflow-hidden relative"
+      style={{ background: `hsl(${colorHsl} / 0.08)` }}
       aria-label={`Browse ${subject}`}
     >
-      <Icon size={32} className="text-accent flex-shrink-0" />
-      <div>
-        <span className="font-display font-medium text-[18px] leading-snug line-clamp-1 block">
-          {subject}
-        </span>
-      </div>
+      <Icon size={28} style={{ color }} className="flex-shrink-0" />
+      <span className="font-display font-medium text-[17px] leading-snug line-clamp-1 block" style={{ color }}>
+        {subject}
+      </span>
     </motion.button>
   );
 }
@@ -229,9 +234,6 @@ const DiscoverPage = () => {
     isLoading: tutorsForCoursesLoading,
   } = useTutorsForStudentCourses(studentId, selectedUniversity);
 
-  // Trending / new tutors
-  const { data: trendingTutors = [] } = useTrendingTutors(selectedUniversity);
-  const { data: newTutors = [] } = useNewTutors(selectedUniversity);
 
   const uni = universities.find((u) => u.id === selectedUniversity);
 
@@ -388,47 +390,17 @@ const DiscoverPage = () => {
             variants={variants.fadeSlideUp}
             initial="hidden"
             animate="visible"
+            whileHover={{ boxShadow: "0 8px 24px -4px hsl(158 72% 36% / 0.18)" }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate("/search")}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg border border-hairline bg-surface mb-6 text-left"
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl border border-hairline bg-surface mb-7 text-left transition-shadow"
             aria-label="Open search"
           >
-            <Search size={18} className="text-ink-subtle flex-shrink-0" />
-            <span className="text-body-sm text-ink-subtle">Search courses, tutors…</span>
+            <div className="w-8 h-8 rounded-xl bg-accent-soft flex items-center justify-center flex-shrink-0">
+              <Search size={16} className="text-accent" />
+            </div>
+            <span className="text-body-sm text-ink-muted">Search tutors, courses…</span>
           </motion.button>
-
-          {/* ── 4. Contextual hero card ─────────────────────── */}
-          <motion.div
-            variants={variants.fadeSlideUp}
-            initial="hidden"
-            animate="visible"
-            className="mb-8"
-          >
-            <motion.button
-              whileTap={{ scale: 0.99 }}
-              onClick={() => navigate("/search")}
-              className="w-full bg-surface rounded-xl border border-hairline p-5 text-left flex items-center gap-4 transition-shadow hover:shadow-[0_0_0_2px_hsl(152_60%_42%_/_0.15)]"
-              aria-label="Find a tutor"
-            >
-              {/* Icon circle */}
-              <div className="w-12 h-12 rounded-full bg-accent-soft flex items-center justify-center flex-shrink-0">
-                <Sparkles size={24} className="text-accent" />
-              </div>
-              {/* Text */}
-              <div className="flex-1 min-w-0">
-                <p className="text-label leading-snug mb-0.5">
-                  Your next session starts here.
-                </p>
-                <p className="text-body-sm text-ink-muted">
-                  Browse top-rated tutors at your university.
-                </p>
-              </div>
-              {/* CTA */}
-              <span className="text-body-sm font-medium text-accent flex-shrink-0">
-                Find a tutor
-              </span>
-            </motion.button>
-          </motion.div>
 
           {/* ── 5. Tutors for your courses ──────────────────── */}
           {(hasEnrolledCourses || studentCoursesLoading || tutorsForCoursesLoading) && (
@@ -489,33 +461,7 @@ const DiscoverPage = () => {
             )}
           </Section>
 
-          {/* ── 7. Trending this week ────────────────────────── */}
-          {trendingTutors.length > 0 && (
-            <Section title="Trending this week" overline="TRENDING">
-              <div className="space-y-3">
-                {trendingTutors.map((tutor) => (
-                  <motion.div key={tutor.id} variants={variants.staggerItem}>
-                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
-                  </motion.div>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* ── 8. New tutors at [uni] ──────────────────────── */}
-          {newTutors.length > 0 && (
-            <Section title={`New tutors at ${uni?.short_name ?? "your university"}`} overline="NEW">
-              <div className="space-y-3">
-                {newTutors.map((tutor) => (
-                  <motion.div key={tutor.id} variants={variants.staggerItem}>
-                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
-                  </motion.div>
-                ))}
-              </div>
-            </Section>
-          )}
-
-          {/* ── 9. Popular courses ──────────────────────────── */}
+          {/* ── 7. Popular courses ──────────────────────────── */}
           <Section title="Popular courses" overline="BROWSE">
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
               {coursesLoading ? (

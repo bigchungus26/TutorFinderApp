@@ -39,7 +39,8 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
       <Footer />
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[392px]">
         <nav
-          className="bg-surface rounded-xl shadow-float border border-hairline flex items-center justify-around px-2 py-2"
+          className="bg-surface rounded-2xl border border-hairline flex items-center justify-around px-2 py-2"
+          style={{ boxShadow: "0 8px 32px rgba(20,20,20,0.10), 0 2px 8px rgba(20,20,20,0.06)" }}
           aria-label="Main navigation"
         >
           {tabs.map(tab => {
@@ -53,24 +54,24 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
                 className="relative"
               >
                 <motion.div
-                  whileTap={{ scale: 0.92 }}
+                  whileTap={{ scale: 0.88 }}
                   className="flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl"
                 >
-                  {/* Active indicator pill */}
                   {active && (
                     <motion.div
                       layoutId="student-tab-indicator"
-                      className="absolute inset-0 rounded-xl bg-accent-soft"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      className="absolute inset-0 rounded-xl"
+                      style={{ background: "hsl(158 72% 36% / 0.12)" }}
+                      transition={{ type: "spring", stiffness: 420, damping: 30 }}
                     />
                   )}
                   <tab.icon
                     size={22}
-                    strokeWidth={active ? 2.2 : 1.8}
-                    className={`relative z-10 transition-colors ${active ? "text-accent" : "text-ink-subtle"}`}
+                    strokeWidth={active ? 2.4 : 1.7}
+                    className={`relative z-10 transition-colors duration-150 ${active ? "text-accent" : "text-ink-subtle"}`}
                   />
                   <span
-                    className={`text-caption relative z-10 transition-colors ${active ? "text-accent" : "text-ink-subtle"}`}
+                    className={`text-caption relative z-10 font-medium transition-colors duration-150 ${active ? "text-accent" : "text-ink-subtle"}`}
                   >
                     {tab.label}
                   </span>

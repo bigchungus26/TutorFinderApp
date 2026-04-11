@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Footer } from "@/components/Footer";
 import { getSelectedRole, setSelectedRole } from "@/lib/rolePreference";
 
 const SignupPage = () => {
@@ -65,25 +64,27 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col px-6 pt-16 pb-8 relative overflow-hidden">
-      <div className="relative z-10 flex-1 flex flex-col">
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 rounded-full border border-hairline bg-white px-4 py-2 text-sm font-medium text-ink shadow-[0_10px_25px_rgba(26,26,26,0.04)] transition-all hover:border-primary hover:text-primary"
-          >
-            <ArrowLeft size={16} />
-            Go back
-          </button>
-        </div>
-        <div className="mb-4">
-          <span className="text-sm font-body font-semibold text-accent tracking-wide uppercase">Tutr</span>
-        </div>
-        <h1 className="text-display-lg mb-2">Create your account.</h1>
-        <p className="text-muted-ink text-base mb-6">
-          Start your student search or join the tutor marketplace for Lebanon's top campuses.
-        </p>
+    <div
+      style={{ position: "fixed", inset: 0, display: "flex", flexDirection: "column", overflow: "auto" }}
+      className="px-6 pt-12 pb-8 bg-background"
+    >
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="inline-flex items-center gap-2 text-sm text-ink-muted mb-8 self-start"
+      >
+        <ArrowLeft size={16} />
+        Back
+      </button>
+      <div className="flex-1 flex flex-col justify-center max-w-sm w-full mx-auto">
+        <span
+          className="block mb-3"
+          style={{ fontFamily: "'Fraunces', serif", fontSize: "1rem", fontWeight: 500, color: "hsl(var(--accent))" }}
+        >
+          Tutr
+        </span>
+        <h1 className="text-display-lg mb-1">Create account.</h1>
+        <p className="text-ink-muted mb-6">Join Lebanon's campus tutor network.</p>
 
         <div className="mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium"
           style={{ background: role === "tutor" ? "hsl(35 65% 86%)" : "hsl(152 42% 85%)", color: role === "tutor" ? "hsl(35 50% 20%)" : "hsl(152 40% 18%)" }}
@@ -98,31 +99,31 @@ const SignupPage = () => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 flex-1">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-muted-ink mb-1.5 block">Full name</label>
+            <label className="text-sm font-medium text-ink-muted mb-1.5 block">Full name</label>
             <input
               type="text"
               value={fullName}
               onChange={e => setFullName(e.target.value)}
               placeholder="Your full name"
               required
-              className="w-full p-3.5 rounded-lg border border-hairline bg-surface font-body text-sm"
+              className="w-full px-4 py-3.5 rounded-xl border border-hairline bg-surface text-sm outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-ink mb-1.5 block">Email</label>
+            <label className="text-sm font-medium text-ink-muted mb-1.5 block">Email</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="you@university.edu"
               required
-              className="w-full p-3.5 rounded-lg border border-hairline bg-surface font-body text-sm"
+              className="w-full px-4 py-3.5 rounded-xl border border-hairline bg-surface text-sm outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-ink mb-1.5 block">Password</label>
+            <label className="text-sm font-medium text-ink-muted mb-1.5 block">Password</label>
             <input
               type="password"
               value={password}
@@ -130,7 +131,7 @@ const SignupPage = () => {
               placeholder="At least 8 characters"
               required
               minLength={8}
-              className="w-full p-3.5 rounded-lg border border-hairline bg-surface font-body text-sm"
+              className="w-full px-4 py-3.5 rounded-xl border border-hairline bg-surface text-sm outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
           </div>
 
@@ -154,22 +155,24 @@ const SignupPage = () => {
           )}
 
           <motion.button
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.02, boxShadow: "0 12px 36px -4px hsl(158 72% 36% / 0.4)" }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 380, damping: 24 }}
             type="submit"
             disabled={loading || !agreedTerms}
-            className="w-full h-14 rounded-lg bg-accent text-accent-foreground font-body font-semibold text-base disabled:opacity-40"
+            className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-semibold text-base disabled:opacity-40"
           >
             {loading ? "Creating account…" : role === "tutor" ? "Join as a tutor" : "Start learning"}
           </motion.button>
         </form>
 
-        <div className="text-center mt-6">
-          <Link to="/login" className="text-sm text-muted-ink underline underline-offset-2">
-            Already have an account? Sign in
+        <p className="text-center mt-6 text-sm text-ink-muted">
+          Have an account?{" "}
+          <Link to="/login" className="text-accent font-medium underline underline-offset-2">
+            Sign in
           </Link>
-        </div>
+        </p>
       </div>
-      <Footer />
     </div>
   );
 };
