@@ -139,13 +139,21 @@ export function TutorCard({
               {displayCourses.map((tc) => (
                 <span
                   key={tc.course_id}
-                  className="rounded px-2 py-0.5 text-label font-medium"
+                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-label font-medium"
                   style={{
                     backgroundColor: uniColor + "14",
                     color: uniColor,
                   }}
                 >
                   {tc.course?.code ?? tc.course_id}
+                  {tc.grade && (
+                    <span
+                      className="rounded px-1 py-px text-[10px] font-bold leading-tight"
+                      style={{ backgroundColor: uniColor + "30", color: uniColor }}
+                    >
+                      {tc.grade}
+                    </span>
+                  )}
                 </span>
               ))}
               {extra > 0 && (

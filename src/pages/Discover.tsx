@@ -32,15 +32,10 @@ import {
   useSubjects,
 } from "@/hooks/useSupabaseQuery";
 import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStudentCourses";
-import { useConversations } from "@/hooks/useMessages";
 import { supabase } from "@/lib/supabase";
-import {
-  isMissingSupabaseResourceError,
-  isSupabaseResourceMissing,
-  markSupabaseResourceMissing,
-} from "@/lib/supabaseResourceFallback";
 
 import { TutorCard } from "@/components/TutorCard";
+import { NotificationSheet } from "@/components/NotificationSheet";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
 import { TutorCardSkeleton } from "@/components/skeletons/TutorCardSkeleton";
@@ -81,10 +76,6 @@ function useTrendingTutors(universityId: string) {
   return useQuery({
     queryKey: ["trending-tutors", universityId],
     queryFn: async () => {
-      if (isSupabaseResourceMissing("trending_tutors")) {
-        return [] as Profile[];
-      }
-
       const { data, error } = await supabase
         .from("trending_tutors" as never)
         .select(`
@@ -95,11 +86,8 @@ function useTrendingTutors(universityId: string) {
         .eq("university_id", universityId)
         .limit(5);
       if (error) {
-        if (isMissingSupabaseResourceError(error)) {
-          markSupabaseResourceMissing("trending_tutors");
-          console.warn("trending_tutors view not available:", error.message);
-          return [] as Profile[];
-        }
+        // View may not exist yet — return empty gracefully
+        console.warn("trending_tutors view not available:", error.message);
         return [] as Profile[];
       }
       return (data ?? []) as Profile[];
@@ -220,6 +208,7 @@ const DiscoverPage = () => {
   const { profile } = useAuth();
 
   const [uniSwitcherOpen, setUniSwitcherOpen] = useState(false);
+  const [notifSheetOpen, setNotifSheetOpen] = useState(false);
 
   // Pull-to-refresh state
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -250,7 +239,6 @@ const DiscoverPage = () => {
     data: tutorsForCourses = [],
     isLoading: tutorsForCoursesLoading,
   } = useTutorsForStudentCourses(studentId, selectedUniversity);
-  const { data: conversations = [] } = useConversations(profile?.id ?? "");
 
   // Trending / new tutors
   const { data: trendingTutors = [] } = useTrendingTutors(selectedUniversity);
@@ -264,7 +252,6 @@ const DiscoverPage = () => {
     .slice(0, 5);
 
   const timeOfDay = getGreeting();
-  const hasUnreadMessages = conversations.some((conversation: any) => (conversation.unreadCount ?? 0) > 0);
 
   // ── Pull-to-refresh handlers ──────────────────────────────
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
@@ -377,32 +364,24 @@ const DiscoverPage = () => {
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => navigate("/messages")}
+                  onClick={() => setNotifSheetOpen(true)}
                   aria-label="Notifications"
-                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface transition-colors hover:bg-muted"
+                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface"
                 >
                   <Bell size={18} className="text-ink-muted" />
                 </button>
-                {hasUnreadMessages && (
-                  <span
-                    className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent border-2 border-background"
-                    aria-hidden="true"
-                  />
-                )}
+                {/* Notification dot — always shown; no handler yet */}
+                <span
+                  className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent border-2 border-background"
+                  aria-hidden="true"
+                />
               </div>
               {/* Avatar */}
-              <button
-                type="button"
-                onClick={() => navigate("/profile")}
-                aria-label="Open profile"
-                className="rounded-full transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                <img
-                  src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
-                  alt={profile?.full_name ?? "Profile"}
-                  className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
-                />
-              </button>
+              <img
+                src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
+                alt={profile?.full_name ?? "Profile"}
+                className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
+              />
             </div>
           </motion.div>
 
@@ -618,6 +597,13 @@ const DiscoverPage = () => {
       <UniversitySwitcher
         open={uniSwitcherOpen}
         onClose={() => setUniSwitcherOpen(false)}
+      />
+
+      {/* ── Notification sheet ───────────────────────────── */}
+      <NotificationSheet
+        isOpen={notifSheetOpen}
+        onClose={() => setNotifSheetOpen(false)}
+        userId={profile?.id ?? ""}
       />
     </>
   );

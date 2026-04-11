@@ -106,7 +106,8 @@ export function useTutors(universityId?: string) {
         .select(`
           *,
           tutor_stats (*),
-          tutor_courses (*, course:courses(*))
+          tutor_courses (*, course:courses(*)),
+          tutor_boosts (*)
         `)
         .eq("role", "tutor");
       if (universityId) query = query.eq("university_id", universityId);
@@ -170,7 +171,7 @@ export function useReviews(tutorId: string) {
         .from("reviews")
         .select(`
           *,
-          student:profiles!reviews_student_id_fkey (full_name, avatar_url),
+          student:profiles!reviews_student_id_fkey (full_name, avatar_url, university_id),
           course:courses (code, name)
         `)
         .eq("tutor_id", tutorId)
@@ -222,7 +223,7 @@ export function useSessions(userId: string, role: "student" | "tutor") {
         .from("sessions")
         .select(`
           *,
-          tutor:profiles!sessions_tutor_id_fkey (full_name, avatar_url),
+          tutor:profiles!sessions_tutor_id_fkey (full_name, avatar_url, cancellation_hours),
           student:profiles!sessions_student_id_fkey (full_name, avatar_url),
           course:courses (code, name)
         `)

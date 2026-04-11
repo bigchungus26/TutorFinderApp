@@ -317,8 +317,13 @@ const ProfilePage = () => {
     if (!user) return;
     await supabase.from("profiles").update({ role: "tutor" }).eq("id", user.id);
     await refreshProfile();
-    navigate("/tutor/requests");
-  }, [user, refreshProfile, navigate]);
+    // Story 32: route to tutor onboarding if not yet set up as tutor
+    if (!profile?.hourly_rate) {
+      navigate("/onboarding/tutor");
+    } else {
+      navigate("/tutor/requests");
+    }
+  }, [user, profile, refreshProfile, navigate]);
 
   const completedCount = sessions.filter((s: any) => s.status === "completed").length;
   const courseIds = studentCourses.map((sc: any) => sc.course_id as string);

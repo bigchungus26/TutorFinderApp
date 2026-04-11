@@ -3,21 +3,22 @@
 // Emotional centerpiece: avatar, stats bar, availability grid,
 // reviews, pricing, sticky CTA. Spring animations throughout.
 // ============================================================
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Heart, Star, BadgeCheck, Video, MapPin,
-  Clock, Flag, ChevronRight, MessageCircle,
+  Clock, Flag, ChevronRight, MessageCircle, Share2,
 } from "lucide-react";
 import { useTutor, useReviews, useUniversities } from "@/hooks/useSupabaseQuery";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useIsTutorSaved, useSaveTutor, useUnsaveTutor } from "@/hooks/useSavedTutors";
 import { useCreateReport, ReportReason } from "@/hooks/useReports";
-import { useOpenConversation } from "@/hooks/useOpenConversation";
+import { useGetOrCreateConversation } from "@/hooks/useMessages";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/components/ui/sonner";
 import { springs, variants } from "@/lib/motion";
-import type { TutorWithDetails } from "@/types/database";
 import { Avatar } from "@/components/Avatar";
 import { Skeleton } from "@/components/skeletons/Skeleton";
 import { QueryError } from "@/components/ErrorBoundary";
@@ -131,7 +132,7 @@ function PageSkeleton() {
 const TutorProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const studentId = user?.id ?? "";
   const tutorId = id ?? "";
 
@@ -144,15 +145,25 @@ const TutorProfilePage = () => {
   const saveTutor = useSaveTutor();
   const unsaveTutor = useUnsaveTutor();
   const createReport = useCreateReport();
-  const { openConversation, isPending: isOpeningConversation } = useOpenConversation();
+  const getOrCreate = useGetOrCreateConversation();
 
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ day: number; start: string; end: string } | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<{ day: number; start_time: string; end_time: string } | null>(null);
   const [reviewsSheetOpen, setReviewsSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [reportReason, setReportReason] = useState<ReportReason>("inappropriate");
   const [reportDetails, setReportDetails] = useState("");
+  const [reviewFilter, setReviewFilter] = useState<"all" | "mine">("all");
+
+  // Story 29: Log a profile view once per viewer per day
+  useEffect(() => {
+    if (!tutorId || !user?.id) return;
+    const key = `tutr:pv:${tutorId}:${new Date().toDateString()}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    supabase.from("profile_views").insert({ tutor_id: tutorId, viewer_id: user.id }).then();
+  }, [tutorId, user?.id]);
 
   const uni = universities.find(u => u.id === tutor?.university_id);
   const uniColor = uni?.color ?? "#2ba66a";
@@ -169,10 +180,15 @@ const TutorProfilePage = () => {
     return map;
   }, [taughtCourses]);
 
-  const filteredReviews = useMemo(() =>
-    selectedCourseId ? reviews.filter((r: any) => r.course_id === selectedCourseId) : reviews,
-    [reviews, selectedCourseId]
-  );
+  const studentUniId = profile?.university_id ?? null;
+  const filteredReviews = useMemo(() => {
+    let result = reviews as any[];
+    if (selectedCourseId) result = result.filter((r: any) => r.course_id === selectedCourseId);
+    if (reviewFilter === "mine" && studentUniId) {
+      result = result.filter((r: any) => r.student?.university_id === studentUniId);
+    }
+    return result;
+  }, [reviews, selectedCourseId, reviewFilter, studentUniId]);
 
   const next7Days = useMemo(() => getNext7Days(), []);
   const slotsByDay = useMemo(() => {
@@ -187,18 +203,25 @@ const TutorProfilePage = () => {
   const rate = tutor?.hourly_rate ?? 0;
 
   const handleToggleSave = () => {
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-
     if (!studentId) return;
     if (isSaved) unsaveTutor.mutate({ studentId, tutorId });
-    else saveTutor.mutate({ studentId, tutorId, tutor: tutor as TutorWithDetails });
+    else saveTutor.mutate({ studentId, tutorId });
   };
 
   const handleMessage = async () => {
-    await openConversation({ studentId: user?.id ?? "", tutorId });
+    if (!studentId) return;
+    const convId = await getOrCreate.mutateAsync({ studentId, tutorId });
+    navigate(`/messages/${convId}`);
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      try { await navigator.share({ title: tutor?.full_name, url }); } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied to clipboard");
+    }
   };
 
   const handleReport = () => {
@@ -241,16 +264,27 @@ const TutorProfilePage = () => {
               <ArrowLeft size={18} className="text-foreground" />
             </motion.button>
 
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              transition={springs.bouncy}
-              onClick={handleToggleSave}
-              disabled={saveTutor.isPending || unsaveTutor.isPending}
-              className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center"
-              aria-label={isSaved ? "Remove from saved" : "Save tutor"}
-            >
-              <Heart size={18} className={isSaved ? "text-accent fill-accent" : "text-ink-muted"} />
-            </motion.button>
+            <div className="flex items-center gap-2">
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                transition={springs.bouncy}
+                onClick={handleShare}
+                className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center"
+                aria-label="Share tutor profile"
+              >
+                <Share2 size={18} className="text-ink-muted" />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                transition={springs.bouncy}
+                onClick={handleToggleSave}
+                disabled={saveTutor.isPending || unsaveTutor.isPending}
+                className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center"
+                aria-label={isSaved ? "Remove from saved" : "Save tutor"}
+              >
+                <Heart size={18} className={isSaved ? "text-accent fill-accent" : "text-ink-muted"} />
+              </motion.button>
+            </div>
           </div>
 
           {/* Avatar + identity */}
@@ -276,18 +310,6 @@ const TutorProfilePage = () => {
                 style={{ backgroundColor: uniColor + "20", color: uniColor }}
               >
                 {uni.short_name}
-              </span>
-            )}
-
-            {tutor.tutor_status && uni && (
-              <span
-                className="inline-block px-3 py-0.5 rounded-full text-label mb-1.5"
-                style={{
-                  backgroundColor: tutor.tutor_status === "student" ? "#2ba66a20" : "#f59e0b20",
-                  color: tutor.tutor_status === "student" ? "#2ba66a" : "#d97706",
-                }}
-              >
-                {uni.short_name} {tutor.tutor_status === "student" ? "Student" : "Alumni"}
               </span>
             )}
 
@@ -415,7 +437,7 @@ const TutorProfilePage = () => {
                             whileTap={{ scale: 0.97 }}
                             transition={springs.snappy}
                             onClick={() => {
-                              setSelectedSlot({ day: slot.day_of_week, start: slot.start_time, end: slot.end_time });
+                              setSelectedSlot({ day: slot.day_of_week, start_time: slot.start_time, end_time: slot.end_time });
                               setBookingOpen(true);
                             }}
                             className="w-full text-center px-2 py-1 rounded-lg bg-accent-light text-accent text-caption font-medium"
@@ -438,15 +460,33 @@ const TutorProfilePage = () => {
                 Reviews
                 {selectedCourseId && ` · ${taughtCourses.find((tc: any) => tc.course_id === selectedCourseId)?.course?.code ?? ""}`}
               </h2>
-              {reviews.length > 3 && (
-                <button
-                  onClick={() => setReviewsSheetOpen(true)}
-                  className="flex items-center gap-1 text-accent text-label"
-                >
-                  See all {reviews.length}
-                  <ChevronRight size={14} />
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {studentUniId && reviews.length > 0 && (
+                  <div className="flex items-center rounded-full border border-border overflow-hidden text-caption">
+                    <button
+                      onClick={() => setReviewFilter("all")}
+                      className={`px-2.5 py-1 ${reviewFilter === "all" ? "bg-accent text-white" : "bg-surface text-ink-muted"}`}
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => setReviewFilter("mine")}
+                      className={`px-2.5 py-1 ${reviewFilter === "mine" ? "bg-accent text-white" : "bg-surface text-ink-muted"}`}
+                    >
+                      My uni
+                    </button>
+                  </div>
+                )}
+                {reviews.length > 3 && (
+                  <button
+                    onClick={() => setReviewsSheetOpen(true)}
+                    className="flex items-center gap-1 text-accent text-label"
+                  >
+                    See all {reviews.length}
+                    <ChevronRight size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {reviewsLoading ? (
@@ -508,7 +548,7 @@ const TutorProfilePage = () => {
             whileTap={{ scale: 0.97 }}
             transition={springs.snappy}
             onClick={handleMessage}
-            disabled={isOpeningConversation}
+            disabled={getOrCreate.isPending}
             className="flex items-center justify-center gap-2 w-12 h-12 rounded-xl border border-border bg-surface text-foreground disabled:opacity-60 flex-shrink-0"
             aria-label="Message tutor"
           >
@@ -529,7 +569,7 @@ const TutorProfilePage = () => {
       {/* BookingSheet */}
       {tutor && (
         <BookingSheet
-          open={bookingOpen}
+          isOpen={bookingOpen}
           onClose={() => { setBookingOpen(false); setSelectedSlot(null); }}
           tutor={tutor as any}
           selectedSlot={selectedSlot ?? undefined}
