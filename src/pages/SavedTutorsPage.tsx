@@ -70,7 +70,7 @@ const SavedTutorsPage = () => {
                   exit={{ opacity: 0, scale: 0.96, transition: transitions.fast }}
                   className="relative"
                 >
-                  <TutorCard tutor={tutor} />
+                  <TutorCard tutor={tutor} showSaveButton={false} />
                   {/* Unsave heart button */}
                   <motion.button
                     whileTap={{

@@ -361,8 +361,10 @@ const DiscoverPage = () => {
               {/* Notification bell with dot */}
               <div className="relative">
                 <button
+                  type="button"
+                  onClick={() => navigate("/messages")}
                   aria-label="Notifications"
-                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface"
+                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface transition-colors hover:bg-muted"
                 >
                   <Bell size={18} className="text-ink-muted" />
                 </button>
