@@ -61,7 +61,7 @@ const LoginPage = () => {
       <motion.button
         whileTap={{ scale: 0.92 }}
         transition={springs.snappy}
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/")}
         className="relative z-10 inline-flex items-center gap-2 text-body-sm text-ink-muted mb-8 self-start"
         aria-label="Go back"
       >

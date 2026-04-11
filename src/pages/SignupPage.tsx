@@ -76,7 +76,7 @@ const SignupPage = () => {
       <motion.button
         whileTap={{ scale: 0.92 }}
         transition={springs.snappy}
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/")}
         className="relative z-10 inline-flex items-center gap-2 text-body-sm text-ink-muted mb-8 self-start"
         aria-label="Go back"
       >
@@ -107,7 +107,7 @@ const SignupPage = () => {
           {role === "tutor" ? "Joining as a tutor ✏️" : "Joining as a student 🎓"}
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="underline underline-offset-2 text-caption opacity-70 ml-1 min-h-0 min-w-0"
           >
             change
