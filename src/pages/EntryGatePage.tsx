@@ -6,13 +6,11 @@
 // ============================================================
 import { motion } from "framer-motion";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { getSelectedRole, getRoleLandingPath, setSelectedRole } from "@/lib/rolePreference";
 import { variants, springs } from "@/lib/motion";
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
   const [searchParams] = useSearchParams();
   const storedRole = getSelectedRole();
   const isSwitchMode = searchParams.get("switch") === "1";
@@ -23,10 +21,6 @@ const EntryGatePage = () => {
 
   const handleRoleSelect = (role: "student" | "tutor") => {
     setSelectedRole(role);
-    if (user && !profile?.onboarded_at) {
-      navigate(`/onboarding/${role}`, { replace: true });
-      return;
-    }
     navigate("/signup");
   };
 
