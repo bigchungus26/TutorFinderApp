@@ -53,6 +53,7 @@ type Draft = {
   selectedUni: string;
   selectedMajor: string;
   selectedYear: string;
+  tutorStatus: "student" | "alumni" | null;
   avatarPreview: string;
   avatarFileName: string;
   selectedCourses: CourseSelection[];
@@ -331,6 +332,7 @@ function TutorOnboarding() {
   const [gpa, setGpa] = useState("");
   const [courseSearch, setCourseSearch] = useState("");
   const [bio, setBio] = useState("");
+  const [tutorStatus, setTutorStatus] = useState<"student" | "alumni" | null>(null);
   const [teachingStyles, setTeachingStyles] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [mode, setMode] = useState<TutorMode>("both");
@@ -375,6 +377,7 @@ function TutorOnboarding() {
       );
       setGpa(draft.gpa ?? "");
       setBio(draft.bio ?? "");
+      setTutorStatus(draft.tutorStatus ?? null);
       setTeachingStyles(draft.teachingStyles ?? []);
       setLanguages(draft.languages ?? []);
       setMode(draft.mode ?? "both");
@@ -428,6 +431,7 @@ function TutorOnboarding() {
         selectedUni,
         selectedMajor,
         selectedYear,
+        tutorStatus,
         avatarPreview,
         avatarFileName,
         selectedCourses,
@@ -467,6 +471,7 @@ function TutorOnboarding() {
       selectedYear,
       subscriptionAccepted,
       teachingStyles,
+      tutorStatus,
       yearsExperience,
     ],
   );
@@ -567,6 +572,7 @@ function TutorOnboarding() {
         hourly_rate: Number(rate),
         online: mode !== "in-person",
         in_person: mode !== "online",
+        tutor_status: tutorStatus,
         onboarded_at: new Date().toISOString(),
       });
 
@@ -723,6 +729,23 @@ function TutorOnboarding() {
                       ))}
                     </div>
                     <p className="mt-3 text-xs text-ink-muted/80">More fields below</p>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Your status at this university</p>
+                    <div className="flex flex-wrap gap-2.5">
+                      {([
+                        { value: "student" as const, label: "Current student" },
+                        { value: "alumni" as const, label: "Alumni / Graduated" },
+                      ]).map(({ value, label }) => (
+                        <SelectableChip
+                          key={value}
+                          active={tutorStatus === value}
+                          label={label}
+                          onClick={() => setTutorStatus((prev) => (prev === value ? null : value))}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-2 text-xs text-ink-muted">Helps students know if you're currently enrolled or a graduate. Optional.</p>
                   </div>
                   <FilePicker
                     label="Profile photo"

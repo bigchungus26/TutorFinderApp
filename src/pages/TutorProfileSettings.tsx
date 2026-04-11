@@ -83,6 +83,7 @@ interface EditProfileSheetProps {
     hourly_rate: number | null;
     online: boolean;
     in_person: boolean;
+    tutor_status: "student" | "alumni" | null;
   };
   onClose: () => void;
 }
@@ -95,6 +96,7 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
   const [rate, setRate] = useState(String(profile.hourly_rate ?? ""));
   const [online, setOnline] = useState(profile.online ?? false);
   const [inPerson, setInPerson] = useState(profile.in_person ?? false);
+  const [tutorStatus, setTutorStatus] = useState<"student" | "alumni" | null>(profile.tutor_status ?? null);
   const updateProfile = useUpdateProfile();
 
   const handleSave = useCallback(async () => {
@@ -108,13 +110,14 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
         hourly_rate: rate ? parseFloat(rate) : null,
         online,
         in_person: inPerson,
+        tutor_status: tutorStatus,
       });
       toast.success("Profile saved");
       onClose();
     } catch (err) {
       toastError(err);
     }
-  }, [profile.id, name, major, year, bio, rate, online, inPerson, updateProfile, onClose]);
+  }, [profile.id, name, major, year, bio, rate, online, inPerson, tutorStatus, updateProfile, onClose]);
 
   return (
     <>
@@ -213,6 +216,33 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
                 </motion.button>
               ))}
             </div>
+          </div>
+
+          {/* University status */}
+          <div>
+            <p className="text-caption text-ink-muted uppercase tracking-wider mb-2">
+              University status
+            </p>
+            <div className="flex gap-2">
+              {([
+                { value: "student" as const, label: "Current student" },
+                { value: "alumni" as const, label: "Alumni" },
+              ]).map(({ value, label }) => (
+                <motion.button
+                  key={value}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setTutorStatus((prev) => (prev === value ? null : value))}
+                  className={`flex-1 py-2.5 rounded-xl border text-label font-medium transition-colors ${
+                    tutorStatus === value
+                      ? "border-accent bg-accent-light text-accent"
+                      : "border-border bg-surface text-foreground"
+                  }`}
+                >
+                  {label}
+                </motion.button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-caption text-ink-muted">Tap again to clear.</p>
           </div>
         </div>
 
@@ -652,7 +682,7 @@ const TutorProfilePage = () => {
         {editProfileOpen && profile && (
           <EditProfileSheet
             key="tutor-edit-profile"
-            profile={profile}
+            profile={{ ...profile, tutor_status: (profile as any).tutor_status ?? null }}
             onClose={() => setEditProfileOpen(false)}
           />
         )}
