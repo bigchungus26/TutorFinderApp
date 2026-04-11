@@ -84,21 +84,22 @@ const SplashPage = () => {
   };
 
   return (
-    <AnimatePresence>
-      {!exiting && (
-        <motion.div
-          key="splash"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.03, transition: { duration: 0.25 } }}
-          className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden cursor-pointer"
-          style={{ background: "var(--bg-primary)" }}
-          onClick={() => {
-            if (!resolvedRef.current) {
-              resolvedRef.current = true;
-              triggerExit(destinationRef.current);
-            }
-          }}
-        >
+    <motion.div
+      initial={false}
+      animate={
+        exiting
+          ? { opacity: 0, scale: 1.03, transition: { duration: 0.25 } }
+          : { opacity: 1, scale: 1 }
+      }
+      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden cursor-pointer"
+      style={{ background: "var(--bg-primary)" }}
+      onClick={() => {
+        if (!resolvedRef.current) {
+          resolvedRef.current = true;
+          triggerExit(destinationRef.current);
+        }
+      }}
+    >
           {/* Noise texture */}
           <div className="noise-bg" aria-hidden="true" />
 
@@ -160,9 +161,7 @@ const SplashPage = () => {
               TUTR
             </motion.h1>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    </motion.div>
   );
 };
 
