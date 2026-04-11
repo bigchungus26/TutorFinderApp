@@ -7,7 +7,7 @@
 // ============================================================
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { resolveDestination } from "@/lib/routing";
 import { springs } from "@/lib/motion";
@@ -20,12 +20,6 @@ const SplashPage = () => {
   const [exiting, setExiting] = useState(false);
   const destinationRef = useRef<string>("/welcome");
   const resolvedRef = useRef(false);
-  const [taglineVisible, setTaglineVisible] = useState(false);
-
-  useEffect(() => {
-    const taglineTimer = setTimeout(() => setTaglineVisible(true), 400);
-    return () => clearTimeout(taglineTimer);
-  }, []);
 
   useEffect(() => {
     const startTime = Date.now();
@@ -165,20 +159,6 @@ const SplashPage = () => {
             >
               TUTR
             </motion.h1>
-
-            {/* Tagline */}
-            <AnimatePresence>
-              {taglineVisible && (
-                <motion.p
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="text-body text-ink-muted mt-3 text-center"
-                >
-                  Peer tutoring for Lebanese universities
-                </motion.p>
-              )}
-            </AnimatePresence>
           </div>
         </motion.div>
       )}
