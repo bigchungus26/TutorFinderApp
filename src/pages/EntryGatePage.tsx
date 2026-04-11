@@ -164,7 +164,7 @@ const EntryGatePage = () => {
           <span style={{ fontSize: "2.5rem" }} aria-hidden="true">🎓</span>
           <span
             style={{
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontSize: "clamp(1.75rem, 7vw, 2.5rem)",
               fontWeight: 700,
               color: "var(--text-primary)",
@@ -193,7 +193,7 @@ const EntryGatePage = () => {
           <span style={{ fontSize: "2.5rem" }} aria-hidden="true">✏️</span>
           <span
             style={{
-              fontFamily: "'Fraunces', serif",
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
               fontSize: "clamp(1.75rem, 7vw, 2.5rem)",
               fontWeight: 700,
               color: "var(--text-primary)",

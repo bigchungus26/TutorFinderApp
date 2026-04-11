@@ -54,7 +54,7 @@ const OfflinePage = () => {
         />
 
         {/* Heading */}
-        <h1 className="text-display-md text-ink" style={{ fontFamily: "'Fraunces', serif" }}>
+        <h1 className="text-display-md text-ink">
           You're offline
         </h1>
 

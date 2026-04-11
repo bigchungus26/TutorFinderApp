@@ -197,7 +197,7 @@
 @layer utilities {
   /* Display — Fraunces 40px, weight 800 */
   .text-display {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 2.5rem;          /* 40px */
     line-height: 1.1;
     font-weight: 800;
@@ -205,7 +205,7 @@
   }
   /* H1 — Fraunces 32px, weight 700 */
   .text-h1 {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 2rem;            /* 32px */
     line-height: 1.15;
     font-weight: 700;
@@ -213,7 +213,7 @@
   }
   /* H2 — Fraunces 25px, weight 700 */
   .text-h2 {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.5625rem;       /* 25px */
     line-height: 1.2;
     font-weight: 700;
@@ -284,35 +284,35 @@
 
   /* ── Legacy display aliases (backward compat) ── */
   .text-display-hero {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 3rem;
     line-height: 1.08;
     font-weight: 800;
     letter-spacing: -0.025em;
   }
   .text-display-xl {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 2.5rem;
     line-height: 1.1;
     font-weight: 700;
     letter-spacing: -0.02em;
   }
   .text-display-lg {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 2rem;
     line-height: 1.15;
     font-weight: 700;
     letter-spacing: -0.015em;
   }
   .text-display-md {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.5rem;
     line-height: 1.2;
     font-weight: 600;
     letter-spacing: -0.01em;
   }
   .text-display-sm {
-    font-family: 'Fraunces', serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.25rem;
     line-height: 1.25;
     font-weight: 600;

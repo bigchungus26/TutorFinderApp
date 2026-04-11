@@ -164,7 +164,7 @@ function StepShell({
         <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
         <h1
           className="text-[2rem] font-semibold tracking-[-0.04em] text-foreground sm:text-[2.35rem]"
-          style={{ fontFamily: "'Fraunces', serif", lineHeight: 1.05 }}
+          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.05 }}
         >
           {title}
         </h1>
@@ -1043,7 +1043,7 @@ function TutorOnboarding() {
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Tutor membership</p>
                         <h2
                           className="mt-2 text-[1.8rem] font-semibold tracking-[-0.04em] text-foreground"
-                          style={{ fontFamily: "'Fraunces', serif", lineHeight: 1.08 }}
+                          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.08 }}
                         >
                           ${SUBSCRIPTION_PRICE}/month
                         </h2>

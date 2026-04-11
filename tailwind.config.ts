@@ -19,7 +19,7 @@ export default {
     extend: {
       // ── Font families ─────────────────────────────────────────────
       fontFamily: {
-        display: ["Fraunces", "serif"],
+        display: ["Plus Jakarta Sans", "sans-serif"],
         body:    ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         sans:    ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
       },
