@@ -439,7 +439,7 @@ function Step2({
   onSemester: (v: string) => void;
 }) {
   return (
-    <div className="px-5 pt-8 pb-4 flex-1 flex flex-col overflow-hidden">
+    <div className="px-5 pt-8 pb-4 flex-1 min-h-0 flex flex-col overflow-hidden">
       <p className="text-overline text-accent mb-2">Step 3</p>
       <h1 className="text-h1 font-display mb-1">
         Your <em>courses</em>
@@ -468,7 +468,8 @@ function Step2({
       </div>
 
       {selectedCourseIds.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
+        <div className="mb-3 max-h-28 overflow-y-auto pr-1">
+          <div className="flex flex-wrap gap-2">
           {selectedCourseIds.map(id => {
             const c = allCourses.find(x => x.id === id);
             if (!c) return null;
@@ -481,10 +482,11 @@ function Step2({
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto space-y-0.5">
+      <div className="min-h-0 flex-1 overflow-y-auto space-y-0.5 pb-4">
         {filteredCourses
           .filter(c => !selectedCourseIds.includes(c.id))
           .map(c => (
