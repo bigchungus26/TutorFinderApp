@@ -33,19 +33,20 @@ export const UniversitySwitcher = ({ open, onClose }: Props) => {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-xl max-w-[440px] mx-auto"
+            className="fixed bottom-0 left-0 right-0 z-50 mx-auto flex max-h-[82vh] max-w-[440px] flex-col rounded-t-xl bg-surface"
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
           >
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 rounded-full bg-border" />
             </div>
-            <div className="px-6 pb-2">
+            <div className="flex-1 overflow-y-auto px-6 pb-2">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-display text-xl font-medium">Choose your university</h2>
                 <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted" aria-label="Close">
                   <X size={20} />
                 </button>
               </div>
-              <div className="space-y-2 pb-8">
+              <div className="space-y-2 pb-6">
                 {universities.map(uni => (
                   <motion.button
                     key={uni.id}
