@@ -3,11 +3,13 @@
 // Upcoming and past sessions with review modal.
 // Tab bar with spring pill indicator, stagger animations.
 // ============================================================
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Clock, Video, MapPin, X, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSessions, useCreateReview } from "@/hooks/useSupabaseQuery";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import { SessionCardSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
@@ -29,7 +31,7 @@ type SessionWithDetails = {
   status: "upcoming" | "completed" | "cancelled";
   price: number;
   created_at: string;
-  tutor: { full_name: string; avatar_url: string } | null;
+  tutor: { full_name: string; avatar_url: string; cancellation_hours?: number } | null;
   student: { full_name: string; avatar_url: string } | null;
   course: { code: string; name: string } | null;
 };
@@ -237,14 +239,24 @@ function ReviewPromptCard({ session, onSubmit, onDismiss }: {
 }
 
 // ── Session card ─────────────────────────────────────────────
-function SessionCard({ session, showReviewButton, onReview }: {
+function naturalDate(dateStr: string): string {
+  const sessionDate = new Date(dateStr + "T00:00:00");
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff = Math.round((sessionDate.getTime() - today.getTime()) / 86_400_000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  if (diff > 1 && diff < 7) return sessionDate.toLocaleDateString("en-US", { weekday: "long" });
+  return sessionDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function SessionCard({ session, showReviewButton, onReview, onCancel }: {
   session: SessionWithDetails;
   showReviewButton?: boolean;
   onReview?: (s: SessionWithDetails) => void;
+  onCancel?: (s: SessionWithDetails) => void;
 }) {
-  const dateStr = new Date(session.date).toLocaleDateString("en-US", {
-    weekday: "short", month: "short", day: "numeric",
-  });
+  const dateStr = naturalDate(session.date);
 
   const statusStyle: Record<string, string> = {
     upcoming: "bg-accent-light text-accent",
@@ -278,13 +290,25 @@ function SessionCard({ session, showReviewButton, onReview }: {
       <div className="flex items-center justify-between">
         <span className="text-body-sm text-ink-muted">${session.price?.toFixed(2) ?? "—"}</span>
         {session.status === "upcoming" && (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            transition={springs.snappy}
-            className="px-4 py-1.5 rounded-lg bg-accent text-white text-label font-medium"
-          >
-            {session.location === "online" ? "Join" : "Details"}
-          </motion.button>
+          <div className="flex items-center gap-2">
+            {onCancel && (
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                transition={springs.snappy}
+                onClick={() => onCancel(session)}
+                className="px-3 py-1.5 rounded-lg border border-border text-label text-ink-muted"
+              >
+                Cancel
+              </motion.button>
+            )}
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              transition={springs.snappy}
+              className="px-4 py-1.5 rounded-lg bg-accent text-white text-label font-medium"
+            >
+              {session.location === "online" ? "Join" : "Details"}
+            </motion.button>
+          </div>
         )}
         {session.status === "completed" && showReviewButton && onReview && (
           <motion.button
@@ -305,11 +329,29 @@ function SessionCard({ session, showReviewButton, onReview }: {
 // ── Main page ────────────────────────────────────────────────
 const SessionsPage = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
   const [reviewSession, setReviewSession] = useState<SessionWithDetails | null>(null);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
   const { data: allSessions = [], isLoading, refetch } = useSessions(user?.id ?? "", "student");
+
+  // Story 12: Auto-complete sessions whose scheduled time has passed
+  useEffect(() => {
+    if (!allSessions.length) return;
+    const now = Date.now();
+    const toComplete = (allSessions as SessionWithDetails[]).filter(s => {
+      if (s.status !== "upcoming") return false;
+      const [h = 0, m = 0] = (s.time ?? "00:00").split(":").map(Number);
+      const end = new Date(s.date + "T00:00:00").getTime() + (h * 60 + m + (s.duration ?? 60)) * 60_000;
+      return end < now;
+    });
+    if (!toComplete.length) return;
+    const ids = toComplete.map(s => s.id);
+    supabase.from("sessions").update({ status: "completed" }).in("id", ids).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["sessions", user?.id, "student"] });
+    });
+  }, [allSessions, user?.id, queryClient]);
 
   const completedSessions = (allSessions as SessionWithDetails[]).filter(s => s.status === "completed");
   const reviewPromptSession = completedSessions.find(s => {
@@ -321,6 +363,23 @@ const SessionsPage = () => {
   const upcoming = (allSessions as SessionWithDetails[]).filter(s => s.status === "upcoming");
   const past = (allSessions as SessionWithDetails[]).filter(s => s.status === "completed" || s.status === "cancelled");
   const sessions = tab === "upcoming" ? upcoming : past;
+
+  // Story 26: Cancel with policy check
+  const handleCancelSession = useCallback(async (session: SessionWithDetails) => {
+    const cancellationHours = session.tutor?.cancellation_hours ?? 4;
+    if (cancellationHours > 0) {
+      const [h = 0, m = 0] = (session.time ?? "00:00").split(":").map(Number);
+      const sessionStart = new Date(session.date + "T00:00:00").getTime() + (h * 60 + m) * 60_000;
+      const hoursUntilSession = (sessionStart - Date.now()) / 3_600_000;
+      if (hoursUntilSession < cancellationHours) {
+        toast(`This tutor requires ${cancellationHours}h notice to cancel. Session is in ${Math.round(hoursUntilSession)}h.`);
+        return;
+      }
+    }
+    await supabase.from("sessions").update({ status: "cancelled" }).eq("id", session.id);
+    queryClient.invalidateQueries({ queryKey: ["sessions", user?.id, "student"] });
+    toast.success("Session cancelled");
+  }, [user?.id, queryClient]);
 
   const handleDismissReview = useCallback((id: string) => {
     setDismissed(id);
@@ -416,6 +475,7 @@ const SessionsPage = () => {
                 session={session as SessionWithDetails}
                 showReviewButton={!isDismissed(session.id) && !dismissedIds.has(session.id)}
                 onReview={s => setReviewSession(s)}
+                onCancel={session.status === "upcoming" ? handleCancelSession : undefined}
               />
             ))}
           </motion.div>

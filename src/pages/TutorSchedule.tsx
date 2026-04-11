@@ -1,5 +1,5 @@
 // ── TutorSchedule — Sessions + Availability Editor ────────────
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Video, Clock, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -155,10 +155,28 @@ function SessionCard({ session, onMarkCompleted }: {
 }
 
 // ── Availability Grid ──────────────────────────────────────────
-function AvailabilityGrid({ tutorId }: { tutorId: string }) {
+function AvailabilityGrid({ tutorId, sessions = [] }: { tutorId: string; sessions?: any[] }) {
   const { data: savedSlots = [] } = useAvailability(tutorId);
   const upsertAvailability = useUpsertAvailability();
   const toggleSlot = useToggleAvailabilitySlot();
+
+  // Build a map of dayOfWeek+hourIdx → session for booked-slot overlay
+  const bookedCells = useMemo<Record<string, any>>(() => {
+    const map: Record<string, any> = {};
+    for (const s of sessions) {
+      if (s.status !== "upcoming") continue;
+      // s.date is ISO date, s.time is "HH:MM"
+      const dayOfWeek = new Date(s.date + "T00:00:00").getDay();
+      const [h = 0] = (s.time ?? "").split(":").map(Number);
+      // Map Sunday (0) to slot index 6 (since DAYS starts Mon)
+      const dayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const hourIdx = HOURS_24.findIndex(t => parseInt(t) === h);
+      if (hourIdx >= 0) {
+        map[cellKey(dayIdx, hourIdx)] = s;
+      }
+    }
+    return map;
+  }, [sessions]);
 
   // Local optimistic state: map of "dayIdx-hourIdx" → {active, slotId?}
   const [localGrid, setLocalGrid] = useState<Record<string, { active: boolean; slotId?: string }>>({});
@@ -265,6 +283,7 @@ function AvailabilityGrid({ tutorId }: { tutorId: string }) {
               {HOURS_DISPLAY.map((label, hourIdx) => {
                 const key = cellKey(dayIdx, hourIdx);
                 const { active } = localGrid[key] ?? { active: false };
+                const booked = bookedCells[key];
 
                 return (
                   <motion.button
@@ -273,13 +292,17 @@ function AvailabilityGrid({ tutorId }: { tutorId: string }) {
                     onClick={() => handleToggle(dayIdx, hourIdx)}
                     aria-label={`${day} ${label} — ${active ? "remove" : "add"} slot`}
                     aria-pressed={active}
+                    title={booked ? `Booked: ${booked.student?.full_name ?? "student"}` : undefined}
                     className={
-                      active
+                      booked
+                        ? "border-2 border-accent bg-accent/10 rounded-lg py-2 px-2 text-center cursor-pointer text-xs font-medium text-accent relative"
+                        : active
                         ? "bg-accent text-accent-foreground rounded-lg py-2 px-2 text-center cursor-pointer text-xs font-medium font-display"
                         : "border border-border rounded-lg py-2 px-2 text-center cursor-pointer text-xs text-foreground-subtle"
                     }
                   >
                     {label}
+                    {booked && <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-accent" />}
                   </motion.button>
                 );
               })}
@@ -420,7 +443,7 @@ const TutorSchedule = () => {
             className="px-5"
           >
             {user ? (
-              <AvailabilityGrid tutorId={user.id} />
+              <AvailabilityGrid tutorId={user.id} sessions={sessions} />
             ) : (
               <p className="text-body-sm text-ink-muted text-center py-10">Please log in to manage availability.</p>
             )}

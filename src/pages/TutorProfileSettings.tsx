@@ -3,9 +3,9 @@
 // Tutor's own profile page: header skeleton on load, courses
 // taught, availability link, dark mode toggle, save with toast.
 // ============================================================
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   BadgeCheck,
   Star,
@@ -17,9 +17,14 @@ import {
   CalendarDays,
   BookOpen,
   Monitor,
+  MessageCircle,
   X,
   Check,
   PenLine,
+  PauseCircle,
+  Zap,
+  CreditCard,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUniversity } from "@/contexts/UniversityContext";
@@ -31,7 +36,7 @@ import {
 } from "@/hooks/useSupabaseQuery";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { ProfileHeaderSkeleton } from "@/components/skeletons";
-import { variants, springs } from "@/lib/motion";
+import { variants, springs, transitions } from "@/lib/motion";
 import { toast, toastError } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -82,6 +87,8 @@ interface EditProfileSheetProps {
     hourly_rate: number | null;
     online: boolean;
     in_person: boolean;
+    tutor_status: "student" | "alumni" | null;
+    cancellation_hours: number;
   };
   onClose: () => void;
 }
@@ -94,6 +101,8 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
   const [rate, setRate] = useState(String(profile.hourly_rate ?? ""));
   const [online, setOnline] = useState(profile.online ?? false);
   const [inPerson, setInPerson] = useState(profile.in_person ?? false);
+  const [tutorStatus, setTutorStatus] = useState<"student" | "alumni" | null>(profile.tutor_status ?? null);
+  const [cancellationHours, setCancellationHours] = useState(profile.cancellation_hours ?? 4);
   const updateProfile = useUpdateProfile();
 
   const handleSave = useCallback(async () => {
@@ -107,13 +116,15 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
         hourly_rate: rate ? parseFloat(rate) : null,
         online,
         in_person: inPerson,
+        tutor_status: tutorStatus,
+        cancellation_hours: cancellationHours,
       });
       toast.success("Profile saved");
       onClose();
     } catch (err) {
       toastError(err);
     }
-  }, [profile.id, name, major, year, bio, rate, online, inPerson, updateProfile, onClose]);
+  }, [profile.id, name, major, year, bio, rate, online, inPerson, tutorStatus, cancellationHours, updateProfile, onClose]);
 
   return (
     <>
@@ -211,6 +222,61 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
                   </span>
                 </motion.button>
               ))}
+            </div>
+          </div>
+
+          {/* University status */}
+          <div>
+            <p className="text-caption text-ink-muted uppercase tracking-wider mb-2">
+              University status
+            </p>
+            <div className="flex gap-2">
+              {([
+                { value: "student" as const, label: "Current student" },
+                { value: "alumni" as const, label: "Alumni" },
+              ]).map(({ value, label }) => (
+                <motion.button
+                  key={value}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setTutorStatus((prev) => (prev === value ? null : value))}
+                  className={`flex-1 py-2.5 rounded-xl border text-label font-medium transition-colors ${
+                    tutorStatus === value
+                      ? "border-accent bg-accent-light text-accent"
+                      : "border-border bg-surface text-foreground"
+                  }`}
+                >
+                  {label}
+                </motion.button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-caption text-ink-muted">Tap again to clear.</p>
+          </div>
+
+          {/* Cancellation policy — Story 11 */}
+          <div>
+            <p className="text-caption text-ink-muted uppercase tracking-wider mb-2">
+              Cancellation policy
+            </p>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-body-sm text-foreground">
+                {cancellationHours === 0
+                  ? "Flexible — cancel any time"
+                  : `${cancellationHours}h notice required`}
+              </span>
+              <span className="text-caption text-ink-muted">{cancellationHours}h</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={48}
+              step={1}
+              value={cancellationHours}
+              onChange={e => setCancellationHours(Number(e.target.value))}
+              className="w-full accent-accent"
+            />
+            <div className="flex justify-between text-caption text-ink-muted mt-1">
+              <span>Flexible</span>
+              <span>48h</span>
             </div>
           </div>
         </div>
@@ -434,6 +500,7 @@ function SettingsRow({
 // ── Main Page ──────────────────────────────────────────────────
 const TutorProfilePage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const { selectedUniversity } = useUniversity();
   const { data: universities = [] } = useUniversities();
@@ -443,6 +510,50 @@ const TutorProfilePage = () => {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editCoursesOpen, setEditCoursesOpen] = useState(false);
+  const isPaused = !!(profile as any)?.paused_until && new Date((profile as any).paused_until) > new Date();
+
+  useEffect(() => {
+    if (searchParams.get("edit") !== "1") return;
+    setEditProfileOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("edit");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  // Story 27: Real-time subscription for new booking requests
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel(`tutor-requests-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "sessions", filter: `tutor_id=eq.${user.id}` },
+        (payload) => {
+          toast.success("New session request!", {
+            description: "A student wants to book a session with you.",
+          });
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
+
+  const handleTogglePause = useCallback(async () => {
+    if (!user?.id) return;
+    const newPausedUntil = isPaused ? null : new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+    await supabase.from("profiles").update({ paused_until: newPausedUntil }).eq("id", user.id);
+    await refreshProfile();
+    toast.success(isPaused ? "Bookings resumed" : "Bookings paused for 24 hours");
+  }, [user?.id, isPaused, refreshProfile]);
+
+  const handleBoost = useCallback(async () => {
+    if (!user?.id) return;
+    const endsAt = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+    await supabase
+      .from("tutor_boosts")
+      .upsert({ tutor_id: user.id, active: true, started_at: new Date().toISOString(), ends_at: endsAt }, { onConflict: "tutor_id" });
+    toast.success("Profile boosted for 7 days!");
+  }, [user?.id]);
 
   // Gather tutor's courses from profile (populated by useTutor)
   const tutorCourses: { course_id: string; course?: { code: string; name: string } }[] =
@@ -453,8 +564,13 @@ const TutorProfilePage = () => {
     if (!user) return;
     await supabase.from("profiles").update({ role: "student" }).eq("id", user.id);
     await refreshProfile();
-    navigate("/");
-  }, [user, refreshProfile, navigate]);
+    // Story 32: route to student onboarding if student profile not yet set up
+    if (!profile?.major) {
+      navigate("/onboarding/student");
+    } else {
+      navigate("/");
+    }
+  }, [user, profile, refreshProfile, navigate]);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -587,6 +703,42 @@ const TutorProfilePage = () => {
             sublabel="Set your weekly available slots"
             onClick={() => navigate("/tutor/schedule#availability")}
           />
+          <SettingsRow
+            icon={MessageCircle}
+            label="Messages"
+            sublabel="Open conversations with students"
+            onClick={() => navigate("/messages")}
+          />
+
+          {/* Story 28: Pause bookings */}
+          <SettingsRow
+            icon={PauseCircle}
+            label={isPaused ? "Resume bookings" : "Pause bookings"}
+            sublabel={isPaused ? "Bookings are currently paused" : "Pause new bookings for 24 hours"}
+            onClick={handleTogglePause}
+            right={
+              <span className={`text-caption font-medium px-2 py-0.5 rounded-full ${isPaused ? "bg-amber-100 text-amber-700" : "bg-muted text-ink-muted"}`}>
+                {isPaused ? "Paused" : "Active"}
+              </span>
+            }
+          />
+
+          {/* Story 31: Boost profile */}
+          <SettingsRow
+            icon={Zap}
+            label="Boost profile"
+            sublabel="Featured in search for 7 days"
+            onClick={handleBoost}
+            highlight
+          />
+
+          {/* Story 30: Subscription */}
+          <SettingsRow
+            icon={CreditCard}
+            label="Subscription"
+            sublabel={`Plan: ${profile?.subscription_plan ?? "Free"} · ${profile?.subscription_status ?? "—"}`}
+            right={<ChevronRight size={16} className="text-ink-muted flex-shrink-0" />}
+          />
 
           {/* Appearance with inline toggle */}
           <div className="flex items-center gap-3 px-4 py-3.5">
@@ -636,7 +788,7 @@ const TutorProfilePage = () => {
         {editProfileOpen && profile && (
           <EditProfileSheet
             key="tutor-edit-profile"
-            profile={profile}
+            profile={{ ...profile, tutor_status: (profile as any).tutor_status ?? null, cancellation_hours: profile.cancellation_hours ?? 4 }}
             onClose={() => setEditProfileOpen(false)}
           />
         )}

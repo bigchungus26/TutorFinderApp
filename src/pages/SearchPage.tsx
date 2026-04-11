@@ -304,6 +304,7 @@ const SearchPage = () => {
 
   const [rawQuery, setRawQuery] = useState(searchParams.get("subject") || "");
   const [query, setQuery] = useState(rawQuery);
+  const [codeOnly, setCodeOnly] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleInputChange = (value: string) => {
@@ -337,12 +338,22 @@ const SearchPage = () => {
   const filteredCourses = useMemo(() => {
     if (!query) return courses;
     const q = query.toLowerCase();
-    return courses.filter(c =>
-      c.code.toLowerCase().includes(q) ||
-      c.name.toLowerCase().includes(q) ||
-      c.subject?.toLowerCase().includes(q)
+    const matched = courses.filter(c =>
+      codeOnly
+        ? c.code.toLowerCase().includes(q)
+        : (c.code.toLowerCase().includes(q) ||
+           c.name.toLowerCase().includes(q) ||
+           c.subject?.toLowerCase().includes(q))
     );
-  }, [query, courses]);
+    // Sort: exact code match first, then starts-with code, then rest
+    return matched.sort((a, b) => {
+      const aCode = a.code.toLowerCase();
+      const bCode = b.code.toLowerCase();
+      const aExact = aCode === q ? 0 : aCode.startsWith(q) ? 1 : 2;
+      const bExact = bCode === q ? 0 : bCode.startsWith(q) ? 1 : 2;
+      return aExact - bExact;
+    });
+  }, [query, courses, codeOnly]);
 
   const filteredTutors = useMemo(() => {
     let result = [...tutors];
@@ -382,6 +393,20 @@ const SearchPage = () => {
         result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
     }
+
+    // Story 31: Boosted tutors surface first within their rating tier
+    const isActive = (t: any) => {
+      const boost = (t as any).tutor_boosts;
+      if (!boost) return false;
+      const b = Array.isArray(boost) ? boost[0] : boost;
+      return b?.active && (!b?.ends_at || new Date(b.ends_at) > new Date());
+    };
+    result.sort((a, b) => {
+      const aB = isActive(a) ? 1 : 0;
+      const bB = isActive(b) ? 1 : 0;
+      if (bB !== aB) return bB - aB;
+      return 0; // preserve existing sort within tier
+    });
 
     return result;
   }, [query, tutors, appliedFilters]);
@@ -438,7 +463,7 @@ const SearchPage = () => {
       </div>
 
       {/* University pill + filters */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3 flex-wrap">
         <UniversityPill onClick={() => setUniSwitcherOpen(true)} />
         <motion.button
           whileTap={{ scale: 0.96 }}
@@ -455,6 +480,16 @@ const SearchPage = () => {
               {activeFilterPills.length}
             </span>
           )}
+        </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          transition={springs.snappy}
+          onClick={() => setCodeOnly(v => !v)}
+          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-label font-medium transition-colors ${
+            codeOnly ? "border-accent bg-accent-light text-accent" : "border-border bg-surface text-foreground"
+          }`}
+        >
+          Code only
         </motion.button>
       </div>
 
@@ -597,11 +632,23 @@ const SearchPage = () => {
             animate="visible"
             className="space-y-3"
           >
-            {filteredTutors.slice(0, activeTab === "All" ? 3 : undefined).map((t, i) => (
-              <motion.div key={t.id} variants={variants.staggerItem} custom={i}>
-                <TutorCard tutor={t as any} />
-              </motion.div>
-            ))}
+            {filteredTutors.slice(0, activeTab === "All" ? 3 : undefined).map((t, i) => {
+              const boost = (t as any).tutor_boosts;
+              const b = Array.isArray(boost) ? boost[0] : boost;
+              const isFeatured = b?.active && (!b?.ends_at || new Date(b.ends_at) > new Date());
+              return (
+                <motion.div key={t.id} variants={variants.staggerItem} custom={i}>
+                  {isFeatured && (
+                    <div className="flex items-center gap-1 mb-1 px-1">
+                      <span className="inline-flex items-center gap-1 text-caption font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                        ⚡ Featured
+                      </span>
+                    </div>
+                  )}
+                  <TutorCard tutor={t as any} />
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       )}

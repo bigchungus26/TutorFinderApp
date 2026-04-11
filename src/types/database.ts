@@ -80,12 +80,26 @@ export type Database = {
           university_id: string | null;
           major: string;
           year: string;
+          gpa: number | null;
           bio: string;
+          teaching_styles: string[];
+          languages: string[];
+          availability_preferences: string[];
           hourly_rate: number | null;
+          max_students_per_session: number | null;
           verified: boolean;
           online: boolean;
           in_person: boolean;
+          previous_tutoring_experience: boolean;
+          years_of_experience: number | null;
+          proof_asset_url: string;
+          proof_asset_name: string;
+          subscription_plan: string;
+          subscription_status: string;
           agreed_terms_at: string | null;
+          tutor_status: "student" | "alumni" | null;
+          cancellation_hours: number;
+          paused_until: string | null;
           onboarded_at: string | null;
           created_at: string;
           updated_at: string;
@@ -98,11 +112,25 @@ export type Database = {
           university_id?: string | null;
           major?: string;
           year?: string;
+          gpa?: number | null;
           bio?: string;
+          teaching_styles?: string[];
+          languages?: string[];
+          availability_preferences?: string[];
           hourly_rate?: number | null;
+          max_students_per_session?: number | null;
           verified?: boolean;
           online?: boolean;
           in_person?: boolean;
+          previous_tutoring_experience?: boolean;
+          years_of_experience?: number | null;
+          proof_asset_url?: string;
+          proof_asset_name?: string;
+          subscription_plan?: string;
+          subscription_status?: string;
+          tutor_status?: "student" | "alumni" | null;
+          cancellation_hours?: number;
+          paused_until?: string | null;
           agreed_terms_at?: string | null;
           onboarded_at?: string | null;
           created_at?: string;
@@ -116,11 +144,25 @@ export type Database = {
           university_id?: string | null;
           major?: string;
           year?: string;
+          gpa?: number | null;
           bio?: string;
+          teaching_styles?: string[];
+          languages?: string[];
+          availability_preferences?: string[];
           hourly_rate?: number | null;
+          max_students_per_session?: number | null;
           verified?: boolean;
           online?: boolean;
           in_person?: boolean;
+          previous_tutoring_experience?: boolean;
+          years_of_experience?: number | null;
+          proof_asset_url?: string;
+          proof_asset_name?: string;
+          subscription_plan?: string;
+          subscription_status?: string;
+          tutor_status?: "student" | "alumni" | null;
+          cancellation_hours?: number;
+          paused_until?: string | null;
           agreed_terms_at?: string | null;
           onboarded_at?: string | null;
           created_at?: string;
@@ -164,6 +206,8 @@ export type Database = {
           location: "online" | "in-person";
           status: "upcoming" | "completed" | "cancelled";
           price: number;
+          cancelled_by: string | null;
+          cancelled_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -178,6 +222,8 @@ export type Database = {
           location?: "online" | "in-person";
           status?: "upcoming" | "completed" | "cancelled";
           price: number;
+          cancelled_by?: string | null;
+          cancelled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -192,6 +238,8 @@ export type Database = {
           location?: "online" | "in-person";
           status?: "upcoming" | "completed" | "cancelled";
           price?: number;
+          cancelled_by?: string | null;
+          cancelled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -301,12 +349,99 @@ export type Database = {
           updated_at?: string;
         };
       };
+
+      profile_views: {
+        Row: {
+          id: string;
+          tutor_id: string;
+          viewer_id: string | null;
+          viewed_at: string;
+        };
+        Insert: {
+          id?: string;
+          tutor_id: string;
+          viewer_id?: string | null;
+          viewed_at?: string;
+        };
+        Update: {
+          id?: string;
+          tutor_id?: string;
+          viewer_id?: string | null;
+          viewed_at?: string;
+        };
+      };
+
+      tutor_subscriptions: {
+        Row: {
+          id: string;
+          tutor_id: string;
+          status: "active" | "grace_period" | "inactive";
+          current_period_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tutor_id: string;
+          status?: "active" | "grace_period" | "inactive";
+          current_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tutor_id?: string;
+          status?: "active" | "grace_period" | "inactive";
+          current_period_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      tutor_boosts: {
+        Row: {
+          id: string;
+          tutor_id: string;
+          active: boolean;
+          started_at: string | null;
+          ends_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          tutor_id: string;
+          active?: boolean;
+          started_at?: string | null;
+          ends_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          tutor_id?: string;
+          active?: boolean;
+          started_at?: string | null;
+          ends_at?: string | null;
+          created_at?: string;
+        };
+      };
     };
 
     Enums: {
       session_location: "online" | "in-person";
       session_status: "upcoming" | "completed" | "cancelled";
       request_status: "pending" | "accepted" | "declined";
+      notification_type:
+        | "request_received"
+        | "request_accepted"
+        | "request_declined"
+        | "session_reminder"
+        | "new_review"
+        | "saved_by_student"
+        | "new_message"
+        | "session_cancelled"
+        | "review_prompt"
+        | "subscription_inactive";
+      subscription_tier_status: "active" | "grace_period" | "inactive";
     };
   };
 };
@@ -314,17 +449,22 @@ export type Database = {
 // ============================================================
 // Convenience type aliases
 // ============================================================
-export type University   = Database["public"]["Tables"]["universities"]["Row"];
-export type Course       = Database["public"]["Tables"]["courses"]["Row"];
-export type Profile      = Database["public"]["Tables"]["profiles"]["Row"];
-export type TutorCourse  = Database["public"]["Tables"]["tutor_courses"]["Row"];
-export type Session      = Database["public"]["Tables"]["sessions"]["Row"];
-export type Request      = Database["public"]["Tables"]["requests"]["Row"];
-export type Review       = Database["public"]["Tables"]["reviews"]["Row"];
-export type TutorStats   = Database["public"]["Tables"]["tutor_stats"]["Row"];
+export type University         = Database["public"]["Tables"]["universities"]["Row"];
+export type Course             = Database["public"]["Tables"]["courses"]["Row"];
+export type Profile            = Database["public"]["Tables"]["profiles"]["Row"];
+export type TutorCourse        = Database["public"]["Tables"]["tutor_courses"]["Row"];
+export type Session            = Database["public"]["Tables"]["sessions"]["Row"];
+export type Request            = Database["public"]["Tables"]["requests"]["Row"];
+export type Review             = Database["public"]["Tables"]["reviews"]["Row"];
+export type TutorStats         = Database["public"]["Tables"]["tutor_stats"]["Row"];
+export type ProfileView        = Database["public"]["Tables"]["profile_views"]["Row"];
+export type TutorSubscription  = Database["public"]["Tables"]["tutor_subscriptions"]["Row"];
+export type TutorBoost         = Database["public"]["Tables"]["tutor_boosts"]["Row"];
 
 // Tutor profile with joined stats and courses
 export type TutorWithDetails = Profile & {
   tutor_stats: TutorStats | null;
   tutor_courses: (TutorCourse & { course: Course })[];
+  tutor_boosts?: TutorBoost | null;
+  tutor_subscriptions?: TutorSubscription | null;
 };

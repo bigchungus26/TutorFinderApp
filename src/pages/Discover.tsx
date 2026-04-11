@@ -35,6 +35,7 @@ import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStuden
 import { supabase } from "@/lib/supabase";
 
 import { TutorCard } from "@/components/TutorCard";
+import { NotificationSheet } from "@/components/NotificationSheet";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
 import { TutorCardSkeleton } from "@/components/skeletons/TutorCardSkeleton";
@@ -207,6 +208,7 @@ const DiscoverPage = () => {
   const { profile } = useAuth();
 
   const [uniSwitcherOpen, setUniSwitcherOpen] = useState(false);
+  const [notifSheetOpen, setNotifSheetOpen] = useState(false);
 
   // Pull-to-refresh state
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -361,6 +363,8 @@ const DiscoverPage = () => {
               {/* Notification bell with dot */}
               <div className="relative">
                 <button
+                  type="button"
+                  onClick={() => setNotifSheetOpen(true)}
                   aria-label="Notifications"
                   className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface"
                 >
@@ -593,6 +597,13 @@ const DiscoverPage = () => {
       <UniversitySwitcher
         open={uniSwitcherOpen}
         onClose={() => setUniSwitcherOpen(false)}
+      />
+
+      {/* ── Notification sheet ───────────────────────────── */}
+      <NotificationSheet
+        isOpen={notifSheetOpen}
+        onClose={() => setNotifSheetOpen(false)}
+        userId={profile?.id ?? ""}
       />
     </>
   );

@@ -93,6 +93,24 @@ const StudentOnboarding = () => {
     c.name.toLowerCase().includes(courseSearch.toLowerCase())
   );
 
+  // Auto-detect university from email domain
+  useEffect(() => {
+    if (!user?.email) return;
+    const EMAIL_DOMAIN_UNI: Record<string, string> = {
+      "aub.edu.lb": "aub",
+      "lau.edu":    "lau",
+      "lau.edu.lb": "lau",
+      "ndu.edu.lb": "ndu",
+    };
+    const domain = user.email.split("@")[1]?.toLowerCase() ?? "";
+    const detectedUni = EMAIL_DOMAIN_UNI[domain];
+    if (detectedUni) {
+      setSelectedUni(prev => prev || detectedUni);
+      // Skip step 0 (university picker) if we already know their university
+      setStep(prev => prev === 0 ? 1 : prev);
+    }
+  }, [user?.email]);
+
   // Restore draft
   useEffect(() => {
     try {
