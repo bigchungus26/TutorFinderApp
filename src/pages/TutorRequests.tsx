@@ -224,9 +224,16 @@ const TutorRequests = () => {
 
   const handleAccept = useCallback(
     async (req: RequestWithDetails) => {
+      // Step 1: mark as accepted — required, fail fast
       try {
         await updateRequest.mutateAsync({ id: req.id, status: "accepted" });
-        // Create a session row when accepted
+      } catch (err) {
+        toastError(err);
+        return;
+      }
+
+      // Step 2: create session — required; revert request if it fails
+      try {
         await createSession.mutateAsync({
           tutor_id: req.tutor_id,
           student_id: req.student_id,
@@ -235,12 +242,20 @@ const TutorRequests = () => {
           time: req.time,
           duration: req.duration,
           location: req.location,
-          price: 0, // price determined by tutor's rate at booking time
+          price: 0,
         });
-        toast.success("Session accepted");
       } catch (err) {
+        // Roll back the status so the request stays actionable
+        try {
+          await updateRequest.mutateAsync({ id: req.id, status: "pending" });
+        } catch {
+          console.error("Failed to revert request status after session creation failure");
+        }
         toastError(err);
+        return;
       }
+
+      toast.success("Session accepted");
     },
     [updateRequest, createSession]
   );

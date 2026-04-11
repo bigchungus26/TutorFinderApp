@@ -53,15 +53,19 @@ function ReviewModal({ session, onClose, onSuccess }: {
 
   const handleSubmit = useCallback(async () => {
     if (!user?.id || rating === 0) return;
-    await createReview.mutateAsync({
-      tutor_id: session.tutor_id,
-      student_id: user.id,
-      course_id: session.course_id,
-      session_id: session.id,
-      rating,
-      comment,
-    });
-    setShowSuccess(true);
+    try {
+      await createReview.mutateAsync({
+        tutor_id: session.tutor_id,
+        student_id: user.id,
+        course_id: session.course_id,
+        session_id: session.id,
+        rating,
+        comment,
+      });
+      setShowSuccess(true);
+    } catch (err: any) {
+      toast(err?.message || "Failed to submit review. Please try again.");
+    }
   }, [user, rating, comment, session, createReview]);
 
   return (

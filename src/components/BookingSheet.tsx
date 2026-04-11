@@ -13,6 +13,7 @@ import { ArrowLeft, X, Video, MapPin, Clock, BadgeCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateRequest } from "@/hooks/useSupabaseQuery";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
+import { toast } from "@/components/ui/sonner";
 import { variants, transitions } from "@/lib/motion";
 import type { TutorWithDetails } from "@/types/database";
 
@@ -166,18 +167,21 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
 
     const time = selectedSlot ? selectedSlot.start_time : "09:00";
 
-    await createRequest.mutateAsync({
-      student_id: user.id,
-      tutor_id: tutor.id,
-      course_id: selectedCourseId,
-      date,
-      time,
-      duration,
-      location: locationMode,
-      message,
-    });
-
-    setShowSuccess(true);
+    try {
+      await createRequest.mutateAsync({
+        student_id: user.id,
+        tutor_id: tutor.id,
+        course_id: selectedCourseId,
+        date,
+        time,
+        duration,
+        location: locationMode,
+        message,
+      });
+      setShowSuccess(true);
+    } catch (err: any) {
+      toast(err?.message || "Failed to send request. Please try again.");
+    }
   }, [user, tutor, selectedCourseId, duration, locationMode, message, selectedSlot, createRequest]);
 
   const handleSuccessDismiss = useCallback(() => {
