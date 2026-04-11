@@ -111,7 +111,7 @@ export function TutorCard({
                   <BadgeCheck size={15} className="flex-shrink-0 text-accent" aria-label="Verified tutor" />
                 )}
               </div>
-              <div className="mt-0.5 flex items-center gap-1.5">
+              <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
                 {tutor.university && (
                   <span
                     className="rounded px-1.5 py-0.5 text-caption font-medium"
@@ -121,6 +121,8 @@ export function TutorCard({
                     }}
                   >
                     {tutor.university.short_name}
+                    {tutor.tutor_status === "student" && " Student"}
+                    {tutor.tutor_status === "alumni" && " Alumni"}
                   </span>
                 )}
                 {(tutor.major || tutor.year) && (

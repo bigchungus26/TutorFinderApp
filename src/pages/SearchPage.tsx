@@ -24,6 +24,7 @@ const MAX_RECENT = 8;
 type FilterTab = "All" | "Courses" | "Tutors";
 type SortBy = "rating" | "price_asc" | "price_desc" | "newest";
 type LocationFilter = "online" | "in-person" | "both";
+type TutorStatusFilter = "student" | "alumni" | "";
 
 interface Filters {
   minPrice: string;
@@ -31,10 +32,11 @@ interface Filters {
   minRating: number;
   location: LocationFilter;
   sortBy: SortBy;
+  tutorStatus: TutorStatusFilter;
 }
 
 const DEFAULT_FILTERS: Filters = {
-  minPrice: "", maxPrice: "", minRating: 0, location: "both", sortBy: "rating",
+  minPrice: "", maxPrice: "", minRating: 0, location: "both", sortBy: "rating", tutorStatus: "",
 };
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
@@ -229,6 +231,31 @@ function FilterSheet({ open, onClose, filters, onApply }: {
           </div>
 
           <div>
+            <p className="text-label text-foreground mb-2.5">Tutor type</p>
+            <div className="flex gap-2 flex-wrap">
+              {([
+                { value: "" as TutorStatusFilter, label: "Any" },
+                { value: "student" as TutorStatusFilter, label: "Current student" },
+                { value: "alumni" as TutorStatusFilter, label: "Alumni" },
+              ]).map(({ value, label }) => (
+                <motion.button
+                  key={value || "any"}
+                  whileTap={{ scale: 0.96 }}
+                  transition={springs.snappy}
+                  onClick={() => patch({ tutorStatus: value })}
+                  className={`px-4 py-2 rounded-full text-label transition-colors ${
+                    draft.tutorStatus === value
+                      ? "bg-accent text-white"
+                      : "bg-surface border border-border text-foreground"
+                  }`}
+                >
+                  {label}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <p className="text-label text-foreground mb-2.5">Sort by</p>
             <div className="flex gap-2 flex-wrap">
               {SORT_OPTIONS.map(({ value, label }) => (
@@ -368,6 +395,10 @@ const SearchPage = () => {
     if (appliedFilters.location === "online") result = result.filter(t => t.online);
     else if (appliedFilters.location === "in-person") result = result.filter(t => t.in_person);
 
+    if (appliedFilters.tutorStatus) {
+      result = result.filter(t => (t as any).tutor_status === appliedFilters.tutorStatus);
+    }
+
     switch (appliedFilters.sortBy) {
       case "rating":
         result.sort((a, b) => (b.stats?.avg_rating ?? 0) - (a.stats?.avg_rating ?? 0));
@@ -402,6 +433,10 @@ const SearchPage = () => {
     if (appliedFilters.sortBy !== "rating") {
       const label = SORT_OPTIONS.find(s => s.value === appliedFilters.sortBy)?.label ?? "";
       pills.push({ key: "sort", label: `Sort: ${label}`, remove: () => setAppliedFilters(f => ({ ...f, sortBy: "rating" })) });
+    }
+    if (appliedFilters.tutorStatus) {
+      const label = appliedFilters.tutorStatus === "student" ? "Current students only" : "Alumni only";
+      pills.push({ key: "tutorStatus", label, remove: () => setAppliedFilters(f => ({ ...f, tutorStatus: "" })) });
     }
     return pills;
   }, [appliedFilters]);

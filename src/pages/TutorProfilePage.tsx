@@ -279,6 +279,18 @@ const TutorProfilePage = () => {
               </span>
             )}
 
+            {tutor.tutor_status && uni && (
+              <span
+                className="inline-block px-3 py-0.5 rounded-full text-label mb-1.5"
+                style={{
+                  backgroundColor: tutor.tutor_status === "student" ? "#2ba66a20" : "#f59e0b20",
+                  color: tutor.tutor_status === "student" ? "#2ba66a" : "#d97706",
+                }}
+              >
+                {uni.short_name} {tutor.tutor_status === "student" ? "Student" : "Alumni"}
+              </span>
+            )}
+
             <p className="text-body-sm text-ink-muted">
               {[tutor.major, tutor.year].filter(Boolean).join(" · ")}
             </p>

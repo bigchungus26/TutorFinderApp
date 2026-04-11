@@ -97,6 +97,7 @@ export type Database = {
           subscription_plan: string;
           subscription_status: string;
           agreed_terms_at: string | null;
+          tutor_status: "student" | "alumni" | null;
           onboarded_at: string | null;
           created_at: string;
           updated_at: string;
@@ -125,6 +126,8 @@ export type Database = {
           proof_asset_name?: string;
           subscription_plan?: string;
           subscription_status?: string;
+          tutor_status?: "student" | "alumni" | null;
+          tutor_status?: "student" | "alumni" | null;
           agreed_terms_at?: string | null;
           onboarded_at?: string | null;
           created_at?: string;
@@ -154,6 +157,7 @@ export type Database = {
           proof_asset_name?: string;
           subscription_plan?: string;
           subscription_status?: string;
+          tutor_status?: "student" | "alumni" | null;
           agreed_terms_at?: string | null;
           onboarded_at?: string | null;
           created_at?: string;
