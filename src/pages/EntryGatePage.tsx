@@ -24,6 +24,29 @@ const EntryGatePage = () => {
   const isSwitchMode = searchParams.get("switch") === "1";
   const roleFromQuery = searchParams.get("role");
   const activeRole = isSelectedRole(roleFromQuery) ? roleFromQuery : storedRole;
+  const isDarkMode = theme === "dark";
+  const studentCardStyle = isDarkMode
+    ? {
+        background:
+          "linear-gradient(160deg, rgba(43,166,106,0.28) 0%, rgba(43,166,106,0.16) 100%)",
+        boxShadow: "0 10px 30px rgba(7,18,13,0.32), 0 0 0 1px rgba(92,214,154,0.12) inset",
+      }
+    : {
+        background:
+          "linear-gradient(160deg, rgba(43,166,106,0.12) 0%, rgba(43,166,106,0.05) 100%)",
+        boxShadow: "0 4px 24px rgba(43,166,106,0.1)",
+      };
+  const tutorCardStyle = isDarkMode
+    ? {
+        background:
+          "linear-gradient(160deg, rgba(245,158,11,0.24) 0%, rgba(245,158,11,0.14) 100%)",
+        boxShadow: "0 10px 30px rgba(20,14,5,0.32), 0 0 0 1px rgba(255,214,153,0.12) inset",
+      }
+    : {
+        background:
+          "linear-gradient(160deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)",
+        boxShadow: "0 4px 24px rgba(245,158,11,0.1)",
+      };
 
   if (!isSwitchMode && activeRole && !isStartingFlow) {
     return <Navigate to={getRoleLandingPath(activeRole)} replace />;
@@ -132,11 +155,10 @@ const EntryGatePage = () => {
           transition={springs.snappy}
           onClick={() => void handleRoleSelect("student")}
           disabled={isStartingFlow}
-          className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
-          style={{
-            background: "linear-gradient(160deg, rgba(43,166,106,0.12) 0%, rgba(43,166,106,0.05) 100%)",
-            boxShadow: "0 4px 24px rgba(43,166,106,0.1)",
-          }}
+          className={`flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border transition-colors ${
+            isDarkMode ? "border-white/10" : "border-border"
+          }`}
+          style={studentCardStyle}
           aria-label="I'm a student — find tutors"
         >
           <span style={{ fontSize: "2.5rem" }} aria-hidden="true">🎓</span>
@@ -162,11 +184,10 @@ const EntryGatePage = () => {
           transition={springs.snappy}
           onClick={() => void handleRoleSelect("tutor")}
           disabled={isStartingFlow}
-          className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
-          style={{
-            background: "linear-gradient(160deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)",
-            boxShadow: "0 4px 24px rgba(245,158,11,0.1)",
-          }}
+          className={`flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border transition-colors ${
+            isDarkMode ? "border-white/10" : "border-border"
+          }`}
+          style={tutorCardStyle}
           aria-label="I'm a tutor — teach students"
         >
           <span style={{ fontSize: "2.5rem" }} aria-hidden="true">✏️</span>
