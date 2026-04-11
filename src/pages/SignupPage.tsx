@@ -8,6 +8,7 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { clearSelectedRole, getSelectedRole, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
+import { supabase } from "@/lib/supabase";
 import { springs, variants } from "@/lib/motion";
 
 const SignupPage = () => {
@@ -47,6 +48,18 @@ const SignupPage = () => {
     setLoading(true);
     try {
       await signUp(email, password, fullName, role);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        await supabase
+          .from("profiles")
+          .update({ role, full_name: fullName })
+          .eq("id", user.id);
+      }
+
       setCheckEmail(true);
     } catch (err: any) {
       const msg = err.message?.includes("already registered")

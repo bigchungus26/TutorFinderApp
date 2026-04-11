@@ -8,7 +8,8 @@ import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { springs, variants } from "@/lib/motion";
-import { clearSelectedRole, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
+import { clearSelectedRole, getSelectedRole, isSelectedRole, setSelectedRole } from "@/lib/rolePreference";
+import { supabase } from "@/lib/supabase";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -32,10 +33,26 @@ const LoginPage = () => {
     setError("");
     setLoading(true);
     try {
-      if (isSelectedRole(requestedRole)) {
-        setSelectedRole(requestedRole);
+      const preferredRole = isSelectedRole(requestedRole) ? requestedRole : getSelectedRole();
+
+      if (preferredRole) {
+        setSelectedRole(preferredRole);
       }
       await signIn(email, password);
+
+      if (preferredRole) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          await supabase
+            .from("profiles")
+            .update({ role: preferredRole })
+            .eq("id", user.id);
+        }
+      }
+
       navigate("/");
     } catch (err: any) {
       const msg = err.message?.includes("Invalid login")

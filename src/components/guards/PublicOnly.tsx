@@ -34,7 +34,7 @@ const PublicOnly = ({ children }: PublicOnlyProps) => {
     if (allowEntryGateWhileOnboarding) {
       return <>{children}</>;
     }
-    const role = profile?.role ?? metadataRole ?? getSelectedRole() ?? "student";
+    const role = metadataRole ?? getSelectedRole() ?? profile?.role ?? "student";
     return <Navigate to={`/onboarding/${role}`} replace />;
   }
 
