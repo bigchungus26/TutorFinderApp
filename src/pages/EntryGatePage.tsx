@@ -30,36 +30,36 @@ const EntryGatePage = () => {
 
         {/* Student */}
         <motion.button
-          whileHover={{ scale: 1.025, y: -5, boxShadow: "0 24px 48px -8px hsl(152 50% 60% / 0.35)" }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 340, damping: 28 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 380, damping: 26 }}
           onClick={() => { setSelectedRole("student"); navigate("/signup"); }}
-          className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-2 min-h-0"
-          style={{ background: "hsl(152 42% 85%)" }}
+          className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-3 min-h-0"
+          style={{ background: "linear-gradient(160deg, hsl(152 55% 82%) 0%, hsl(158 60% 70%) 100%)", boxShadow: "0 8px 32px hsl(152 55% 60% / 0.3)" }}
         >
+          <span style={{ fontSize: "2.5rem" }}>🎓</span>
           <span
-            style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(2rem, 8vw, 2.75rem)", fontWeight: 500, color: "hsl(152 40% 18%)", letterSpacing: "-0.02em", lineHeight: 1.1 }}
+            style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(1.75rem, 7vw, 2.5rem)", fontWeight: 500, color: "hsl(152 50% 14%)", letterSpacing: "-0.02em", lineHeight: 1.1 }}
           >
             I'm a student
           </span>
-          <span className="text-sm" style={{ color: "hsl(152 30% 35%)" }}>Find tutors for your courses</span>
+          <span className="text-sm font-medium" style={{ color: "hsl(152 40% 28%)" }}>Find tutors for your courses</span>
         </motion.button>
 
         {/* Tutor */}
         <motion.button
-          whileHover={{ scale: 1.025, y: -5, boxShadow: "0 24px 48px -8px hsl(35 70% 55% / 0.35)" }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ type: "spring", stiffness: 340, damping: 28 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: "spring", stiffness: 380, damping: 26 }}
           onClick={() => { setSelectedRole("tutor"); navigate("/signup"); }}
-          className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-2 min-h-0"
-          style={{ background: "hsl(35 65% 86%)" }}
+          className="flex-1 rounded-[2rem] flex flex-col items-center justify-center gap-3 min-h-0"
+          style={{ background: "linear-gradient(160deg, hsl(35 80% 84%) 0%, hsl(30 75% 72%) 100%)", boxShadow: "0 8px 32px hsl(35 70% 60% / 0.3)" }}
         >
+          <span style={{ fontSize: "2.5rem" }}>✏️</span>
           <span
-            style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(2rem, 8vw, 2.75rem)", fontWeight: 500, color: "hsl(35 50% 20%)", letterSpacing: "-0.02em", lineHeight: 1.1 }}
+            style={{ fontFamily: "'Fraunces', serif", fontSize: "clamp(1.75rem, 7vw, 2.5rem)", fontWeight: 500, color: "hsl(35 60% 16%)", letterSpacing: "-0.02em", lineHeight: 1.1 }}
           >
             I'm a tutor
           </span>
-          <span className="text-sm" style={{ color: "hsl(35 35% 38%)" }}>Teach students at your campus</span>
+          <span className="text-sm font-medium" style={{ color: "hsl(35 45% 30%)" }}>Teach students at your campus</span>
         </motion.button>
 
       </div>

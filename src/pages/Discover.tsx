@@ -328,19 +328,22 @@ const DiscoverPage = () => {
           transition: "padding-top 0.2s",
         }}
       >
-        <div className="px-5 pt-14">
-
+        {/* ── Gradient header area ─────────────────────────── */}
+        <div
+          className="px-5 pt-14 pb-6 -mx-0"
+          style={{ background: "linear-gradient(180deg, hsl(152 60% 93%) 0%, transparent 100%)" }}
+        >
           {/* ── 1. Greeting header ──────────────────────────── */}
           <motion.div
             variants={variants.fadeSlideDown}
             initial="hidden"
             animate="visible"
-            className="flex items-start justify-between mb-1"
+            className="flex items-start justify-between mb-4"
           >
             <div className="flex-1 min-w-0">
               <h1 className="text-display-hero leading-tight">
                 Good {timeOfDay},{" "}
-                <span style={{ fontStyle: "italic" }}>
+                <span style={{ fontStyle: "italic", color: "hsl(158 76% 36%)" }}>
                   {profile?.full_name?.split(" ")[0] ?? "there"}
                 </span>
               </h1>
@@ -351,37 +354,26 @@ const DiscoverPage = () => {
               )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 ml-3 mt-1">
-              {/* Notification bell with dot */}
               <div className="relative">
                 <button
                   aria-label="Notifications"
                   onClick={() => navigate("/messages")}
-                  className="w-9 h-9 rounded-full flex items-center justify-center border border-hairline bg-surface"
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-white shadow-sm"
                 >
                   <Bell size={18} className="text-ink-muted" />
                 </button>
-                {/* Notification dot — always shown; no handler yet */}
-                <span
-                  className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent border-2 border-background"
-                  aria-hidden="true"
-                />
+                <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-accent border-2 border-white" aria-hidden="true" />
               </div>
-              {/* Avatar */}
               <img
                 src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
                 alt={profile?.full_name ?? "Profile"}
-                className="w-10 h-10 rounded-full object-cover border border-hairline flex-shrink-0"
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm flex-shrink-0"
               />
             </div>
           </motion.div>
 
           {/* ── 2. University pill ──────────────────────────── */}
-          <motion.div
-            variants={variants.fadeIn}
-            initial="hidden"
-            animate="visible"
-            className="mb-4 mt-3"
-          >
+          <motion.div variants={variants.fadeIn} initial="hidden" animate="visible" className="mb-4">
             <UniversityPill onClick={() => setUniSwitcherOpen(true)} />
           </motion.div>
 
@@ -390,17 +382,20 @@ const DiscoverPage = () => {
             variants={variants.fadeSlideUp}
             initial="hidden"
             animate="visible"
-            whileHover={{ boxShadow: "0 8px 24px -4px hsl(158 72% 36% / 0.18)" }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => navigate("/search")}
-            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl border border-hairline bg-surface mb-7 text-left transition-shadow"
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-white text-left"
+            style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
             aria-label="Open search"
           >
-            <div className="w-8 h-8 rounded-xl bg-accent-soft flex items-center justify-center flex-shrink-0">
-              <Search size={16} className="text-accent" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, hsl(158 76% 44%), hsl(165 80% 30%))" }}>
+              <Search size={16} className="text-white" />
             </div>
             <span className="text-body-sm text-ink-muted">Search tutors, courses…</span>
           </motion.button>
+        </div>
+
+        <div className="px-5">
 
           {/* ── 5. Tutors for your courses ──────────────────── */}
           {(hasEnrolledCourses || studentCoursesLoading || tutorsForCoursesLoading) && (
@@ -524,6 +519,7 @@ const DiscoverPage = () => {
             </Section>
           )}
 
+        </div>
         </div>
       </div>
 

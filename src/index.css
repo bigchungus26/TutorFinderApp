@@ -21,9 +21,9 @@
     --input: 150 20% 80%;
 
     /* ── Accent (green) ── */
-    --accent: 158 72% 36%;
+    --accent: 158 76% 40%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 150 52% 90%;
+    --accent-soft: 150 60% 91%;
 
     /* ── Status ── */
     --success: 155 46% 33%;

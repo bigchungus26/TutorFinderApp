@@ -80,12 +80,12 @@ const LoginPage = () => {
           )}
 
           <motion.button
-            whileHover={{ scale: 1.02, boxShadow: "0 12px 36px -4px hsl(158 72% 36% / 0.4)" }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 380, damping: 24 }}
+            whileTap={{ scale: 0.94 }}
+            transition={{ type: "spring", stiffness: 400, damping: 24 }}
             type="submit"
             disabled={loading}
-            className="w-full h-14 rounded-2xl bg-accent text-accent-foreground font-semibold text-base disabled:opacity-40"
+            className="w-full h-14 rounded-2xl text-white font-semibold text-base disabled:opacity-40"
+            style={{ background: "linear-gradient(135deg, hsl(158 76% 44%), hsl(165 80% 30%))", boxShadow: "0 8px 24px hsl(158 76% 40% / 0.35)" }}
           >
             {loading ? "Signing in…" : "Sign in"}
           </motion.button>

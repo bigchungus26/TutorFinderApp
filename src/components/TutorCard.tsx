@@ -21,27 +21,18 @@ interface TutorCardProps {
 
 function TutorAvatar({ avatarUrl, fullName }: { avatarUrl: string; fullName: string }) {
   const [imgError, setImgError] = useState(false);
-
   const isPravatar = avatarUrl?.includes("pravatar.cc");
   const hasRealAvatar = avatarUrl && !isPravatar;
-
   const dicebearUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName)}&backgroundColor=e8f5ee,fbeee3,f5e6d3&fontFamily=serif`;
-
-  const initials = fullName
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  const initials = fullName.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
 
   if (imgError) {
     return (
-      <div className="w-12 h-12 rounded-full flex-shrink-0 bg-accent-soft flex items-center justify-center ring-2 ring-surface ring-offset-0">
-        <span className="text-accent text-sm font-semibold leading-none">{initials}</span>
+      <div className="w-12 h-12 rounded-full flex-shrink-0 bg-accent-soft flex items-center justify-center">
+        <span className="text-accent text-sm font-semibold">{initials}</span>
       </div>
     );
   }
-
   return (
     <img
       src={hasRealAvatar ? avatarUrl : dicebearUrl}
@@ -60,35 +51,35 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
   const moreCount = taughtCourses.length - 3;
   const rating = tutor.tutor_stats?.rating ?? 0;
   const reviewCount = tutor.tutor_stats?.review_count ?? 0;
-  const uniColor = uni?.color ?? "hsl(158 72% 36%)";
+  const uniColor = uni?.color ?? "#2fa86e";
 
   return (
     <Link to={`/tutor/${tutor.id}`}>
       <motion.div
-        whileHover={{ y: -4, boxShadow: "0 16px 40px -8px rgba(20,20,20,0.14)" }}
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: "spring", stiffness: 380, damping: 28 }}
-        className="bg-surface rounded-2xl border border-hairline overflow-hidden"
+        whileTap={{ scale: 0.96 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        className="bg-white rounded-2xl overflow-hidden flex"
+        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)" }}
       >
-        {/* Color stripe keyed to university */}
-        <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${uniColor}, ${uniColor}88)` }} />
+        {/* Bold left accent bar */}
+        <div className="w-1.5 flex-shrink-0 rounded-l-2xl" style={{ background: uniColor }} />
 
-        <div className="p-4 flex gap-3.5">
+        <div className="flex-1 p-4 flex gap-3.5">
           <TutorAvatar avatarUrl={tutor.avatar_url} fullName={tutor.full_name} />
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="font-display font-medium text-body">{tutor.full_name}</span>
+              <span className="font-display font-medium text-body text-ink">{tutor.full_name}</span>
               {tutor.verified && <BadgeCheck size={15} className="text-accent flex-shrink-0" />}
             </div>
-            <div className="text-sm text-ink-muted leading-tight">{tutor.major} · {tutor.year}</div>
+            <div className="text-xs text-ink-muted mt-0.5">{tutor.major} · {tutor.year}</div>
 
             {visibleCourses.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {visibleCourses.map((ct) => (
                   <span
                     key={ct.course.id}
-                    className="text-xs px-2 py-0.5 rounded-full font-medium"
+                    className="text-xs px-2 py-0.5 rounded-full font-semibold"
                     style={{ background: `${uniColor}18`, color: uniColor }}
                   >
                     {ct.course.code}
@@ -103,7 +94,7 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
             {rating > 0 && (
               <div className="flex items-center gap-1 mt-2">
                 <Star size={12} className="text-amber-400 fill-amber-400" />
-                <span className="text-sm font-semibold text-ink">{rating}</span>
+                <span className="text-xs font-bold text-ink">{rating}</span>
                 <span className="text-xs text-ink-muted">({reviewCount})</span>
               </div>
             )}
@@ -111,13 +102,13 @@ export const TutorCard = ({ tutor }: TutorCardProps) => {
 
           {tutor.hourly_rate && (
             <div className="flex-shrink-0 self-center">
-              <span
-                className="inline-flex flex-col items-center justify-center px-2.5 py-1.5 rounded-xl text-xs font-semibold"
-                style={{ background: `${uniColor}15`, color: uniColor }}
+              <div
+                className="px-3 py-2 rounded-xl text-center"
+                style={{ background: `${uniColor}15` }}
               >
-                <span className="text-base font-bold leading-tight">${tutor.hourly_rate}</span>
-                <span className="opacity-70">/hr</span>
-              </span>
+                <div className="text-base font-bold leading-none" style={{ color: uniColor }}>${tutor.hourly_rate}</div>
+                <div className="text-[10px] mt-0.5 font-medium" style={{ color: uniColor, opacity: 0.7 }}>/hr</div>
+              </div>
             </div>
           )}
         </div>

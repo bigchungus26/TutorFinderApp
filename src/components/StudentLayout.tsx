@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link } from "react-router-dom";
-import { Sparkles, Search, Calendar, User, Bell } from "lucide-react";
+import { Sparkles, Search, Calendar, User } from "lucide-react";
 import { ReactNode } from "react";
 import { Footer } from "@/components/Footer";
 import { tabVariants } from "@/lib/motion";
+import { AmbientBackground } from "@/components/AmbientBackground";
 
 const tabs = [
   { path: "/discover", icon: Sparkles, label: "Discover" },
@@ -24,6 +25,7 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="min-h-[100dvh] bg-background relative overflow-x-hidden">
+      <AmbientBackground />
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
