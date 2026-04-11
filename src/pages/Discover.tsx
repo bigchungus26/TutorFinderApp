@@ -373,11 +373,18 @@ const DiscoverPage = () => {
                 />
               </div>
               {/* Avatar */}
-              <img
-                src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
-                alt={profile?.full_name ?? "Profile"}
-                className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
-              />
+              <button
+                type="button"
+                onClick={() => navigate("/profile")}
+                aria-label="Open profile"
+                className="rounded-full transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-accent/30"
+              >
+                <img
+                  src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
+                  alt={profile?.full_name ?? "Profile"}
+                  className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
+                />
+              </button>
             </div>
           </motion.div>
 
