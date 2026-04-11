@@ -5,17 +5,30 @@
 // If user already has a stored role, skip directly.
 // ============================================================
 import { motion } from "framer-motion";
-import { useNavigate, Navigate, Link } from "react-router-dom";
+import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { getSelectedRole, getRoleLandingPath, setSelectedRole } from "@/lib/rolePreference";
 import { variants, springs } from "@/lib/motion";
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
+  const [searchParams] = useSearchParams();
   const storedRole = getSelectedRole();
+  const isSwitchMode = searchParams.get("switch") === "1";
 
-  if (storedRole) {
+  if (!isSwitchMode && storedRole) {
     return <Navigate to={getRoleLandingPath(storedRole)} replace />;
   }
+
+  const handleRoleSelect = (role: "student" | "tutor") => {
+    setSelectedRole(role);
+    if (user && !profile?.onboarded_at) {
+      navigate(`/onboarding/${role}`, { replace: true });
+      return;
+    }
+    navigate("/signup");
+  };
 
   return (
     <div
@@ -79,7 +92,7 @@ const EntryGatePage = () => {
           variants={variants.fadeSlideUp}
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
-          onClick={() => { setSelectedRole("student"); navigate("/signup"); }}
+          onClick={() => handleRoleSelect("student")}
           className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
           style={{
             background: "linear-gradient(160deg, rgba(43,166,106,0.12) 0%, rgba(43,166,106,0.05) 100%)",
@@ -108,7 +121,7 @@ const EntryGatePage = () => {
           variants={variants.fadeSlideUp}
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
-          onClick={() => { setSelectedRole("tutor"); navigate("/signup"); }}
+          onClick={() => handleRoleSelect("tutor")}
           className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
           style={{
             background: "linear-gradient(160deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)",

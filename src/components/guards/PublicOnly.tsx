@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getSelectedRole, getRoleAppPath } from "@/lib/rolePreference";
 
@@ -9,10 +9,13 @@ type PublicOnlyProps = {
 
 const PublicOnly = ({ children }: PublicOnlyProps) => {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
   const metadataRole =
     user?.user_metadata?.role === "student" || user?.user_metadata?.role === "tutor"
       ? user.user_metadata.role
       : null;
+  const allowEntryGateWhileOnboarding =
+    location.pathname === "/" && new URLSearchParams(location.search).get("switch") === "1";
 
   if (loading) {
     return (
@@ -28,6 +31,9 @@ const PublicOnly = ({ children }: PublicOnlyProps) => {
   }
 
   if (user && !profile?.onboarded_at) {
+    if (allowEntryGateWhileOnboarding) {
+      return <>{children}</>;
+    }
     const role = profile?.role ?? metadataRole ?? getSelectedRole() ?? "student";
     return <Navigate to={`/onboarding/${role}`} replace />;
   }

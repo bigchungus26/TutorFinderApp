@@ -22,7 +22,6 @@ const StudentLandingPage = lazy(() => import("@/pages/StudentLandingPage"));
 const TutorLandingPage = lazy(() => import("@/pages/TutorLandingPage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const SignupPage = lazy(() => import("@/pages/SignupPage"));
-const ChooseRolePage = lazy(() => import("@/pages/ChooseRolePage"));
 const StudentOnboarding = lazy(() => import("@/pages/StudentOnboarding"));
 const TutorOnboarding = lazy(() => import("@/pages/TutorOnboarding"));
 const DiscoverPage = lazy(() => import("@/pages/Discover"));
@@ -104,9 +103,7 @@ const AppRoutes = () => {
         <Route path="/design-system" element={<DesignSystem />} />
 
         {/* ── Role selection (authenticated but no role) ─ */}
-        <Route path="/choose-role" element={
-          <RequireAuth><ChooseRolePage /></RequireAuth>
-        } />
+        <Route path="/choose-role" element={<Navigate to="/?switch=1" replace />} />
 
         {/* ── Onboarding ──────────────────────────────── */}
         <Route path="/onboarding/student" element={

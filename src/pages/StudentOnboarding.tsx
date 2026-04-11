@@ -136,7 +136,7 @@ const StudentOnboarding = () => {
   const handleBackAction = () => {
     if (step === 0) {
       persistDraft(0);
-      navigate("/choose-role");
+      navigate("/?switch=1");
       return;
     }
 
