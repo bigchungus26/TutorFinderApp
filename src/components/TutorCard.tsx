@@ -31,7 +31,7 @@ export function TutorCard({
   showSaveButton = true,
 }: TutorCardProps) {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const studentId = profile?.role === "student" ? profile.id : "";
   const { data: isSaved = false } = useIsTutorSaved(studentId, tutor.id);
   const saveTutor = useSaveTutor();
@@ -51,6 +51,11 @@ export function TutorCard({
 
   const handleToggleSave = (event: MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     if (!studentId) return;
 
     if (isSaved) {
@@ -68,8 +73,9 @@ export function TutorCard({
           whileTap={{ scale: 0.9 }}
           transition={springs.snappy}
           onClick={handleToggleSave}
+          disabled={saveTutor.isPending || unsaveTutor.isPending}
           aria-label={isSaved ? `Remove ${tutor.full_name} from saved tutors` : `Save ${tutor.full_name} for later`}
-          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface/95 shadow-sm backdrop-blur-sm"
+          className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface/95 shadow-sm backdrop-blur-sm disabled:opacity-60"
         >
           <Heart size={16} className={isSaved ? "text-accent fill-accent" : "text-ink-muted"} />
         </motion.button>

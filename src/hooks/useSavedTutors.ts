@@ -54,11 +54,14 @@ export function useSaveTutor() {
     mutationFn: async ({ studentId, tutorId }: { studentId: string; tutorId: string }) => {
       const { error } = await supabase
         .from("saved_tutors")
-        .insert({ student_id: studentId, tutor_id: tutorId });
+        .upsert(
+          { student_id: studentId, tutor_id: tutorId },
+          { onConflict: "student_id,tutor_id", ignoreDuplicates: true }
+        );
       if (error) throw error;
     },
     onSuccess: (_, { studentId, tutorId }) => {
-      queryClient.invalidateQueries({ queryKey: ["saved-tutors", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["saved-tutors"] });
       queryClient.setQueryData(["is-saved", studentId, tutorId], true);
       toast.success("Tutor saved");
     },
@@ -79,7 +82,7 @@ export function useUnsaveTutor() {
       if (error) throw error;
     },
     onSuccess: (_, { studentId, tutorId }) => {
-      queryClient.invalidateQueries({ queryKey: ["saved-tutors", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["saved-tutors"] });
       queryClient.setQueryData(["is-saved", studentId, tutorId], false);
       toast("Tutor removed from saved");
     },
