@@ -120,25 +120,46 @@ export function useGetOrCreateConversation() {
       studentId: string;
       tutorId: string;
     }) => {
-      // Check if conversation exists
-      const { data: existing, error: findError } = await supabase
-        .from("conversations")
-        .select("id")
-        .eq("student_id", studentId)
-        .eq("tutor_id", tutorId)
-        .maybeSingle();
-      if (findError) throw findError;
+      if (!studentId || !tutorId) {
+        throw new Error("Missing conversation details.");
+      }
 
-      if (existing) return existing.id;
+      const findExistingConversation = async () => {
+        const { data, error } = await supabase
+          .from("conversations")
+          .select("id")
+          .eq("student_id", studentId)
+          .eq("tutor_id", tutorId)
+          .maybeSingle();
 
-      // Create new conversation
+        if (error) throw error;
+        return data?.id ?? null;
+      };
+
+      const existingConversationId = await findExistingConversation();
+      if (existingConversationId) return existingConversationId;
+
       const { data: created, error: createError } = await supabase
         .from("conversations")
-        .insert({ student_id: studentId, tutor_id: tutorId })
+        .upsert(
+          { student_id: studentId, tutor_id: tutorId },
+          { onConflict: "student_id,tutor_id", ignoreDuplicates: false }
+        )
         .select("id")
         .single();
+
+      if (!createError && created?.id) {
+        return created.id;
+      }
+
+      // If another tap/device created it first, fetch the existing row instead of failing.
+      if ((createError as any)?.code === "23505" || (createError as any)?.details?.includes("already exists")) {
+        const conversationId = await findExistingConversation();
+        if (conversationId) return conversationId;
+      }
+
       if (createError) throw createError;
-      return created.id;
+      throw new Error("Unable to open this conversation right now.");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });

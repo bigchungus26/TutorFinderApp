@@ -245,8 +245,8 @@ const TutorOnboarding = () => {
       <SuccessOverlay
         visible={showSuccess}
         title="Profile ready!"
-        description="Students can now find and book you."
-        onDismiss={() => navigate("/tutor/requests")}
+        description="Students can now find you, and you can review your profile next."
+        onDismiss={() => navigate("/tutor/profile?edit=1")}
       />
 
       <ProgressBar step={step} total={TOTAL_STEPS} />

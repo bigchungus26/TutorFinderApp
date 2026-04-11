@@ -192,8 +192,7 @@ const TutorProfilePage = () => {
   };
 
   const handleMessage = async () => {
-    if (!studentId) return;
-    await openConversation({ studentId, tutorId });
+    await openConversation({ studentId: user?.id ?? "", tutorId });
   };
 
   const handleReport = () => {

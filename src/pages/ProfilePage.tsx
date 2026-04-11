@@ -4,7 +4,7 @@
 // ============================================================
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   LogOut, ChevronRight, X, Moon, Sun, Monitor,
   BookOpen, PenLine, Check, Heart, MessageCircle,
@@ -287,6 +287,7 @@ function SettingsRow({ icon: Icon, label, sublabel, onClick, destructive, right 
 // ── Main page ────────────────────────────────────────────────
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, signOut, refreshProfile } = useAuth();
   const { selectedUniversity } = useUniversity();
   const { data: universities = [] } = useUniversities();
@@ -298,6 +299,14 @@ const ProfilePage = () => {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editCoursesOpen, setEditCoursesOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("edit") !== "1") return;
+    setEditProfileOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("edit");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const handleSignOut = useCallback(async () => {
     try { await signOut(); navigate("/welcome"); }

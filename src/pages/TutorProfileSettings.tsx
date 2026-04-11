@@ -3,9 +3,9 @@
 // Tutor's own profile page: header skeleton on load, courses
 // taught, availability link, dark mode toggle, save with toast.
 // ============================================================
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   BadgeCheck,
   Star,
@@ -32,7 +32,7 @@ import {
 } from "@/hooks/useSupabaseQuery";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { ProfileHeaderSkeleton } from "@/components/skeletons";
-import { variants, springs } from "@/lib/motion";
+import { variants, springs, transitions } from "@/lib/motion";
 import { toast, toastError } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -435,6 +435,7 @@ function SettingsRow({
 // ── Main Page ──────────────────────────────────────────────────
 const TutorProfilePage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
   const { selectedUniversity } = useUniversity();
   const { data: universities = [] } = useUniversities();
@@ -444,6 +445,14 @@ const TutorProfilePage = () => {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editCoursesOpen, setEditCoursesOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("edit") !== "1") return;
+    setEditProfileOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("edit");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // Gather tutor's courses from profile (populated by useTutor)
   const tutorCourses: { course_id: string; course?: { code: string; name: string } }[] =
