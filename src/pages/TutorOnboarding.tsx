@@ -30,7 +30,8 @@ const MAJORS = [
 ] as const;
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"] as const;
-const GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+"] as const;
+const GRADES = ["A", "A-", "B+", "B", "B-"] as const;
+const ALLOWED_TUTOR_GRADES = new Set<string>(GRADES);
 const TEACHING_STYLES = [
   { value: "step-by-step", label: "Step-by-step" },
   { value: "exam-focused", label: "Exam-focused" },
@@ -69,6 +70,10 @@ type Draft = {
   yearsExperience: string;
   subscriptionAccepted: boolean;
 };
+
+function sanitizeTutorGrade(grade: string) {
+  return ALLOWED_TUTOR_GRADES.has(grade) ? grade : "A";
+}
 
 const stepContentVariants = {
   enter: (direction: number) => ({ opacity: 0, x: direction > 0 ? 32 : -32 }),
@@ -362,7 +367,12 @@ function TutorOnboarding() {
       setSelectedYear(draft.selectedYear ?? "");
       setAvatarPreview(draft.avatarPreview ?? "");
       setAvatarFileName(draft.avatarFileName ?? "");
-      setSelectedCourses(draft.selectedCourses ?? []);
+      setSelectedCourses(
+        (draft.selectedCourses ?? []).map((course) => ({
+          ...course,
+          grade: sanitizeTutorGrade(course.grade),
+        })),
+      );
       setGpa(draft.gpa ?? "");
       setBio(draft.bio ?? "");
       setTeachingStyles(draft.teachingStyles ?? []);
@@ -499,7 +509,9 @@ function TutorOnboarding() {
 
   const updateCourseGrade = (courseId: string, grade: string) => {
     setSelectedCourses((current) =>
-      current.map((course) => (course.courseId === courseId ? { ...course, grade } : course)),
+      current.map((course) =>
+        course.courseId === courseId ? { ...course, grade: sanitizeTutorGrade(grade) } : course,
+      ),
     );
   };
 
@@ -581,7 +593,7 @@ function TutorOnboarding() {
         tutorId: user.id,
         courses: selectedCourses.map((course) => ({
           course_id: course.courseId,
-          grade: course.grade,
+          grade: sanitizeTutorGrade(course.grade),
         })),
       });
 
