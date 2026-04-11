@@ -1,83 +1,310 @@
-// ============================================================
-// TutorOnboarding — Part 2.8
-// 4-step wizard: university/major/year → bio/rate/mode → courses → availability
-// Filling pill progress bar, horizontal slide, spring CTA
-// ============================================================
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Search, X, Check } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, Check, Search, Upload, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useUniversity } from "@/contexts/UniversityContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUniversities, useCourses, useUpdateProfile, useSetTutorCourses } from "@/hooks/useSupabaseQuery";
+import { useCourses, useSetTutorCourses, useUniversities, useUpdateProfile } from "@/hooks/useSupabaseQuery";
 import { useUpsertAvailability } from "@/hooks/useAvailability";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
 import { toast } from "@/components/ui/sonner";
 import { springs } from "@/lib/motion";
 
-// ── Constants ────────────────────────────────────────────────
 const STORAGE_KEY = "tutr:onboarding:tutor";
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 6;
+const SUBSCRIPTION_PRICE = 12;
 
 const MAJORS = [
-  "Computer Science", "Business", "Engineering", "Pre-med",
-  "Economics", "Architecture", "Biology", "Mathematics",
-  "Psychology", "Languages",
-];
-const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"];
-const GRADES = ["A", "A-", "B+", "B", "B-"] as const;
+  "Computer Science",
+  "Business",
+  "Engineering",
+  "Pre-med",
+  "Economics",
+  "Architecture",
+  "Biology",
+  "Mathematics",
+  "Psychology",
+  "Languages",
+] as const;
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const HOURS = [
-  "8 AM", "9 AM", "10 AM", "11 AM", "12 PM",
-  "1 PM", "2 PM", "3 PM", "4 PM", "5 PM",
-  "6 PM", "7 PM", "8 PM",
-];
-const HOURS_24 = [
-  "08:00", "09:00", "10:00", "11:00", "12:00",
-  "13:00", "14:00", "15:00", "16:00", "17:00",
-  "18:00", "19:00", "20:00",
-];
+const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"] as const;
+const GRADES = ["A+", "A", "A-", "B+", "B", "B-", "C+"] as const;
+const TEACHING_STYLES = [
+  { value: "step-by-step", label: "Step-by-step" },
+  { value: "exam-focused", label: "Exam-focused" },
+  { value: "conceptual-understanding", label: "Conceptual understanding" },
+] as const;
+const LANGUAGE_OPTIONS = ["English", "Arabic", "French"] as const;
+const AVAILABILITY_OPTIONS = [
+  { value: "weekdays", label: "Weekdays" },
+  { value: "weekends", label: "Weekends" },
+  { value: "evenings", label: "Evenings" },
+] as const;
 
-interface Draft {
+type TutorMode = "online" | "in-person" | "both";
+type CourseSelection = { courseId: string; grade: string };
+
+type Draft = {
   step: number;
+  fullName: string;
   selectedUni: string;
   selectedMajor: string;
   selectedYear: string;
+  avatarPreview: string;
+  avatarFileName: string;
+  selectedCourses: CourseSelection[];
+  gpa: string;
   bio: string;
-  rate: number;
-  mode: "online" | "in-person" | "both";
-  selectedCourses: { courseId: string; grade: string }[];
-  availability: Record<string, boolean>;
+  teachingStyles: string[];
+  languages: string[];
+  mode: TutorMode;
+  rate: string;
+  availabilityPreferences: string[];
+  maxStudents: string;
+  proofPreview: string;
+  proofFileName: string;
+  previousExperience: boolean;
+  yearsExperience: string;
+  subscriptionAccepted: boolean;
+};
+
+const stepContentVariants = {
+  enter: (direction: number) => ({ opacity: 0, x: direction > 0 ? 32 : -32 }),
+  center: { opacity: 1, x: 0, transition: springs.smooth },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -32 : 32,
+    transition: { duration: 0.18 },
+  }),
+};
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(new Error("Couldn't read that file."));
+    reader.readAsDataURL(file);
+  });
 }
 
-const cellKey = (d: number, h: number) => `${d}-${h}`;
+function buildAvailabilitySlots(tutorId: string, preferences: string[]) {
+  const slots = new Map<string, { tutor_id: string; day_of_week: number; start_time: string; end_time: string }>();
 
-// ── Progress bar ─────────────────────────────────────────────
-function ProgressBar({ step, total }: { step: number; total: number }) {
-  const pct = Math.round(((step + 1) / total) * 100);
+  const addSlot = (dayOfWeek: number, startTime: string, endTime: string) => {
+    const key = `${dayOfWeek}-${startTime}`;
+    if (!slots.has(key)) {
+      slots.set(key, {
+        tutor_id: tutorId,
+        day_of_week: dayOfWeek,
+        start_time: startTime,
+        end_time: endTime,
+      });
+    }
+  };
+
+  if (preferences.includes("weekdays")) {
+    [1, 2, 3, 4, 5].forEach((day) => addSlot(day, "15:00", "18:00"));
+  }
+  if (preferences.includes("weekends")) {
+    [0, 6].forEach((day) => addSlot(day, "10:00", "13:00"));
+  }
+  if (preferences.includes("evenings")) {
+    [1, 2, 3, 4, 5].forEach((day) => addSlot(day, "18:00", "21:00"));
+  }
+
+  return Array.from(slots.values());
+}
+
+function ProgressBar({ step }: { step: number }) {
+  const progress = ((step + 1) / TOTAL_STEPS) * 100;
+
   return (
-    <div className="px-5 pt-14 pb-0">
-      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-        <motion.div
-          className="h-full bg-accent rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={springs.smooth}
-        />
+    <div className="px-5 pt-8 sm:px-6">
+      <div className="rounded-full bg-border/70 p-1">
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <motion.div
+            className="h-full rounded-full bg-accent"
+            animate={{ width: `${progress}%` }}
+            transition={springs.smooth}
+          />
+        </div>
       </div>
-      <p className="text-caption text-ink-muted mt-1.5 text-right">
-        Step {step + 1} of {total}
-      </p>
+      <div className="mt-3 flex items-center justify-between text-[0.72rem] font-medium uppercase tracking-[0.16em] text-ink-muted">
+        <span>Tutor setup</span>
+        <span>
+          Step {step + 1} of {TOTAL_STEPS}
+        </span>
+      </div>
     </div>
   );
 }
 
-// ── Main component ───────────────────────────────────────────
-const TutorOnboarding = () => {
+function StepShell({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex h-full flex-col overflow-hidden px-5 pb-4 pt-8 sm:px-6">
+      <div className="mb-6 shrink-0">
+        <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
+        <h1
+          className="text-[2rem] font-semibold tracking-[-0.04em] text-foreground sm:text-[2.35rem]"
+          style={{ fontFamily: "'Fraunces', serif", lineHeight: 1.05 }}
+        >
+          {title}
+        </h1>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-ink-muted sm:text-[0.96rem]">{description}</p>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto pb-6">{children}</div>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  readOnly = false,
+  helper,
+}: {
+  label: string;
+  value: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+  readOnly?: boolean;
+  helper?: string;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-foreground">{label}</span>
+      <input
+        type={type}
+        value={value}
+        readOnly={readOnly}
+        onChange={(event) => onChange?.(event.target.value)}
+        placeholder={placeholder}
+        style={{ fontSize: "16px" }}
+        className="w-full rounded-2xl border border-border bg-surface px-4 py-3.5 text-foreground outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10 read-only:cursor-default read-only:bg-muted/40"
+      />
+      {helper ? <span className="mt-2 block text-xs text-ink-muted">{helper}</span> : null}
+    </label>
+  );
+}
+
+function TextArea({
+  label,
+  value,
+  onChange,
+  placeholder,
+  maxLength,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  maxLength: number;
+}) {
+  return (
+    <label className="block">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className="text-xs text-ink-muted">{value.length}/{maxLength}</span>
+      </div>
+      <textarea
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        rows={4}
+        style={{ fontSize: "16px" }}
+        className="w-full resize-none rounded-2xl border border-border bg-surface px-4 py-3.5 text-foreground outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
+      />
+    </label>
+  );
+}
+
+function SelectableChip({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-all ${
+        active
+          ? "border-accent bg-accent text-white shadow-[0_10px_24px_rgba(31,122,99,0.18)]"
+          : "border-border bg-white text-foreground hover:border-accent/30 hover:bg-accent/5"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FilePicker({
+  label,
+  helper,
+  preview,
+  fileName,
+  accept,
+  onChange,
+}: {
+  label: string;
+  helper: string;
+  preview: string;
+  fileName: string;
+  accept: string;
+  onChange: (file: File | null) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-2 block text-sm font-medium text-foreground">{label}</span>
+      <div className="rounded-[1.5rem] border border-dashed border-border bg-white p-4">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-accent/10">
+            {preview ? (
+              <img src={preview} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <Upload className="h-5 w-5 text-accent" />
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-foreground">{fileName || "Upload an optional file"}</p>
+            <p className="mt-1 text-xs leading-5 text-ink-muted">{helper}</p>
+          </div>
+        </div>
+        <input
+          type="file"
+          accept={accept}
+          className="mt-4 block w-full text-sm text-foreground file:mr-3 file:rounded-full file:border-0 file:bg-accent/10 file:px-4 file:py-2 file:font-medium file:text-accent"
+          onChange={(event) => onChange(event.target.files?.[0] ?? null)}
+        />
+      </div>
+    </label>
+  );
+}
+
+function TutorOnboarding() {
   const navigate = useNavigate();
   const { setSelectedUniversity } = useUniversity();
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { data: universities = [] } = useUniversities();
   const updateProfile = useUpdateProfile();
   const setTutorCourses = useSetTutorCourses();
@@ -86,595 +313,763 @@ const TutorOnboarding = () => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [restoredDraft, setRestoredDraft] = useState(false);
 
+  const [fullName, setFullName] = useState("");
   const [selectedUni, setSelectedUni] = useState("");
   const [selectedMajor, setSelectedMajor] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
-  const [bio, setBio] = useState("");
-  const [rate, setRate] = useState(15);
-  const [mode, setMode] = useState<"online" | "in-person" | "both">("both");
-  const [selectedCourses, setSelectedCourses] = useState<{ courseId: string; grade: string }[]>([]);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [avatarFileName, setAvatarFileName] = useState("");
+  const [selectedCourses, setSelectedCourses] = useState<CourseSelection[]>([]);
+  const [gpa, setGpa] = useState("");
   const [courseSearch, setCourseSearch] = useState("");
-  const [availability, setAvailability] = useState<Record<string, boolean>>({});
+  const [bio, setBio] = useState("");
+  const [teachingStyles, setTeachingStyles] = useState<string[]>([]);
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [mode, setMode] = useState<TutorMode>("both");
+  const [rate, setRate] = useState("20");
+  const [availabilityPreferences, setAvailabilityPreferences] = useState<string[]>([]);
+  const [maxStudents, setMaxStudents] = useState("");
+  const [proofPreview, setProofPreview] = useState("");
+  const [proofFileName, setProofFileName] = useState("");
+  const [previousExperience, setPreviousExperience] = useState(false);
+  const [yearsExperience, setYearsExperience] = useState("");
+  const [subscriptionAccepted, setSubscriptionAccepted] = useState(false);
 
-  const { data: allCourses = [] } = useCourses(selectedUni || undefined);
-  const filteredCourses = allCourses.filter(c =>
-    c.code.toLowerCase().includes(courseSearch.toLowerCase()) ||
-    c.name.toLowerCase().includes(courseSearch.toLowerCase())
-  );
+  const { data: allCourses = [] } = useCourses(selectedUni || profile?.university_id || undefined);
+
+  const filteredCourses = useMemo(() => {
+    const normalizedQuery = courseSearch.trim().toLowerCase();
+    if (!normalizedQuery) return allCourses;
+    return allCourses.filter(
+      (course) =>
+        course.code.toLowerCase().includes(normalizedQuery) ||
+        course.name.toLowerCase().includes(normalizedQuery),
+    );
+  }, [allCourses, courseSearch]);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-      const saved: Draft = JSON.parse(raw);
-      setStep(Math.min(saved.step ?? 0, TOTAL_STEPS - 1));
-      setSelectedUni(saved.selectedUni ?? "");
-      setSelectedMajor(saved.selectedMajor ?? "");
-      setSelectedYear(saved.selectedYear ?? "");
-      setBio(saved.bio ?? "");
-      setRate(saved.rate ?? 15);
-      setMode(saved.mode ?? "both");
-      setSelectedCourses(saved.selectedCourses ?? []);
-      setAvailability(saved.availability ?? {});
-      if (saved.step > 0) toast("Picking up where you left off");
-    } catch { /* ignore */ }
+      const draft: Draft = JSON.parse(raw);
+      setStep(Math.min(draft.step ?? 0, TOTAL_STEPS - 1));
+      setFullName(draft.fullName ?? "");
+      setSelectedUni(draft.selectedUni ?? "");
+      setSelectedMajor(draft.selectedMajor ?? "");
+      setSelectedYear(draft.selectedYear ?? "");
+      setAvatarPreview(draft.avatarPreview ?? "");
+      setAvatarFileName(draft.avatarFileName ?? "");
+      setSelectedCourses(draft.selectedCourses ?? []);
+      setGpa(draft.gpa ?? "");
+      setBio(draft.bio ?? "");
+      setTeachingStyles(draft.teachingStyles ?? []);
+      setLanguages(draft.languages ?? []);
+      setMode(draft.mode ?? "both");
+      setRate(draft.rate ?? "20");
+      setAvailabilityPreferences(draft.availabilityPreferences ?? []);
+      setMaxStudents(draft.maxStudents ?? "");
+      setProofPreview(draft.proofPreview ?? "");
+      setProofFileName(draft.proofFileName ?? "");
+      setPreviousExperience(draft.previousExperience ?? false);
+      setYearsExperience(draft.yearsExperience ?? "");
+      setSubscriptionAccepted(draft.subscriptionAccepted ?? false);
+      setRestoredDraft(true);
+      toast("Restored your tutor setup draft.");
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
   }, []);
 
-  const persistDraft = useCallback((nextStep: number) => {
-    const draft: Draft = {
-      step: nextStep,
-      selectedUni, selectedMajor, selectedYear,
-      bio, rate, mode, selectedCourses, availability,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-  }, [selectedUni, selectedMajor, selectedYear, bio, rate, mode, selectedCourses, availability]);
+  useEffect(() => {
+    if (restoredDraft) return;
+    setFullName((current) => current || profile?.full_name || user?.user_metadata?.full_name || "");
+    setSelectedUni((current) => current || profile?.university_id || "");
+    setSelectedMajor((current) => current || profile?.major || "");
+    setSelectedYear((current) => current || profile?.year || "");
+    setAvatarPreview((current) => current || profile?.avatar_url || "");
+    setProofPreview((current) => current || profile?.proof_asset_url || "");
+    setProofFileName((current) => current || profile?.proof_asset_name || "");
+    setGpa((current) => current || (profile?.gpa ? String(profile.gpa) : ""));
+    setBio((current) => current || profile?.bio || "");
+    setTeachingStyles((current) => (current.length ? current : profile?.teaching_styles ?? []));
+    setLanguages((current) => (current.length ? current : profile?.languages ?? []));
+    setAvailabilityPreferences((current) =>
+      current.length ? current : profile?.availability_preferences ?? [],
+    );
+    setRate((current) => current || (profile?.hourly_rate ? String(profile.hourly_rate) : "20"));
+    setMaxStudents((current) =>
+      current || (profile?.max_students_per_session ? String(profile.max_students_per_session) : ""),
+    );
+    setPreviousExperience(profile?.previous_tutoring_experience ?? false);
+    setYearsExperience((current) =>
+      current || (profile?.years_of_experience ? String(profile.years_of_experience) : ""),
+    );
+    setMode(profile?.online && profile?.in_person ? "both" : profile?.online ? "online" : profile?.in_person ? "in-person" : "both");
+  }, [profile, restoredDraft, user]);
+
+  const persistDraft = useCallback(
+    (nextStep: number) => {
+      const draft: Draft = {
+        step: nextStep,
+        fullName,
+        selectedUni,
+        selectedMajor,
+        selectedYear,
+        avatarPreview,
+        avatarFileName,
+        selectedCourses,
+        gpa,
+        bio,
+        teachingStyles,
+        languages,
+        mode,
+        rate,
+        availabilityPreferences,
+        maxStudents,
+        proofPreview,
+        proofFileName,
+        previousExperience,
+        yearsExperience,
+        subscriptionAccepted,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    },
+    [
+      availabilityPreferences,
+      avatarFileName,
+      avatarPreview,
+      bio,
+      fullName,
+      gpa,
+      languages,
+      maxStudents,
+      mode,
+      previousExperience,
+      proofFileName,
+      proofPreview,
+      rate,
+      selectedCourses,
+      selectedMajor,
+      selectedUni,
+      selectedYear,
+      subscriptionAccepted,
+      teachingStyles,
+      yearsExperience,
+    ],
+  );
+
+  const handleAvatarChange = async (file: File | null) => {
+    if (!file) return;
+    try {
+      const result = await readFileAsDataUrl(file);
+      setAvatarPreview(result);
+      setAvatarFileName(file.name);
+    } catch (error) {
+      toast((error as Error).message);
+    }
+  };
+
+  const handleProofChange = async (file: File | null) => {
+    if (!file) return;
+    try {
+      const result = await readFileAsDataUrl(file);
+      setProofPreview(result);
+      setProofFileName(file.name);
+    } catch (error) {
+      toast((error as Error).message);
+    }
+  };
+
+  const toggleSelection = (value: string, setter: Dispatch<SetStateAction<string[]>>) => {
+    setter((current) =>
+      current.includes(value) ? current.filter((item) => item !== value) : [...current, value],
+    );
+  };
+
+  const toggleCourse = (courseId: string) => {
+    setSelectedCourses((current) =>
+      current.some((course) => course.courseId === courseId)
+        ? current.filter((course) => course.courseId !== courseId)
+        : [...current, { courseId, grade: "A" }],
+    );
+  };
+
+  const updateCourseGrade = (courseId: string, grade: string) => {
+    setSelectedCourses((current) =>
+      current.map((course) => (course.courseId === courseId ? { ...course, grade } : course)),
+    );
+  };
 
   const goForward = () => {
-    const next = step + 1;
+    const next = Math.min(step + 1, TOTAL_STEPS - 1);
     setDirection(1);
     persistDraft(next);
     setStep(next);
   };
 
   const goBack = () => {
-    const prev = step - 1;
+    const next = Math.max(step - 1, 0);
     setDirection(-1);
-    persistDraft(prev);
-    setStep(prev);
+    persistDraft(next);
+    setStep(next);
   };
 
-  const toggleCourse = (courseId: string) => {
-    if (selectedCourses.find(sc => sc.courseId === courseId)) {
-      setSelectedCourses(prev => prev.filter(sc => sc.courseId !== courseId));
-    } else {
-      setSelectedCourses(prev => [...prev, { courseId, grade: "A" }]);
-    }
-  };
-
-  const setGrade = (courseId: string, grade: string) => {
-    setSelectedCourses(prev =>
-      prev.map(sc => sc.courseId === courseId ? { ...sc, grade } : sc)
-    );
-  };
-
-  const toggleCell = (d: number, h: number) => {
-    const key = cellKey(d, h);
-    setAvailability(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+  const canContinue = [
+    Boolean(fullName.trim() && selectedUni && selectedMajor),
+    Boolean(selectedYear && selectedCourses.length > 0),
+    Boolean(bio.trim().length >= 20 && teachingStyles.length > 0 && languages.length > 0),
+    Boolean(Number(rate) > 0 && availabilityPreferences.length > 0),
+    Boolean(!previousExperience || yearsExperience !== ""),
+    subscriptionAccepted,
+  ][step];
 
   const finish = async () => {
-    if (!user) return;
+    if (!user) {
+      toast("Please sign in again to finish your tutor profile.");
+      return;
+    }
 
-    // Profile update is required — fail fast
     try {
       await updateProfile.mutateAsync({
         id: user.id,
         role: "tutor",
-        university_id: selectedUni || "aub",
+        full_name: fullName.trim(),
+        avatar_url: avatarPreview || undefined,
+        university_id: selectedUni || null,
         major: selectedMajor,
         year: selectedYear,
-        bio,
-        hourly_rate: rate,
+        gpa: gpa ? Number(gpa) : null,
+        bio: bio.trim(),
+        teaching_styles: teachingStyles,
+        languages,
+        availability_preferences: availabilityPreferences,
+        hourly_rate: Number(rate),
+        max_students_per_session: maxStudents ? Number(maxStudents) : null,
+        online: mode !== "in-person",
+        in_person: mode !== "online",
+        previous_tutoring_experience: previousExperience,
+        years_of_experience: previousExperience && yearsExperience ? Number(yearsExperience) : null,
+        proof_asset_url: proofPreview || "",
+        proof_asset_name: proofFileName || "",
+        subscription_plan: "tutor_monthly",
+        subscription_status: "pending",
         onboarded_at: new Date().toISOString(),
       });
-    } catch (err: any) {
-      console.error("Failed to save tutor profile:", err);
-      toast(err?.message || "Failed to save profile. Please try again.");
-      return;
-    }
 
-    // Course saving is optional — don't block completion if it fails
-    if (selectedCourses.length > 0) {
-      try {
-        await setTutorCourses.mutateAsync({
-          tutorId: user.id,
-          courses: selectedCourses.map(sc => ({ course_id: sc.courseId, grade: sc.grade })),
-        });
-      } catch (err) {
-        console.warn("Could not save courses (non-blocking):", err);
-      }
-    }
-
-    // Availability saving is optional — don't block completion if it fails
-    const slots = Object.entries(availability)
-      .filter(([, v]) => v)
-      .map(([key]) => {
-        const [dStr, hStr] = key.split("-");
-        const start = HOURS_24[parseInt(hStr, 10)];
-        const endHour = parseInt(start.split(":")[0], 10) + 1;
-        return {
-          tutor_id: user.id,
-          day_of_week: parseInt(dStr, 10),
-          start_time: start,
-          end_time: `${String(endHour).padStart(2, "0")}:00`,
-        };
+      await setTutorCourses.mutateAsync({
+        tutorId: user.id,
+        courses: selectedCourses.map((course) => ({
+          course_id: course.courseId,
+          grade: course.grade,
+        })),
       });
 
-    if (slots.length > 0) {
-      try {
-        await upsertAvailability.mutateAsync({ tutorId: user.id, slots });
-      } catch (err) {
-        console.warn("Could not save availability (non-blocking):", err);
-      }
-    }
+      const availabilitySlots = buildAvailabilitySlots(user.id, availabilityPreferences);
+      await upsertAvailability.mutateAsync({
+        tutorId: user.id,
+        slots: availabilitySlots,
+      });
 
-    setSelectedUniversity(selectedUni || "aub");
-    await refreshProfile();
-    localStorage.removeItem(STORAGE_KEY);
-    setShowSuccess(true);
+      setSelectedUniversity(selectedUni || "aub");
+      await refreshProfile();
+      localStorage.removeItem(STORAGE_KEY);
+      setShowSuccess(true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "We couldn't finish setup. Please try again.";
+      toast(message);
+    }
   };
+
+  const currentCourses = selectedCourses
+    .map((selection) => ({
+      selection,
+      course: allCourses.find((course) => course.id === selection.courseId),
+    }))
+    .filter((item): item is { selection: CourseSelection; course: (typeof allCourses)[number] } => Boolean(item.course));
+
+  const availableCourseResults = filteredCourses.filter(
+    (course) => !selectedCourses.some((selection) => selection.courseId === course.id),
+  );
 
   const saving = updateProfile.isPending || setTutorCourses.isPending || upsertAvailability.isPending;
-
-  const canContinue = [
-    !!selectedUni && !!selectedMajor && !!selectedYear,
-    true,
-    selectedCourses.length > 0,
-    true,
-  ][step] ?? true;
-
-  const slideVariants = {
-    enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
-    center: { x: 0, opacity: 1, transition: springs.smooth },
-    exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%", opacity: 0, transition: { duration: 0.15 } }),
-  };
+  const userEmail = user?.email ?? "";
 
   return (
-    <div className="min-h-svh bg-background flex flex-col overflow-x-hidden">
+    <div className="flex min-h-svh flex-col bg-background">
       <SuccessOverlay
         visible={showSuccess}
-        title="Profile ready!"
-        description="Students can now find you, and you can review your profile next."
+        title="Tutor profile ready"
+        description="You are now set up to get discovered by students, and you can refine everything from your profile next."
         onDismiss={() => navigate("/tutor/profile?edit=1")}
       />
 
-      <ProgressBar step={step} total={TOTAL_STEPS} />
+      <ProgressBar step={step} />
 
-      <div className="flex-1 flex flex-col relative overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={step}
             custom={direction}
-            variants={slideVariants}
+            variants={stepContentVariants}
             initial="enter"
             animate="center"
             exit="exit"
-            className="absolute inset-0 flex flex-col"
+            className="flex h-full flex-col"
           >
-            {step === 0 && (
-              <TStep0
-                universities={universities}
-                selectedUni={selectedUni}
-                selectedMajor={selectedMajor}
-                selectedYear={selectedYear}
-                onUni={setSelectedUni}
-                onMajor={setSelectedMajor}
-                onYear={setSelectedYear}
-              />
-            )}
-            {step === 1 && (
-              <TStep1
-                bio={bio}
-                rate={rate}
-                mode={mode}
-                onBio={setBio}
-                onRate={setRate}
-                onMode={setMode}
-              />
-            )}
-            {step === 2 && (
-              <TStep2
-                allCourses={allCourses}
-                filteredCourses={filteredCourses}
-                selectedCourses={selectedCourses}
-                courseSearch={courseSearch}
-                selectedUni={selectedUni}
-                onSearch={setCourseSearch}
-                onToggle={toggleCourse}
-                onGrade={setGrade}
-              />
-            )}
-            {step === 3 && (
-              <TStep3
-                availability={availability}
-                onToggle={toggleCell}
-              />
-            )}
+            {step === 0 ? (
+              <StepShell
+                eyebrow="Basic info"
+                title="Set up the essentials."
+                description="Keep this first step quick. Students should immediately understand who you are, what you study, and where you teach."
+              >
+                <div className="space-y-5">
+                  <Input
+                    label="Full name"
+                    value={fullName}
+                    onChange={setFullName}
+                    placeholder="Your full name"
+                  />
+                  <Input
+                    label="Email"
+                    value={userEmail}
+                    readOnly
+                    helper="This comes from your account and stays synced automatically."
+                  />
+                  <div className="rounded-2xl border border-border bg-surface px-4 py-3.5">
+                    <p className="text-sm font-medium text-foreground">Password</p>
+                    <p className="mt-1 text-sm text-ink-muted">Already secured on your account.</p>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">University</p>
+                    <div className="space-y-2.5">
+                      {universities.map((university) => (
+                        <button
+                          key={university.id}
+                          type="button"
+                          onClick={() => setSelectedUni(university.id)}
+                          className={`flex w-full items-center gap-4 rounded-[1.35rem] border px-4 py-4 text-left transition-all ${
+                            selectedUni === university.id
+                              ? "border-accent bg-accent/8 shadow-[0_16px_40px_rgba(31,122,99,0.12)]"
+                              : "border-border bg-white hover:border-accent/30 hover:bg-accent/5"
+                          }`}
+                        >
+                          <div
+                            className="h-11 w-1.5 rounded-full"
+                            style={{ backgroundColor: university.color }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-foreground">{university.short_name}</p>
+                            <p className="truncate text-sm text-ink-muted">{university.name}</p>
+                          </div>
+                          {selectedUni === university.id ? (
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-white">
+                              <Check className="h-3.5 w-3.5" />
+                            </span>
+                          ) : null}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Major / Field of study</p>
+                    <div className="flex flex-wrap gap-2.5">
+                      {MAJORS.map((major) => (
+                        <SelectableChip
+                          key={major}
+                          active={selectedMajor === major}
+                          label={major}
+                          onClick={() => setSelectedMajor(major)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <FilePicker
+                    label="Profile photo"
+                    helper="Optional, but tutors with a face get more trust and more messages."
+                    preview={avatarPreview}
+                    fileName={avatarFileName}
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                  />
+                </div>
+              </StepShell>
+            ) : null}
+
+            {step === 1 ? (
+              <StepShell
+                eyebrow="Academic credibility"
+                title="Show what you can actually teach."
+                description="This is where the platform feels different. Keep it course-specific so students can find someone who has really taken the class."
+              >
+                <div className="space-y-5">
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Courses you can teach</p>
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                      <input
+                        value={courseSearch}
+                        onChange={(event) => setCourseSearch(event.target.value)}
+                        placeholder={selectedUni ? "Search MATH101, BIO201, ECON..." : "Choose a university first"}
+                        style={{ fontSize: "16px" }}
+                        className="w-full rounded-2xl border border-border bg-surface py-3.5 pl-11 pr-4 text-foreground outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
+                      />
+                    </div>
+                  </div>
+
+                  {currentCourses.length > 0 ? (
+                    <div className="max-h-56 space-y-3 overflow-y-auto rounded-[1.6rem] border border-border bg-white p-3">
+                      {currentCourses.map(({ selection, course }) => (
+                        <div key={selection.courseId} className="rounded-[1.35rem] border border-accent/15 bg-accent/5 p-3.5">
+                          <div className="flex items-start gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-foreground">{course.code}</p>
+                              <p className="truncate text-sm text-ink-muted">{course.name}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => toggleCourse(selection.courseId)}
+                              className="rounded-full p-1 text-ink-muted transition-colors hover:bg-white hover:text-foreground"
+                              aria-label={`Remove ${course.code}`}
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {GRADES.map((grade) => (
+                              <SelectableChip
+                                key={grade}
+                                active={selection.grade === grade}
+                                label={grade}
+                                onClick={() => updateCourseGrade(selection.courseId, grade)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="rounded-[1.6rem] border border-border bg-white">
+                    <div className="max-h-64 overflow-y-auto p-2">
+                      {availableCourseResults.length > 0 ? (
+                        availableCourseResults.map((course) => (
+                          <button
+                            key={course.id}
+                            type="button"
+                            onClick={() => toggleCourse(course.id)}
+                            className="flex w-full items-center justify-between rounded-[1.2rem] px-3 py-3 text-left transition-colors hover:bg-accent/5"
+                          >
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground">{course.code}</p>
+                              <p className="truncate text-sm text-ink-muted">{course.name}</p>
+                            </div>
+                            <span className="text-xs font-medium uppercase tracking-[0.16em] text-accent">Add</span>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-8 text-center text-sm text-ink-muted">
+                          {selectedUni ? "No matching courses right now." : "Pick your university to load courses."}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Input
+                      label="GPA"
+                      value={gpa}
+                      onChange={setGpa}
+                      placeholder="Optional"
+                      type="number"
+                      helper="Optional, but recommended if you want extra trust."
+                    />
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-medium text-foreground">Year</span>
+                      <select
+                        value={selectedYear}
+                        onChange={(event) => setSelectedYear(event.target.value)}
+                        style={{ fontSize: "16px" }}
+                        className="w-full rounded-2xl border border-border bg-surface px-4 py-3.5 text-foreground outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
+                      >
+                        <option value="">Select your year</option>
+                        {YEARS.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+              </StepShell>
+            ) : null}
+
+            {step === 2 ? (
+              <StepShell
+                eyebrow="Tutor profile"
+                title="Shape how students see you."
+                description="This is the part that sells the fit. Keep it warm, specific, and easy to scan."
+              >
+                <div className="space-y-5">
+                  <TextArea
+                    label="Short bio"
+                    value={bio}
+                    onChange={setBio}
+                    placeholder="Mechanical engineering student at AUB. I help with statics, dynamics, and exam prep in a calm, structured way."
+                    maxLength={240}
+                  />
+
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Teaching style</p>
+                    <div className="flex flex-wrap gap-2.5">
+                      {TEACHING_STYLES.map((style) => (
+                        <SelectableChip
+                          key={style.value}
+                          active={teachingStyles.includes(style.value)}
+                          label={style.label}
+                          onClick={() => toggleSelection(style.value, setTeachingStyles)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Languages spoken</p>
+                    <div className="flex flex-wrap gap-2.5">
+                      {LANGUAGE_OPTIONS.map((language) => (
+                        <SelectableChip
+                          key={language}
+                          active={languages.includes(language)}
+                          label={language}
+                          onClick={() => toggleSelection(language, setLanguages)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Session format</p>
+                    <div className="grid gap-2.5 sm:grid-cols-3">
+                      {(["online", "in-person", "both"] as const).map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setMode(option)}
+                          className={`rounded-[1.35rem] border px-4 py-3 text-sm font-medium capitalize transition-all ${
+                            mode === option
+                              ? "border-accent bg-accent/8 text-accent shadow-[0_14px_32px_rgba(31,122,99,0.12)]"
+                              : "border-border bg-white text-foreground hover:border-accent/30 hover:bg-accent/5"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </StepShell>
+            ) : null}
+
+            {step === 3 ? (
+              <StepShell
+                eyebrow="Pricing & availability"
+                title="Set clear expectations."
+                description="A simple rate and a few availability signals are enough to start receiving relevant inquiries."
+              >
+                <div className="space-y-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Input
+                      label="Price per hour"
+                      value={rate}
+                      onChange={setRate}
+                      placeholder="20"
+                      type="number"
+                    />
+                    <Input
+                      label="Max students per session"
+                      value={maxStudents}
+                      onChange={setMaxStudents}
+                      placeholder="Optional"
+                      type="number"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Availability</p>
+                    <div className="flex flex-wrap gap-2.5">
+                      {AVAILABILITY_OPTIONS.map((option) => (
+                        <SelectableChip
+                          key={option.value}
+                          active={availabilityPreferences.includes(option.value)}
+                          label={option.label}
+                          onClick={() => toggleSelection(option.value, setAvailabilityPreferences)}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-ink-muted">
+                      We will prefill a simple weekly schedule for you, and you can fine-tune it from your profile later.
+                    </p>
+                  </div>
+                </div>
+              </StepShell>
+            ) : null}
+
+            {step === 4 ? (
+              <StepShell
+                eyebrow="Trust boosters"
+                title="Give students extra confidence."
+                description="These details are optional, but they make it much easier for a student to choose you over someone generic."
+              >
+                <div className="space-y-5">
+                  <FilePicker
+                    label="Proof of credibility"
+                    helper="Optional transcript, certificate, or any supporting screenshot that helps students trust your profile."
+                    preview={proofPreview}
+                    fileName={proofFileName}
+                    accept="image/*,.pdf"
+                    onChange={handleProofChange}
+                  />
+
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Previous tutoring experience</p>
+                    <div className="grid gap-2.5 sm:grid-cols-2">
+                      {[
+                        { label: "No, just starting", value: false },
+                        { label: "Yes, I have taught before", value: true },
+                      ].map((option) => (
+                        <button
+                          key={String(option.value)}
+                          type="button"
+                          onClick={() => setPreviousExperience(option.value)}
+                          className={`rounded-[1.35rem] border px-4 py-3 text-left text-sm font-medium transition-all ${
+                            previousExperience === option.value
+                              ? "border-accent bg-accent/8 text-accent shadow-[0_14px_32px_rgba(31,122,99,0.12)]"
+                              : "border-border bg-white text-foreground hover:border-accent/30 hover:bg-accent/5"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {previousExperience ? (
+                    <Input
+                      label="Years of experience"
+                      value={yearsExperience}
+                      onChange={setYearsExperience}
+                      placeholder="0"
+                      type="number"
+                    />
+                  ) : null}
+                </div>
+              </StepShell>
+            ) : null}
+
+            {step === 5 ? (
+              <StepShell
+                eyebrow="Subscription"
+                title="Join the platform as a tutor."
+                description="Keep this simple and clear. Your listing goes live, students can discover you, and you receive inquiries from your campus community."
+              >
+                <div className="space-y-5">
+                  <div className="rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_24px_60px_rgba(17,24,39,0.06)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Tutor membership</p>
+                        <h2
+                          className="mt-2 text-[1.8rem] font-semibold tracking-[-0.04em] text-foreground"
+                          style={{ fontFamily: "'Fraunces', serif", lineHeight: 1.08 }}
+                        >
+                          ${SUBSCRIPTION_PRICE}/month
+                        </h2>
+                      </div>
+                      <span className="rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+                        Clean start
+                      </span>
+                    </div>
+
+                    <div className="mt-5 space-y-3 text-sm text-ink-muted">
+                      <p>You get listed on the platform and appear in course-specific searches.</p>
+                      <p>Students can view your profile, compare your pricing, and message you directly.</p>
+                      <p>You can keep refining your listing, schedule, and profile after setup.</p>
+                    </div>
+                  </div>
+
+                  <label className="flex items-start gap-3 rounded-[1.4rem] border border-border bg-white px-4 py-4">
+                    <input
+                      type="checkbox"
+                      checked={subscriptionAccepted}
+                      onChange={(event) => setSubscriptionAccepted(event.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+                    />
+                    <span className="text-sm leading-6 text-foreground">
+                      I&apos;m ready to join as a tutor and publish my listing under the monthly tutor plan.
+                    </span>
+                  </label>
+                </div>
+              </StepShell>
+            ) : null}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Bottom nav */}
-      <div className="px-5 pb-10 pt-4 space-y-3 bg-background z-10">
-        {step > 0 && (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            transition={springs.snappy}
-            onClick={goBack}
-            className="flex items-center gap-1.5 text-ink-muted text-body-sm"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </motion.button>
-        )}
+      <div className="shrink-0 border-t border-border/80 bg-background px-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6">
+        <div className="mb-3 flex items-center justify-between">
+          {step > 0 ? (
+            <button
+              type="button"
+              onClick={goBack}
+              className="inline-flex items-center gap-2 text-sm font-medium text-ink-muted transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          ) : (
+            <span />
+          )}
+          <Link to="/terms" target="_blank" className="text-xs text-ink-muted transition-colors hover:text-accent">
+            Terms & privacy
+          </Link>
+        </div>
 
         {step < TOTAL_STEPS - 1 ? (
           <motion.button
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: canContinue ? 0.98 : 1 }}
             transition={springs.snappy}
+            type="button"
             onClick={goForward}
             disabled={!canContinue}
-            className="w-full h-14 rounded-2xl bg-accent text-white text-label font-semibold disabled:opacity-40 transition-opacity"
+            className="h-14 w-full rounded-2xl bg-accent text-sm font-semibold text-white shadow-[0_18px_34px_rgba(31,122,99,0.22)] transition-all disabled:cursor-not-allowed disabled:opacity-45"
           >
             Continue
           </motion.button>
         ) : (
-          <>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              transition={springs.snappy}
-              onClick={finish}
-              disabled={saving}
-              className="w-full h-14 rounded-2xl bg-accent text-white text-label font-semibold disabled:opacity-40 transition-opacity flex items-center justify-center gap-2"
-            >
-              {saving ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                  />
-                  Saving…
-                </>
-              ) : "Start tutoring"}
-            </motion.button>
-            <p className="text-caption text-ink-muted text-center">
-              By continuing you agree to our{" "}
-              <Link to="/terms" className="text-accent" target="_blank">Terms</Link>
-              {" & "}
-              <Link to="/privacy" className="text-accent" target="_blank">Privacy Policy</Link>
-            </p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ── Step 0: University + Major + Year ────────────────────────
-function TStep0({
-  universities, selectedUni, selectedMajor, selectedYear,
-  onUni, onMajor, onYear,
-}: {
-  universities: any[];
-  selectedUni: string;
-  selectedMajor: string;
-  selectedYear: string;
-  onUni: (v: string) => void;
-  onMajor: (v: string) => void;
-  onYear: (v: string) => void;
-}) {
-  return (
-    <div className="px-5 pt-8 pb-4 flex-1 overflow-y-auto">
-      <p className="text-overline text-accent mb-2">Step 1</p>
-      <h1 className="text-h1 font-display mb-1">
-        Your <em>university</em>
-      </h1>
-      <p className="text-body-sm text-ink-muted mb-5">
-        We'll match you with students from your school.
-      </p>
-
-      <div className="space-y-2.5 mb-6">
-        {universities.map(uni => (
           <motion.button
-            key={uni.id}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: saving ? 1 : 0.98 }}
             transition={springs.snappy}
-            onClick={() => onUni(uni.id)}
-            className={`w-full p-4 rounded-xl border text-left flex items-center gap-4 transition-colors ${
-              selectedUni === uni.id
-                ? "border-accent bg-accent-light"
-                : "border-border bg-surface"
-            }`}
+            type="button"
+            onClick={finish}
+            disabled={!canContinue || saving}
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-sm font-semibold text-white shadow-[0_18px_34px_rgba(31,122,99,0.22)] transition-all disabled:cursor-not-allowed disabled:opacity-45"
           >
-            <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: uni.color }} />
-            <div className="flex-1 min-w-0">
-              <div className="text-label font-semibold text-foreground">{uni.short_name}</div>
-              <div className="text-body-sm text-ink-muted truncate">{uni.name}</div>
-            </div>
-            {selectedUni === uni.id && (
-              <div className="w-5 h-5 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                <Check size={10} color="white" strokeWidth={2.5} />
-              </div>
+            {saving ? (
+              <>
+                <motion.span
+                  className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+                />
+                Finishing setup
+              </>
+            ) : (
+              "Finish tutor setup"
             )}
           </motion.button>
-        ))}
-      </div>
-
-      <p className="text-label text-ink-muted mb-2">Major</p>
-      <div className="flex flex-wrap gap-2 mb-5">
-        {MAJORS.map(m => (
-          <motion.button
-            key={m}
-            whileTap={{ scale: 0.95 }}
-            transition={springs.snappy}
-            onClick={() => onMajor(m)}
-            className={`px-3.5 py-2 rounded-full text-label transition-colors ${
-              selectedMajor === m
-                ? "bg-accent text-white"
-                : "bg-surface border border-border text-foreground"
-            }`}
-          >
-            {m}
-          </motion.button>
-        ))}
-      </div>
-
-      <p className="text-label text-ink-muted mb-2">Year</p>
-      <select
-        value={selectedYear}
-        onChange={e => onYear(e.target.value)}
-        style={{ fontSize: "16px" }}
-        className="w-full p-3.5 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent transition-colors"
-      >
-        <option value="">Select your year</option>
-        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-      </select>
-    </div>
-  );
-}
-
-// ── Step 1: Bio + Rate + Mode ────────────────────────────────
-function TStep1({
-  bio, rate, mode, onBio, onRate, onMode,
-}: {
-  bio: string;
-  rate: number;
-  mode: "online" | "in-person" | "both";
-  onBio: (v: string) => void;
-  onRate: (v: number) => void;
-  onMode: (v: "online" | "in-person" | "both") => void;
-}) {
-  return (
-    <div className="px-5 pt-8 pb-4 flex-1 overflow-y-auto">
-      <p className="text-overline text-accent mb-2">Step 2</p>
-      <h1 className="text-h1 font-display mb-1">
-        Tell students about <em>yourself</em>
-      </h1>
-      <p className="text-body-sm text-ink-muted mb-5">
-        A strong bio gets more bookings.
-      </p>
-
-      <p className="text-label text-ink-muted mb-2">Bio</p>
-      <textarea
-        value={bio}
-        onChange={e => onBio(e.target.value)}
-        rows={4}
-        placeholder="e.g. Senior CS student at AUB. Aced CMPS211 and CMPS303. Love breaking down complex topics."
-        style={{ fontSize: "16px" }}
-        className="w-full p-4 rounded-xl border border-border bg-surface text-foreground resize-none focus:outline-none focus:border-accent transition-colors mb-1"
-        maxLength={300}
-      />
-      <div className="flex justify-end mb-5">
-        <span className="text-caption text-ink-muted">{bio.length}/300</span>
-      </div>
-
-      <p className="text-label text-ink-muted mb-2">Hourly rate</p>
-      <div className="text-center mb-2">
-        <span className="text-display font-display text-foreground">${rate}</span>
-        <span className="text-body text-ink-muted">/hr</span>
-      </div>
-      <input
-        type="range"
-        min={5}
-        max={60}
-        step={5}
-        value={rate}
-        onChange={e => onRate(Number(e.target.value))}
-        className="w-full accent-accent mb-1"
-      />
-      <div className="flex justify-between text-caption text-ink-muted mb-5">
-        <span>$5/hr</span>
-        <span>$60/hr</span>
-      </div>
-
-      <p className="text-label text-ink-muted mb-2">Session mode</p>
-      <div className="flex gap-2">
-        {(["online", "in-person", "both"] as const).map(m => (
-          <button
-            key={m}
-            onClick={() => onMode(m)}
-            className={`flex-1 py-3 rounded-xl text-label capitalize transition-colors border ${
-              mode === m
-                ? "bg-accent-light border-accent text-accent font-medium"
-                : "bg-surface border-border text-ink-muted"
-            }`}
-          >
-            {m}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Step 2: Courses + Grades ─────────────────────────────────
-function TStep2({
-  allCourses, filteredCourses, selectedCourses, courseSearch,
-  selectedUni, onSearch, onToggle, onGrade,
-}: {
-  allCourses: any[];
-  filteredCourses: any[];
-  selectedCourses: { courseId: string; grade: string }[];
-  courseSearch: string;
-  selectedUni: string;
-  onSearch: (v: string) => void;
-  onToggle: (id: string) => void;
-  onGrade: (id: string, g: string) => void;
-}) {
-  return (
-    <div className="px-5 pt-8 pb-4 flex-1 flex flex-col overflow-hidden">
-      <p className="text-overline text-accent mb-2">Step 3</p>
-      <h1 className="text-h1 font-display mb-1">
-        Courses you can <em>teach</em>
-      </h1>
-      <p className="text-body-sm text-ink-muted mb-4">
-        Select courses and the grade you earned.
-      </p>
-
-      <div className="relative mb-3">
-        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
-        <input
-          value={courseSearch}
-          onChange={e => onSearch(e.target.value)}
-          placeholder="Search courses…"
-          style={{ fontSize: "16px" }}
-          className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-surface text-foreground focus:outline-none focus:border-accent transition-colors"
-        />
-      </div>
-
-      {selectedCourses.length > 0 && (
-        <div className="space-y-2 mb-3">
-          {selectedCourses.map(sc => {
-            const c = allCourses.find(x => x.id === sc.courseId);
-            if (!c) return null;
-            return (
-              <div key={sc.courseId} className="flex items-center gap-2 bg-accent-light rounded-xl p-3 border border-accent/20">
-                <span className="text-label font-medium text-foreground flex-1 truncate">{c.code}</span>
-                <div className="flex gap-1">
-                  {GRADES.map(g => (
-                    <button
-                      key={g}
-                      onClick={() => onGrade(sc.courseId, g)}
-                      className={`text-caption px-2 py-1 rounded-full font-semibold transition-colors ${
-                        sc.grade === g
-                          ? "bg-accent text-white"
-                          : "bg-surface border border-border text-ink-muted"
-                      }`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-                <button onClick={() => onToggle(sc.courseId)} className="p-1 text-ink-muted hover:text-foreground" aria-label="Remove">
-                  <X size={14} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto space-y-0.5">
-        {filteredCourses
-          .filter(c => !selectedCourses.find(sc => sc.courseId === c.id))
-          .map(c => (
-            <motion.button
-              key={c.id}
-              whileTap={{ scale: 0.98 }}
-              transition={springs.snappy}
-              onClick={() => onToggle(c.id)}
-              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-accent-light transition-colors flex items-center gap-3"
-            >
-              <span className="text-label font-medium text-foreground w-20 flex-shrink-0">{c.code}</span>
-              <span className="text-body-sm text-ink-muted truncate">{c.name}</span>
-            </motion.button>
-          ))}
-        {filteredCourses.filter(c => !selectedCourses.find(sc => sc.courseId === c.id)).length === 0 && !selectedCourses.length && (
-          <p className="text-body-sm text-ink-muted text-center py-8">
-            {selectedUni ? "No courses found." : "Select a university first."}
-          </p>
         )}
       </div>
-    </div>
-  );
-}
-
-// ── Step 3: Availability grid ────────────────────────────────
-function TStep3({
-  availability, onToggle,
-}: {
-  availability: Record<string, boolean>;
-  onToggle: (d: number, h: number) => void;
-}) {
-  const activeCount = Object.values(availability).filter(Boolean).length;
-
-  return (
-    <div className="px-5 pt-8 pb-4 flex-1 flex flex-col overflow-hidden">
-      <p className="text-overline text-accent mb-2">Step 4</p>
-      <h1 className="text-h1 font-display mb-1">
-        Your <em>availability</em>
-      </h1>
-      <p className="text-body-sm text-ink-muted mb-4">
-        Tap to mark when you're free. You can update anytime.
-      </p>
-
-      <div className="flex-1 overflow-x-auto">
-        <div className="min-w-[380px]">
-          {/* Day headers */}
-          <div className="grid grid-cols-8 gap-1 mb-1.5 pl-14">
-            {DAYS.map(d => (
-              <div key={d} className="text-caption font-semibold text-ink-muted text-center">
-                {d.charAt(0)}
-              </div>
-            ))}
-          </div>
-
-          {/* Time rows */}
-          <div className="space-y-1">
-            {HOURS.map((label, hi) => (
-              <div key={hi} className="grid grid-cols-8 gap-1 items-center">
-                <div className="text-caption text-ink-muted col-span-1 text-right pr-2 w-14 flex-shrink-0">
-                  {label}
-                </div>
-                {DAYS.map((_, di) => {
-                  const active = !!availability[cellKey(di, hi)];
-                  return (
-                    <motion.button
-                      key={di}
-                      whileTap={{ scale: 0.9 }}
-                      transition={springs.snappy}
-                      onClick={() => onToggle(di, hi)}
-                      className={`h-7 rounded-md border transition-colors ${
-                        active
-                          ? "bg-accent-light border-accent"
-                          : "bg-surface border-border"
-                      }`}
-                      aria-label={`${DAYS[di]} ${label}`}
-                      aria-pressed={active}
-                    />
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <p className="text-caption text-ink-muted text-center mt-3">
-        {activeCount} slot{activeCount !== 1 ? "s" : ""} selected
-      </p>
     </div>
   );
 }

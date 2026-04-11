@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("id", userId)
       .single();
     setProfile(data);
+    return data;
   };
 
   const refreshProfile = async () => {
@@ -47,21 +48,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    setLoading(true);
     supabase.auth.getSession().then(({ data: { session } }) => {
       const u = session?.user ?? null;
       setUser(u);
       if (u) fetchProfile(u.id).finally(() => setLoading(false));
-      else setLoading(false);
+      else {
+        setProfile(null);
+        setLoading(false);
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoading(true);
       const u = session?.user ?? null;
       setUser(u);
-      if (u) fetchProfile(u.id);
+      if (u) {
+        fetchProfile(u.id).finally(() => setLoading(false));
+      }
       else {
         setProfile(null);
+        setLoading(false);
       }
     });
 
