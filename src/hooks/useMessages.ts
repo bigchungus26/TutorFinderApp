@@ -141,15 +141,17 @@ export function useGetOrCreateConversation() {
 
       const { data: created, error: createError } = await supabase
         .from("conversations")
-        .upsert(
-          { student_id: studentId, tutor_id: tutorId },
-          { onConflict: "student_id,tutor_id", ignoreDuplicates: false }
-        )
+        .insert({ student_id: studentId, tutor_id: tutorId })
         .select("id")
         .single();
 
       if (!createError && created?.id) {
         return created.id;
+      }
+
+      const conversationId = await findExistingConversation();
+      if (conversationId) {
+        return conversationId;
       }
 
       // If another tap/device created it first, fetch the existing row instead of failing.
