@@ -16,6 +16,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { TutorCardSkeleton } from "@/components/skeletons";
 import { initAuthListener } from "@/lib/authListener";
 import { useTheme } from "@/hooks/useTheme";
+import ProfilePage from "@/pages/ProfilePage";
 // ── Lazy-load all pages for performance (J4) ─────────────────
 const EntryGatePage = lazy(() => import("@/pages/EntryGatePage"));
 const StudentLandingPage = lazy(() => import("@/pages/StudentLandingPage"));
@@ -29,7 +30,6 @@ const SearchPage = lazy(() => import("@/pages/SearchPage"));
 const CourseDetail = lazy(() => import("@/pages/CourseDetail"));
 const TutorProfilePage = lazy(() => import("@/pages/TutorProfilePage"));
 const SessionsPage = lazy(() => import("@/pages/SessionsPage"));
-const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const TutorRequests = lazy(() => import("@/pages/TutorRequests"));
 const TutorSchedule = lazy(() => import("@/pages/TutorSchedule"));
 const TutorEarnings = lazy(() => import("@/pages/TutorEarnings"));

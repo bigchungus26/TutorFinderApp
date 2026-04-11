@@ -20,6 +20,14 @@ interface State {
   error?: Error;
 }
 
+function isChunkLoadError(error: Error) {
+  const message = String(error?.message ?? "");
+  return (
+    message.includes("Failed to fetch dynamically imported module") ||
+    message.includes("Importing a module script failed")
+  );
+}
+
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -32,6 +40,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[ErrorBoundary]", error, info.componentStack);
+
+    if (typeof window === "undefined" || !isChunkLoadError(error)) {
+      return;
+    }
+
+    const reloadKey = `lazy-reload:${window.location.pathname}`;
+    const alreadyReloaded = window.sessionStorage.getItem(reloadKey) === "1";
+
+    if (!alreadyReloaded) {
+      window.sessionStorage.setItem(reloadKey, "1");
+      window.location.reload();
+      return;
+    }
+
+    window.sessionStorage.removeItem(reloadKey);
   }
 
   handleRetry = () => {

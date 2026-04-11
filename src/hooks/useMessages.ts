@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toastError } from "@/components/ui/sonner";
+import {
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 type Participant = {
   id: string;
@@ -30,16 +35,6 @@ type LocalConversation = {
 };
 
 const LOCAL_CONVERSATIONS_KEY = "localConversations";
-
-function isMissingMessagingResource(error: any) {
-  const message = String(error?.message ?? "");
-  return (
-    error?.code === "PGRST205" ||
-    error?.status === 404 ||
-    message.includes("Could not find the table") ||
-    message.includes("schema cache")
-  );
-}
 
 function readLocalConversations(): LocalConversation[] {
   if (typeof window === "undefined") return [];
@@ -115,6 +110,12 @@ export function useConversations(userId: string) {
   return useQuery({
     queryKey: ["conversations", userId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("conversations")) {
+        return readLocalConversations()
+          .filter((conversation) => conversation.student_id === userId || conversation.tutor_id === userId)
+          .map((conversation) => summarizeConversation(conversation, userId));
+      }
+
       const { data, error } = await supabase
         .from("conversations")
         .select(`
@@ -127,7 +128,8 @@ export function useConversations(userId: string) {
         .order("last_message_at", { ascending: false });
 
       if (error) {
-        if (isMissingMessagingResource(error)) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("conversations");
           return readLocalConversations()
             .filter((conversation) => conversation.student_id === userId || conversation.tutor_id === userId)
             .map((conversation) => summarizeConversation(conversation, userId));
@@ -146,6 +148,10 @@ export function useConversation(conversationId: string) {
   return useQuery({
     queryKey: ["conversation", conversationId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("conversations")) {
+        return getLocalConversationById(conversationId);
+      }
+
       const { data, error } = await supabase
         .from("conversations")
         .select(`
@@ -157,7 +163,8 @@ export function useConversation(conversationId: string) {
         .single();
 
       if (error) {
-        if (isMissingMessagingResource(error)) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("conversations");
           return getLocalConversationById(conversationId);
         }
         throw error;
@@ -173,6 +180,10 @@ export function useMessages(conversationId: string, poll = true) {
   return useQuery({
     queryKey: ["messages", conversationId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("messages")) {
+        return getLocalConversationById(conversationId)?.messages ?? [];
+      }
+
       const { data, error } = await supabase
         .from("messages")
         .select(`*, sender:profiles!messages_sender_id_fkey (full_name, avatar_url, id)`)
@@ -180,7 +191,8 @@ export function useMessages(conversationId: string, poll = true) {
         .order("created_at", { ascending: true });
 
       if (error) {
-        if (isMissingMessagingResource(error)) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("messages");
           return getLocalConversationById(conversationId)?.messages ?? [];
         }
         throw error;
@@ -189,7 +201,7 @@ export function useMessages(conversationId: string, poll = true) {
       return data;
     },
     enabled: !!conversationId,
-    refetchInterval: poll ? 3000 : false,
+    refetchInterval: poll && !isSupabaseResourceMissing("messages") ? 3000 : false,
     refetchIntervalInBackground: false,
     staleTime: 0,
   });
@@ -238,8 +250,12 @@ export function useSendMessage() {
         .select(`*, sender:profiles!messages_sender_id_fkey (full_name, avatar_url, id)`)
         .single();
 
-      if (error && !isMissingMessagingResource(error)) {
+      if (error && !isMissingSupabaseResourceError(error)) {
         throw error;
+      }
+
+      if (error) {
+        markSupabaseResourceMissing("messages");
       }
 
       return {
@@ -288,7 +304,8 @@ export function useGetOrCreateConversation() {
           .maybeSingle();
 
         if (error) {
-          if (isMissingMessagingResource(error)) {
+          if (isMissingSupabaseResourceError(error)) {
+            markSupabaseResourceMissing("conversations");
             return null;
           }
           throw error;
@@ -310,7 +327,10 @@ export function useGetOrCreateConversation() {
         return created.id;
       }
 
-      if (!createError || isMissingMessagingResource(createError)) {
+      if (!createError || isMissingSupabaseResourceError(createError)) {
+        if (createError) {
+          markSupabaseResourceMissing("conversations");
+        }
         const student = await fetchParticipant(studentId);
         const tutor = await fetchParticipant(tutorId);
         const localConversation: LocalConversation = {
@@ -368,8 +388,12 @@ export function useMarkMessagesRead() {
         .neq("sender_id", readerId)
         .eq("read", false);
 
-      if (error && !isMissingMessagingResource(error)) {
+      if (error && !isMissingSupabaseResourceError(error)) {
         throw error;
+      }
+
+      if (error) {
+        markSupabaseResourceMissing("messages");
       }
 
       return updatedConversations;

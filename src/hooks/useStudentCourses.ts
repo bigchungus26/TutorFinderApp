@@ -1,17 +1,32 @@
 // ── Student Courses Hooks (C6) ────────────────────────────────
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import {
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 export function useStudentCourses(studentId: string) {
   return useQuery({
     queryKey: ["student-courses", studentId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("student_courses")) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("student_courses")
         .select(`*, course:courses(*)`)
         .eq("student_id", studentId)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("student_courses");
+          return [];
+        }
+        throw error;
+      }
       return data;
     },
     enabled: !!studentId,
@@ -62,12 +77,22 @@ export function useTutorsForStudentCourses(studentId: string, universityId?: str
   return useQuery({
     queryKey: ["tutors-for-courses", studentId, universityId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("student_courses")) {
+        return [];
+      }
+
       // Get student's course IDs first
       const { data: studentCourseData, error: scError } = await supabase
         .from("student_courses")
         .select("course_id")
         .eq("student_id", studentId);
-      if (scError) throw scError;
+      if (scError) {
+        if (isMissingSupabaseResourceError(scError)) {
+          markSupabaseResourceMissing("student_courses");
+          return [];
+        }
+        throw scError;
+      }
       if (!studentCourseData?.length) return [];
 
       const courseIds = studentCourseData.map(sc => sc.course_id);

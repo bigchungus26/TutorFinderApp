@@ -2,6 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { TutorWithDetails } from "@/types/database";
 import { toast } from "@/components/ui/sonner";
+import {
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 type SavedTutorEntry = {
   id: string;
@@ -73,6 +78,10 @@ export function useSavedTutors(studentId: string) {
     queryFn: async () => {
       const localEntries = readLocalSavedTutors(studentId);
 
+      if (isSupabaseResourceMissing("saved_tutors")) {
+        return localEntries;
+      }
+
       const { data, error } = await supabase
         .from("saved_tutors")
         .select(`
@@ -87,6 +96,9 @@ export function useSavedTutors(studentId: string) {
         .order("created_at", { ascending: false });
 
       if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("saved_tutors");
+        }
         return localEntries;
       }
 
@@ -103,6 +115,7 @@ export function useIsTutorSaved(studentId: string, tutorId: string) {
     queryFn: async () => {
       const localMatch = readLocalSavedTutors(studentId).some((entry) => entry.tutor_id === tutorId);
       if (localMatch) return true;
+      if (isSupabaseResourceMissing("saved_tutors")) return false;
 
       const { data, error } = await supabase
         .from("saved_tutors")
@@ -111,7 +124,12 @@ export function useIsTutorSaved(studentId: string, tutorId: string) {
         .eq("tutor_id", tutorId)
         .maybeSingle();
 
-      if (error) return false;
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("saved_tutors");
+        }
+        return false;
+      }
       return !!data;
     },
     enabled: !!studentId && !!tutorId,
@@ -139,6 +157,9 @@ export function useSaveTutor() {
         .insert({ student_id: studentId, tutor_id: tutorId });
 
       if (error && error.code !== "23505") {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("saved_tutors");
+        }
         console.warn("Saved tutor sync failed, kept locally:", error);
       }
 
@@ -166,6 +187,9 @@ export function useUnsaveTutor() {
         .eq("tutor_id", tutorId);
 
       if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("saved_tutors");
+        }
         console.warn("Saved tutor removal sync failed, removed locally:", error);
       }
 

@@ -2,6 +2,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toast, toastError } from "@/components/ui/sonner";
+import {
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 export interface AvailabilitySlot {
   id?: string;
@@ -15,13 +20,23 @@ export function useAvailability(tutorId: string) {
   return useQuery({
     queryKey: ["availability", tutorId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("availability")) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("availability")
         .select("*")
         .eq("tutor_id", tutorId)
         .order("day_of_week")
         .order("start_time");
-      if (error) throw error;
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("availability");
+          return [];
+        }
+        throw error;
+      }
       return data as AvailabilitySlot[];
     },
     enabled: !!tutorId,
