@@ -9,7 +9,6 @@
 import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { getRoleLandingPath, getSelectedRole } from "@/lib/rolePreference";
 
 type RequireAuthProps = {
   children: ReactNode;
@@ -46,11 +45,11 @@ const RequireAuth = ({ children }: RequireAuthProps) => {
     return <AuthSkeleton />;
   }
 
-  // No authenticated user — save current path and redirect to welcome
+  // No authenticated user — save current path and redirect to login
   if (!user) {
     const currentPath = location.pathname + location.search + location.hash;
     sessionStorage.setItem("pendingRoute", currentPath);
-    return <Navigate to={getRoleLandingPath(getSelectedRole() ?? "student")} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Authenticated — render the protected content
