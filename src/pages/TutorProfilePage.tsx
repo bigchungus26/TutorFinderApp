@@ -128,7 +128,7 @@ function ReviewCard({ review }: { review: any }) {
 // ── Loading skeleton ───────────────────────────────────────────
 function PageSkeleton() {
   return (
-    <div className="min-h-screen bg-background pb-28 px-5 pt-14">
+    <div className="min-h-screen pb-28 px-5 pt-14">
       {/* Nav row */}
       <div className="flex items-center justify-between mb-8">
         <Skeleton className="w-9 h-9 rounded-xl" />
@@ -189,11 +189,9 @@ const TutorProfilePage = () => {
   const [reportReason, setReportReason] = useState<ReportReason>("inappropriate");
   const [reportDetails, setReportDetails] = useState("");
 
-  // ── Sticky action bar on scroll ────────────────────────────
+  // ── Show action bar after mount ────────────────────────────
   useEffect(() => {
-    const onScroll = () => setShowActionBar(window.scrollY > 200);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    setShowActionBar(true);
   }, []);
 
   // ── Derived data ───────────────────────────────────────────
@@ -275,7 +273,7 @@ const TutorProfilePage = () => {
 
   if (error || !tutor) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-5">
+      <div className="min-h-screen flex items-center justify-center px-5">
         <QueryError
           message="Failed to load tutor profile."
           onRetry={() => refetch()}
@@ -287,7 +285,7 @@ const TutorProfilePage = () => {
   // ── Render ─────────────────────────────────────────────────
   return (
     <>
-      <div className="min-h-screen bg-background pb-36">
+      <div className="min-h-screen pb-36" style={{ background: "linear-gradient(145deg, hsl(152 58% 90%) 0%, hsl(150 30% 96%) 55%, hsl(35 60% 93%) 100%)" }}>
 
         {/* ── Header zone (not sticky) ──────────────────────── */}
         <div className="px-5 pt-14">
@@ -644,7 +642,7 @@ const TutorProfilePage = () => {
       {/* ── BookingSheet ──────────────────────────────────────── */}
       {tutor && (
         <BookingSheet
-          open={bookingOpen}
+          isOpen={bookingOpen}
           onClose={() => {
             setBookingOpen(false);
             setSelectedSlot(null);
