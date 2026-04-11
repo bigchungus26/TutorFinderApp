@@ -694,6 +694,7 @@ function TutorOnboarding() {
                         />
                       ))}
                     </div>
+                    <p className="mt-3 text-xs text-ink-muted/80">More fields below</p>
                   </div>
                   <FilePicker
                     label="Profile photo"

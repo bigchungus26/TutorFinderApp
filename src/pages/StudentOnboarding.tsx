@@ -399,6 +399,7 @@ function Step1({
           </motion.button>
         ))}
       </div>
+      <p className="mb-6 text-xs text-ink-muted/80">More fields below</p>
 
       <p className="text-label text-ink-muted mb-2">Year</p>
       <select
