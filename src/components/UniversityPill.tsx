@@ -16,7 +16,7 @@ export const UniversityPill = ({ onClick }: Props) => {
     <motion.button
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-pill bg-surface border border-hairline text-sm font-body font-medium"
+      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface border border-border text-sm font-body font-medium"
     >
       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: uni.color }} />
       {uni.short_name}

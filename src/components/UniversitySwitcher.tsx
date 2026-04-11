@@ -36,7 +36,7 @@ export const UniversitySwitcher = ({ open, onClose }: Props) => {
             className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-xl max-w-[440px] mx-auto"
           >
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 rounded-full bg-hairline" />
+              <div className="w-10 h-1 rounded-full bg-border" />
             </div>
             <div className="px-6 pb-2">
               <div className="flex items-center justify-between mb-4">
@@ -52,7 +52,7 @@ export const UniversitySwitcher = ({ open, onClose }: Props) => {
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSelect(uni.id)}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-colors ${
-                      selectedUniversity === uni.id ? "border-accent bg-accent-soft" : "border-hairline bg-surface"
+                      selectedUniversity === uni.id ? "border-accent bg-accent-light" : "border-border bg-surface"
                     }`}
                   >
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: uni.color }} />

@@ -70,7 +70,7 @@ function FullErrorScreen({ onRetry }: { onRetry: () => void }) {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={onRetry}
-          className="flex items-center gap-2 h-12 px-5 rounded-lg border border-hairline text-label font-medium text-ink hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="flex items-center gap-2 h-12 px-5 rounded-lg border border-border text-label font-medium text-ink hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <RefreshCw size={16} />
           Retry
@@ -101,7 +101,7 @@ function InlineError({ onRetry }: { onRetry: () => void }) {
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={onRetry}
-        className="flex items-center gap-2 h-10 px-4 rounded-lg border border-hairline text-label text-ink hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-label text-ink hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
       >
         <RefreshCw size={14} />
         Try again
@@ -130,7 +130,7 @@ export function QueryError({ message, onRetry }: QueryErrorProps) {
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={onRetry}
-          className="flex items-center gap-2 h-10 px-4 rounded-lg border border-hairline text-label text-ink hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border text-label text-ink hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           <RefreshCw size={14} />
           Retry

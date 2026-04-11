@@ -67,7 +67,7 @@ function StepDots({ current, total }: { current: number; total: number }) {
               ? "w-5 bg-accent"
               : i === current - 1
               ? "w-5 bg-accent"
-              : "w-2 bg-hairline"
+              : "w-2 bg-border"
           } ${i === current - 1 ? "opacity-100" : i < current - 1 ? "opacity-60" : "opacity-40"}`}
         />
       ))}
@@ -88,10 +88,10 @@ function Chip({ label, selected, onClick, icon }: ChipProps) {
     <motion.button
       whileTap={{ scale: 0.96 }}
       onClick={onClick}
-      className={`flex items-center gap-1.5 px-4 py-2 rounded-pill border text-label transition-colors ${
+      className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-label transition-colors ${
         selected
           ? "bg-accent text-accent-foreground border-accent"
-          : "bg-surface text-ink border-hairline"
+          : "bg-surface text-foreground border-border"
       }`}
     >
       {icon}
@@ -103,7 +103,7 @@ function Chip({ label, selected, onClick, icon }: ChipProps) {
 // ── Section label ──────────────────────────────────────────────
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-caption text-ink-subtle uppercase tracking-wider mb-2">{children}</p>
+    <p className="text-caption text-ink-muted uppercase tracking-wider mb-2">{children}</p>
   );
 }
 
@@ -227,7 +227,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
             >
               {/* Drag handle */}
               <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                <div className="w-10 h-1 rounded-full bg-hairline" />
+                <div className="w-10 h-1 rounded-full bg-border" />
               </div>
 
               {/* Header row: back + close */}
@@ -239,7 +239,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                     className="p-2 -ml-2 rounded-xl hover:bg-muted"
                     aria-label="Back"
                   >
-                    <ArrowLeft size={20} className="text-ink" />
+                    <ArrowLeft size={20} className="text-foreground" />
                   </motion.button>
                 ) : (
                   <div className="w-9" />
@@ -280,7 +280,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                     >
                       {/* Pre-selected slot info */}
                       {selectedSlot && (
-                        <div className="bg-accent-soft rounded-xl px-4 py-3 flex items-center gap-3">
+                        <div className="bg-accent-light rounded-xl px-4 py-3 flex items-center gap-3">
                           <Clock size={16} className="text-accent flex-shrink-0" />
                           <div>
                             <p className="text-label text-accent">
@@ -303,7 +303,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                             <select
                               value={selectedCourseId}
                               onChange={(e) => setSelectedCourseId(e.target.value)}
-                              className="w-full h-11 rounded-lg border border-hairline bg-surface px-3 pr-9 text-body text-ink appearance-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                              className="w-full h-11 rounded-lg border border-border bg-surface px-3 pr-9 text-body text-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
                             >
                               {taughtCourses.map((tc) => (
                                 <option key={tc.course_id} value={tc.course_id}>
@@ -385,9 +385,9 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                           onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE))}
                           placeholder="Introduce yourself or ask a question…"
                           rows={5}
-                          className="w-full rounded-xl border border-hairline bg-surface px-4 py-3 text-body text-ink placeholder:text-ink-subtle resize-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                          className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-body text-foreground placeholder:text-ink-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
                         />
-                        <span className="absolute bottom-3 right-3 text-caption text-ink-subtle">
+                        <span className="absolute bottom-3 right-3 text-caption text-ink-muted">
                           {message.length}/{MAX_MESSAGE}
                         </span>
                       </div>
@@ -405,7 +405,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                       className="space-y-4"
                     >
                       {/* Tutor summary row */}
-                      <div className="flex items-center gap-3 bg-accent-soft rounded-xl p-4">
+                      <div className="flex items-center gap-3 bg-accent-light rounded-xl p-4">
                         <img
                           src={tutor.avatar_url || "https://i.pravatar.cc/100"}
                           alt={tutor.full_name}
@@ -413,7 +413,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">
-                            <span className="text-body font-medium text-ink">{tutor.full_name}</span>
+                            <span className="text-body font-medium text-foreground">{tutor.full_name}</span>
                             {tutor.verified && (
                               <BadgeCheck size={14} className="text-accent flex-shrink-0" />
                             )}
@@ -423,11 +423,11 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                       </div>
 
                       {/* Booking details */}
-                      <div className="bg-surface rounded-xl border border-hairline divide-y divide-hairline">
+                      <div className="bg-surface rounded-xl border border-border divide-y divide-border">
                         {/* Course */}
                         <div className="flex items-center justify-between px-4 py-3">
                           <span className="text-body-sm text-ink-muted">Course</span>
-                          <span className="text-body-sm text-ink font-medium">
+                          <span className="text-body-sm text-foreground font-medium">
                             {selectedCourse
                               ? `${selectedCourse.course.code}`
                               : "—"}
@@ -437,7 +437,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                         {/* Date & time */}
                         <div className="flex items-center justify-between px-4 py-3">
                           <span className="text-body-sm text-ink-muted">Date & time</span>
-                          <span className="text-body-sm text-ink font-medium text-right">
+                          <span className="text-body-sm text-foreground font-medium text-right">
                             {selectedSlot
                               ? `${DAY_NAMES[selectedSlot.day]}, ${formatTime(selectedSlot.start_time)}`
                               : "Flexible"}
@@ -447,13 +447,13 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                         {/* Duration */}
                         <div className="flex items-center justify-between px-4 py-3">
                           <span className="text-body-sm text-ink-muted">Duration</span>
-                          <span className="text-body-sm text-ink font-medium">{duration} min</span>
+                          <span className="text-body-sm text-foreground font-medium">{duration} min</span>
                         </div>
 
                         {/* Location */}
                         <div className="flex items-center justify-between px-4 py-3">
                           <span className="text-body-sm text-ink-muted">Location</span>
-                          <span className="text-body-sm text-ink font-medium capitalize">
+                          <span className="text-body-sm text-foreground font-medium capitalize">
                             {locationMode}
                           </span>
                         </div>
@@ -461,14 +461,14 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                         {/* Price */}
                         <div className="flex items-center justify-between px-4 py-3">
                           <span className="text-body-sm text-ink-muted">Total</span>
-                          <span className="text-body font-semibold text-ink">{price}</span>
+                          <span className="text-body font-semibold text-foreground">{price}</span>
                         </div>
                       </div>
 
                       {/* Message preview */}
                       {message.trim().length > 0 && (
-                        <div className="bg-surface rounded-xl border border-hairline px-4 py-3">
-                          <p className="text-caption text-ink-subtle uppercase tracking-wider mb-1.5">
+                        <div className="bg-surface rounded-xl border border-border px-4 py-3">
+                          <p className="text-caption text-ink-muted uppercase tracking-wider mb-1.5">
                             Your message
                           </p>
                           <p className="text-body-sm text-ink-muted leading-relaxed line-clamp-3">
@@ -483,7 +483,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
               </div>
 
               {/* ── Footer: action buttons ──────────────────────── */}
-              <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-hairline bg-surface space-y-3">
+              <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-border bg-surface space-y-3">
                 {step === 1 && (
                   <motion.button
                     whileTap={{ scale: 0.98 }}
@@ -506,7 +506,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                     </motion.button>
                     <button
                       onClick={() => setStep(3)}
-                      className="w-full h-10 text-body-sm text-ink-muted hover:text-ink transition-colors"
+                      className="w-full h-10 text-body-sm text-ink-muted hover:text-foreground transition-colors"
                     >
                       Skip
                     </button>

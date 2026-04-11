@@ -1,13 +1,13 @@
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="mb-16">
     <h2 className="text-display-lg mb-6">{title}</h2>
-    <div className="border-t border-hairline pt-6">{children}</div>
+    <div className="border-t border-border pt-6">{children}</div>
   </section>
 );
 
 const Swatch = ({ name, cssVar, className }: { name: string; cssVar: string; className: string }) => (
   <div className="flex items-center gap-3">
-    <div className={`w-12 h-12 rounded-lg border border-hairline ${className}`} />
+    <div className={`w-12 h-12 rounded-lg border border-border ${className}`} />
     <div>
       <div className="text-label">{name}</div>
       <div className="text-caption text-ink-muted">{cssVar}</div>
@@ -50,7 +50,7 @@ const DesignSystem = () => {
             <h3 className="text-display-sm mb-4">Accent</h3>
             <div className="grid grid-cols-2 gap-4">
               <Swatch name="accent" cssVar="--accent" className="bg-accent" />
-              <Swatch name="accent-soft" cssVar="--accent-soft" className="bg-accent-soft" />
+              <Swatch name="accent-soft" cssVar="--accent-soft" className="bg-accent-light" />
               <Swatch name="accent-foreground" cssVar="--accent-foreground" className="bg-accent-foreground border-2" />
             </div>
           </div>
@@ -97,7 +97,7 @@ const DesignSystem = () => {
             { cls: "text-label", label: "label", spec: "Inter 13/18 · 500" },
             { cls: "text-caption", label: "caption", spec: "Inter 12/16 · 500 · 0.01em" },
           ].map(t => (
-            <div key={t.label} className="flex items-baseline gap-4 border-b border-hairline pb-4">
+            <div key={t.label} className="flex items-baseline gap-4 border-b border-border pb-4">
               <div className="w-28 shrink-0">
                 <div className="text-label text-accent">{t.label}</div>
                 <div className="text-caption text-ink-subtle mt-0.5">{t.spec}</div>
@@ -133,7 +133,7 @@ const DesignSystem = () => {
             { name: "radius-full", cls: "rounded-pill", val: "999px" },
           ].map(r => (
             <div key={r.name} className="flex items-center gap-3">
-              <div className={`w-16 h-16 bg-accent-soft border-2 border-accent ${r.cls}`} />
+              <div className={`w-16 h-16 bg-accent-light border-2 border-accent ${r.cls}`} />
               <div>
                 <div className="text-label">{r.name}</div>
                 <div className="text-caption text-ink-muted">{r.val} · .{r.cls}</div>
@@ -147,7 +147,7 @@ const DesignSystem = () => {
       <Section title="Shadows">
         <div className="grid grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="w-full h-20 bg-surface rounded-lg border border-hairline shadow-none mb-2" />
+            <div className="w-full h-20 bg-surface rounded-lg border border-border shadow-none mb-2" />
             <div className="text-label">shadow-none</div>
             <div className="text-caption text-ink-muted">Default — use borders</div>
           </div>
@@ -182,9 +182,9 @@ const DesignSystem = () => {
           <div>
             <h3 className="text-label text-ink-muted mb-3">Secondary (outline)</h3>
             <div className="flex flex-wrap gap-3">
-              <button className="h-14 px-6 rounded-lg border border-hairline bg-surface font-body font-medium text-base">Default</button>
-              <button className="h-14 px-6 rounded-lg border border-hairline bg-muted font-body font-medium text-base">Hover</button>
-              <button className="h-14 px-6 rounded-lg border border-hairline bg-surface font-body font-medium text-base opacity-40">Disabled</button>
+              <button className="h-14 px-6 rounded-lg border border-border bg-surface font-body font-medium text-base">Default</button>
+              <button className="h-14 px-6 rounded-lg border border-border bg-muted font-body font-medium text-base">Hover</button>
+              <button className="h-14 px-6 rounded-lg border border-border bg-surface font-body font-medium text-base opacity-40">Disabled</button>
             </div>
           </div>
           <div>
@@ -198,7 +198,7 @@ const DesignSystem = () => {
             <h3 className="text-label text-ink-muted mb-3">Chip / pill</h3>
             <div className="flex flex-wrap gap-2">
               <span className="px-4 py-2 rounded-pill bg-accent text-accent-foreground text-sm font-medium">Active</span>
-              <span className="px-4 py-2 rounded-pill bg-surface border border-hairline text-foreground text-sm font-medium">Inactive</span>
+              <span className="px-4 py-2 rounded-pill bg-surface border border-border text-foreground text-sm font-medium">Inactive</span>
               <span className="px-4 py-2 rounded-pill bg-foreground text-background text-sm font-medium">Tab active</span>
               <span className="px-4 py-2 rounded-pill text-muted-ink text-sm font-medium">Tab inactive</span>
             </div>
@@ -211,7 +211,7 @@ const DesignSystem = () => {
         <div className="space-y-4 max-w-sm">
           <div>
             <label className="text-label text-ink-muted mb-1.5 block">Default</label>
-            <input type="text" placeholder="Placeholder text" className="w-full p-3.5 rounded-md border border-hairline bg-surface font-body text-sm" />
+            <input type="text" placeholder="Placeholder text" className="w-full p-3.5 rounded-md border border-border bg-surface font-body text-sm" />
           </div>
           <div>
             <label className="text-label text-ink-muted mb-1.5 block">Focused</label>
@@ -224,7 +224,7 @@ const DesignSystem = () => {
           </div>
           <div>
             <label className="text-label text-ink-subtle mb-1.5 block">Disabled</label>
-            <input type="text" disabled placeholder="Can't edit" className="w-full p-3.5 rounded-md border border-hairline bg-muted font-body text-sm text-ink-subtle cursor-not-allowed" />
+            <input type="text" disabled placeholder="Can't edit" className="w-full p-3.5 rounded-md border border-border bg-muted font-body text-sm text-ink-subtle cursor-not-allowed" />
           </div>
         </div>
       </Section>
@@ -232,8 +232,8 @@ const DesignSystem = () => {
       {/* ── Cards ── */}
       <Section title="Cards">
         <div className="space-y-4">
-          <div className="bg-surface rounded-xl border border-hairline p-4 flex gap-3.5">
-            <div className="w-12 h-12 rounded-full bg-accent-soft flex-shrink-0" />
+          <div className="bg-surface rounded-xl border border-border p-4 flex gap-3.5">
+            <div className="w-12 h-12 rounded-full bg-accent-light flex-shrink-0" />
             <div className="flex-1">
               <div className="text-body font-display font-medium">Karim Haddad</div>
               <div className="text-body-sm text-ink-muted">Computer Science, Senior</div>
@@ -244,7 +244,7 @@ const DesignSystem = () => {
             </div>
             <span className="text-body font-display font-medium">$15<span className="text-caption text-ink-muted font-body">/hr</span></span>
           </div>
-          <div className="bg-surface rounded-xl border border-hairline p-3.5">
+          <div className="bg-surface rounded-xl border border-border p-3.5">
             <div className="w-full h-1 rounded-full bg-accent mb-3" />
             <div className="text-body-sm font-display font-medium">CMPS 200</div>
             <div className="text-caption text-ink-muted">Introduction to Programming</div>
@@ -274,7 +274,7 @@ const DesignSystem = () => {
           <div>
             <h3 className="text-label text-ink-muted mb-3">Status badges</h3>
             <div className="flex gap-2">
-              <span className="text-caption px-2 py-1 rounded-pill bg-accent-soft text-accent font-medium">Online</span>
+              <span className="text-caption px-2 py-1 rounded-pill bg-accent-light text-accent font-medium">Online</span>
               <span className="text-caption px-2 py-1 rounded-pill bg-muted text-foreground font-medium">In-person</span>
               <span className="text-caption px-2 py-1 rounded-pill bg-success/10 text-success font-medium">Completed</span>
               <span className="text-caption px-2 py-1 rounded-pill bg-danger/10 text-danger font-medium">Cancelled</span>
@@ -285,8 +285,8 @@ const DesignSystem = () => {
 
       {/* ── Empty States ── */}
       <Section title="Empty States">
-        <div className="text-center py-12 bg-surface rounded-xl border border-hairline">
-          <div className="w-20 h-20 rounded-full bg-accent-soft mx-auto mb-4 flex items-center justify-center">
+        <div className="text-center py-12 bg-surface rounded-xl border border-border">
+          <div className="w-20 h-20 rounded-full bg-accent-light mx-auto mb-4 flex items-center justify-center">
             <div className="w-8 h-8 rounded-lg bg-accent/20" />
           </div>
           <p className="text-display-sm mb-1">No sessions yet</p>
@@ -298,7 +298,7 @@ const DesignSystem = () => {
       <Section title="Loading Skeletons">
         <p className="text-body-sm text-ink-muted mb-4">Reserved — skeleton components to be built.</p>
         <div className="space-y-3">
-          <div className="bg-surface rounded-xl border border-hairline p-4 flex gap-3.5 animate-pulse">
+          <div className="bg-surface rounded-xl border border-border p-4 flex gap-3.5 animate-pulse">
             <div className="w-12 h-12 rounded-full bg-muted flex-shrink-0" />
             <div className="flex-1 space-y-2">
               <div className="h-4 bg-muted rounded w-32" />

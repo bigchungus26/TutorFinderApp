@@ -27,26 +27,26 @@ function NotificationIcon({ type }: { type: string }) {
   switch (type) {
     case "message":
       return (
-        <div className={cn(base, "bg-accent-soft")}>
+        <div className={cn(base, "bg-accent-light")}>
           <MessageCircle size={16} className="text-accent" />
         </div>
       );
     case "session":
     case "booking":
       return (
-        <div className={cn(base, "bg-accent-soft")}>
+        <div className={cn(base, "bg-accent-light")}>
           <Calendar size={16} className="text-accent" />
         </div>
       );
     case "review":
       return (
-        <div className={cn(base, "bg-accent-soft")}>
+        <div className={cn(base, "bg-accent-light")}>
           <Star size={16} className="text-accent" />
         </div>
       );
     case "course":
       return (
-        <div className={cn(base, "bg-accent-soft")}>
+        <div className={cn(base, "bg-accent-light")}>
           <BookOpen size={16} className="text-accent" />
         </div>
       );
@@ -132,17 +132,17 @@ export function NotificationSheet({ isOpen, onClose, userId }: NotificationSheet
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed bottom-0 left-0 right-0 z-50 max-w-[440px] mx-auto bg-surface rounded-t-2xl border-t border-hairline shadow-float"
+            className="fixed bottom-0 left-0 right-0 z-50 max-w-[440px] mx-auto bg-surface rounded-t-2xl border-t border-border shadow-float"
             style={{ maxHeight: "80vh" }}
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-hairline" />
+              <div className="w-10 h-1 rounded-full bg-border" />
             </div>
 
             {/* Title row */}
             <div className="flex items-center justify-between px-5 py-3">
-              <h2 className="font-display text-display-sm text-ink">Notifications</h2>
+              <h2 className="font-display text-display-sm text-foreground">Notifications</h2>
               <div className="flex items-center gap-2">
                 {hasUnread && (
                   <button
@@ -165,7 +165,7 @@ export function NotificationSheet({ isOpen, onClose, userId }: NotificationSheet
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-hairline mx-5" />
+            <div className="h-px bg-border mx-5" />
 
             {/* Notification list */}
             <div className="overflow-y-auto" style={{ maxHeight: "calc(80vh - 100px)" }}>
@@ -177,10 +177,10 @@ export function NotificationSheet({ isOpen, onClose, userId }: NotificationSheet
 
               {!isLoading && notifications.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-                  <div className="w-14 h-14 rounded-full bg-accent-soft flex items-center justify-center mb-4">
+                  <div className="w-14 h-14 rounded-full bg-accent-light flex items-center justify-center mb-4">
                     <Bell size={24} className="text-accent" />
                   </div>
-                  <p className="text-body font-medium text-ink mb-1">All caught up</p>
+                  <p className="text-body font-medium text-foreground mb-1">All caught up</p>
                   <p className="text-body-sm text-ink-muted">
                     No notifications yet. We'll let you know when something happens.
                   </p>
@@ -192,7 +192,7 @@ export function NotificationSheet({ isOpen, onClose, userId }: NotificationSheet
                   variants={variants.staggerChildren}
                   initial="hidden"
                   animate="visible"
-                  className="divide-y divide-hairline"
+                  className="divide-y divide-border"
                 >
                   {notifications.map((n) => (
                     <motion.li
@@ -203,13 +203,13 @@ export function NotificationSheet({ isOpen, onClose, userId }: NotificationSheet
                         onClick={() => handleNotificationTap(n)}
                         className={cn(
                           "w-full flex items-start gap-3 px-5 py-3.5 text-left transition-colors",
-                          !n.read ? "bg-accent-soft/30" : "hover:bg-muted/50"
+                          !n.read ? "bg-accent-light/30" : "hover:bg-muted/50"
                         )}
                       >
                         <NotificationIcon type={n.type} />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-label text-ink leading-snug">{n.title}</span>
+                            <span className="text-label text-foreground leading-snug">{n.title}</span>
                             <span className="text-caption text-ink-muted flex-shrink-0 mt-0.5">
                               {relativeTime(n.created_at)}
                             </span>
