@@ -107,7 +107,8 @@ export function useTutors(universityId?: string) {
           *,
           tutor_stats (*),
           tutor_courses (*, course:courses(*)),
-          tutor_boosts (*)
+          tutor_boosts (*),
+          tutor_subscriptions (*)
         `)
         .eq("role", "tutor");
       if (universityId) query = query.eq("university_id", universityId);
@@ -389,6 +390,361 @@ export function useUpdateProfile() {
       queryClient.invalidateQueries({ queryKey: ["profile", data.id] });
       queryClient.invalidateQueries({ queryKey: ["tutors"] });
     },
+  });
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+export function useNotifications(userId: string) {
+  return useQuery({
+    queryKey: ["notifications", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+}
+
+// ============================================================
+// NO-SHOWS
+// ============================================================
+export function useNoShows(sessionId: string) {
+  return useQuery({
+    queryKey: ["no-shows", sessionId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("no_shows")
+        .select("*")
+        .eq("session_id", sessionId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!sessionId,
+  });
+}
+
+export function useMyNoShowCount(userId: string, role: "student" | "tutor") {
+  return useQuery({
+    queryKey: ["no-show-count", userId, role],
+    queryFn: async () => {
+      const view = role === "student" ? "student_no_show_counts" : "tutor_no_show_counts";
+      const col  = role === "student" ? "student_id" : "tutor_id";
+      const { data, error } = await supabase
+        .from(view)
+        .select("no_show_count")
+        .eq(col, userId)
+        .single();
+      if (error) return 0;
+      return (data?.no_show_count as number) ?? 0;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useCreateNoShow() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      session_id: string;
+      reported_by: string;
+      no_show_party: "student" | "tutor";
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("no_shows")
+        .insert({ ...payload, notes: payload.notes ?? "" })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["no-shows", vars.session_id] });
+      queryClient.invalidateQueries({ queryKey: ["no-show-count"] });
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      toast.success("No-show reported.");
+    },
+    onError: (err) => toastError(err),
+  });
+}
+
+// ============================================================
+// BLOCKS
+// ============================================================
+export function useMyBlocks(userId: string) {
+  return useQuery({
+    queryKey: ["blocks", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("blocks")
+        .select("*, blocked:profiles!blocks_blocked_id_fkey(id, full_name, avatar_url)")
+        .eq("blocker_id", userId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Array<{
+        id: string; blocker_id: string; blocked_id: string; created_at: string;
+        blocked: { id: string; full_name: string; avatar_url: string } | null;
+      }>;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useBlockedByIds(userId: string) {
+  return useQuery({
+    queryKey: ["blocked-ids", userId],
+    queryFn: async () => {
+      const [byMe, ofMe] = await Promise.all([
+        supabase.from("blocks").select("blocked_id").eq("blocker_id", userId),
+        supabase.from("blocks").select("blocker_id").eq("blocked_id", userId),
+      ]);
+      const ids = new Set<string>();
+      byMe.data?.forEach(r => ids.add(r.blocked_id));
+      ofMe.data?.forEach(r => ids.add(r.blocker_id));
+      return ids;
+    },
+    enabled: !!userId,
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateBlock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ blocker_id, blocked_id }: { blocker_id: string; blocked_id: string }) => {
+      const { data, error } = await supabase
+        .from("blocks")
+        .insert({ blocker_id, blocked_id })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["blocks", vars.blocker_id] });
+      queryClient.invalidateQueries({ queryKey: ["blocked-ids", vars.blocker_id] });
+      toast.success("User blocked.");
+    },
+    onError: (err) => toastError(err),
+  });
+}
+
+export function useDeleteBlock() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ blocker_id, blocked_id }: { blocker_id: string; blocked_id: string }) => {
+      const { error } = await supabase
+        .from("blocks")
+        .delete()
+        .eq("blocker_id", blocker_id)
+        .eq("blocked_id", blocked_id);
+      if (error) throw error;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["blocks", vars.blocker_id] });
+      queryClient.invalidateQueries({ queryKey: ["blocked-ids", vars.blocker_id] });
+      toast.success("User unblocked.");
+    },
+    onError: (err) => toastError(err),
+  });
+}
+
+// ============================================================
+// SEMESTERS
+// ============================================================
+export function useSemesters(universityId?: string) {
+  return useQuery({
+    queryKey: ["semesters", universityId],
+    queryFn: async () => {
+      let q = supabase.from("semesters").select("*").order("start_date");
+      if (universityId) q = q.eq("university_id", universityId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 60 * 60,
+  });
+}
+
+export function useCurrentSemester(universityId?: string) {
+  return useQuery({
+    queryKey: ["current-semester", universityId],
+    queryFn: async () => {
+      let q = supabase.from("semesters").select("*").eq("is_current", true);
+      if (universityId) q = q.eq("university_id", universityId);
+      const { data, error } = await q.limit(1).single();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!universityId,
+    staleTime: 1000 * 60 * 60,
+  });
+}
+
+// ============================================================
+// COURSE SUBMISSIONS
+// ============================================================
+export function useCourseSubmissions(userId: string) {
+  return useQuery({
+    queryKey: ["course-submissions", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("course_submissions")
+        .select("*")
+        .eq("submitted_by", userId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+}
+
+export function useSubmitCourse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      submitted_by: string;
+      university_id: string;
+      code: string;
+      name: string;
+      subject: string;
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("course_submissions")
+        .insert({ ...payload, notes: payload.notes ?? "" })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["course-submissions", vars.submitted_by] });
+      toast.success("Thanks! We'll review and add it soon.");
+    },
+    onError: (err) => toastError(err),
+  });
+}
+
+// ============================================================
+// SUPPORT TICKETS
+// ============================================================
+export function useCreateSupportTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: { user_id: string; subject: string; message: string }) => {
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .insert(payload)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["support-tickets", vars.user_id] });
+      toast.success("Support request sent. We'll respond within 48 hours.");
+    },
+    onError: (err) => toastError(err),
+  });
+}
+
+// ============================================================
+// SUBSCRIPTION STATUS
+// ============================================================
+export function useTutorSubscription(tutorId: string) {
+  return useQuery({
+    queryKey: ["subscription", tutorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tutor_subscriptions")
+        .select("*")
+        .eq("tutor_id", tutorId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!tutorId,
+    staleTime: 60_000,
+  });
+}
+
+export function useAdminUpdateSubscription() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      tutor_id: string;
+      status: "active" | "grace_period" | "inactive";
+      current_period_end?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("tutor_subscriptions")
+        .upsert({ ...payload, updated_at: new Date().toISOString() }, { onConflict: "tutor_id" })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["subscription", vars.tutor_id] });
+      queryClient.invalidateQueries({ queryKey: ["tutors"] });
+      toast.success("Subscription updated.");
+    },
+    onError: (err) => toastError(err),
+  });
+}
+
+export function useAdminUpdateBoost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      tutor_id: string;
+      active: boolean;
+      ends_at?: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("tutor_boosts")
+        .upsert({
+          tutor_id: payload.tutor_id,
+          active: payload.active,
+          ends_at: payload.ends_at ?? null,
+          started_at: payload.active ? new Date().toISOString() : null,
+        }, { onConflict: "tutor_id" })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_d, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["tutors"] });
+      toast.success("Boost updated.");
+    },
+    onError: (err) => toastError(err),
+  });
+}
+
+export function useAdminTutors() {
+  return useQuery({
+    queryKey: ["admin-tutors"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`*, tutor_stats(*), tutor_subscriptions(*), tutor_boosts(*)`)
+        .eq("role", "tutor")
+        .order("full_name");
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 30_000,
   });
 }
 

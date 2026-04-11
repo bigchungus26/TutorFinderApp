@@ -10,7 +10,7 @@ import {
   ArrowLeft, Heart, Star, BadgeCheck, Video, MapPin,
   Clock, Flag, ChevronRight, MessageCircle, Share2,
 } from "lucide-react";
-import { useTutor, useReviews, useUniversities } from "@/hooks/useSupabaseQuery";
+import { useTutor, useReviews, useUniversities, useCreateBlock } from "@/hooks/useSupabaseQuery";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useIsTutorSaved, useSaveTutor, useUnsaveTutor } from "@/hooks/useSavedTutors";
 import { useCreateReport, ReportReason } from "@/hooks/useReports";
@@ -152,9 +152,12 @@ const TutorProfilePage = () => {
   const [selectedSlot, setSelectedSlot] = useState<{ day: number; start_time: string; end_time: string } | null>(null);
   const [reviewsSheetOpen, setReviewsSheetOpen] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [reportReason, setReportReason] = useState<ReportReason>("inappropriate");
   const [reportDetails, setReportDetails] = useState("");
   const [reviewFilter, setReviewFilter] = useState<"all" | "mine">("all");
+
+  const createBlock = useCreateBlock();
 
   // Story 29: Log a profile view once per viewer per day
   useEffect(() => {
@@ -230,6 +233,13 @@ const TutorProfilePage = () => {
       { reporterId: studentId, reportedTutorId: tutorId, reason: reportReason, details: reportDetails },
       { onSuccess: () => { setReportSheetOpen(false); setReportDetails(""); setReportReason("inappropriate"); } }
     );
+  };
+
+  const handleBlock = async () => {
+    if (!studentId) return;
+    await createBlock.mutateAsync({ blocker_id: studentId, blocked_id: tutorId });
+    setBlockConfirmOpen(false);
+    navigate(-1);
   };
 
   if (isLoading) return <PageSkeleton />;
@@ -527,15 +537,23 @@ const TutorProfilePage = () => {
             </section>
           )}
 
-          {/* Report */}
-          <section className="pb-4">
+          {/* Report + Block */}
+          <section className="pb-4 flex items-center gap-5">
             <button
               onClick={() => setReportSheetOpen(true)}
               className="flex items-center gap-2 text-ink-muted text-body-sm hover:text-foreground transition-colors"
             >
               <Flag size={14} />
-              Report this tutor
+              Report
             </button>
+            {studentId && studentId !== tutorId && (
+              <button
+                onClick={() => setBlockConfirmOpen(true)}
+                className="flex items-center gap-2 text-ink-muted text-body-sm hover:text-red-500 transition-colors"
+              >
+                Block user
+              </button>
+            )}
           </section>
         </div>
       </div>
@@ -587,6 +605,39 @@ const TutorProfilePage = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Block confirmation modal */}
+      <AnimatePresence>
+        {blockConfirmOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 z-[80]" onClick={() => setBlockConfirmOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }} transition={springs.smooth}
+              className="fixed inset-x-5 top-1/2 -translate-y-1/2 z-[90] bg-surface rounded-2xl p-6 max-w-sm mx-auto shadow-xl"
+              role="dialog" aria-modal="true"
+            >
+              <h3 className="text-h2 font-display text-foreground mb-2">Block {tutor?.full_name}?</h3>
+              <p className="text-body-sm text-ink-muted mb-6">
+                They won't be able to message you, and you won't see each other in search. Existing sessions remain visible.
+              </p>
+              <div className="flex gap-3">
+                <motion.button whileTap={{ scale: 0.97 }} transition={springs.snappy}
+                  onClick={() => setBlockConfirmOpen(false)}
+                  className="flex-1 h-11 rounded-xl border border-border text-foreground text-label font-medium">
+                  Cancel
+                </motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} transition={springs.snappy}
+                  onClick={handleBlock} disabled={createBlock.isPending}
+                  className="flex-1 h-11 rounded-xl bg-red-500 text-white text-label font-semibold disabled:opacity-60">
+                  {createBlock.isPending ? "Blocking…" : "Block"}
+                </motion.button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Report sheet */}
       <Sheet open={reportSheetOpen} onOpenChange={setReportSheetOpen}>

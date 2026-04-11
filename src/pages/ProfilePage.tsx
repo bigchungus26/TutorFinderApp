@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   LogOut, ChevronRight, X, Moon, Sun, Monitor,
-  BookOpen, PenLine, Check, Heart, MessageCircle,
+  BookOpen, PenLine, Check, Heart, MessageCircle, UserX, HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUniversity } from "@/contexts/UniversityContext";
@@ -438,6 +438,8 @@ const ProfilePage = () => {
         <div className="bg-surface rounded-2xl border border-border divide-y divide-border mb-5">
           <SettingsRow icon={PenLine} label="Edit profile" onClick={() => setEditProfileOpen(true)} />
           <SettingsRow icon={MessageCircle} label="Messages" sublabel="Open your conversations" onClick={() => navigate("/messages")} />
+          <SettingsRow icon={UserX} label="Blocked users" sublabel="Manage who you've blocked" onClick={() => navigate("/profile/blocked")} />
+          <SettingsRow icon={HelpCircle} label="Help & support" sublabel="Get help or report an issue" onClick={() => navigate("/support")} />
           <div className="flex items-center gap-3 px-4 py-3.5">
             <Monitor size={20} className="text-ink-muted flex-shrink-0" />
             <div className="flex-1">

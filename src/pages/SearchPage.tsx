@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search as SearchIcon, SlidersHorizontal, X, Star, Clock } from "lucide-react";
 import { useUniversity } from "@/contexts/UniversityContext";
-import { useCourses, useTutors, useUniversities } from "@/hooks/useSupabaseQuery";
+import { useCourses, useTutors, useUniversities, useBlockedByIds, useSubmitCourse } from "@/hooks/useSupabaseQuery";
+import { useAuth } from "@/contexts/AuthContext";
 import { TutorCard } from "@/components/TutorCard";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
@@ -68,85 +69,72 @@ function removeRecent(term: string) {
   saveRecent(loadRecent().filter(s => s !== term));
 }
 
-// ── Course request sheet ─────────────────────────────────────
-function CourseRequestSheet({ open, onClose, initialCourse, universityId }: {
-  open: boolean; onClose: () => void; initialCourse?: string; universityId: string;
+// ── Course submission sheet ─────────────────────────────────────
+export function CourseSubmissionSheet({ open, onClose, initialCode, universityId }: {
+  open: boolean; onClose: () => void; initialCode?: string; universityId: string;
 }) {
-  const [courseCode, setCourseCode] = useState(initialCourse ?? "");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const { user } = useAuth();
+  const submitCourse = useSubmitCourse();
+  const [code, setCode] = useState(initialCode ?? "");
+  const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
+  const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    if (open) { setCourseCode(initialCourse ?? ""); setMessage(""); setSubmitted(false); }
-  }, [open, initialCourse]);
+    if (open) { setCode(initialCode ?? ""); setName(""); setSubject(""); setNotes(""); }
+  }, [open, initialCode]);
 
   const handleSubmit = async () => {
-    if (!courseCode.trim()) return;
-    setLoading(true);
-    try {
-      await supabase.from("course_requests").insert({
-        course_code: courseCode.trim().toUpperCase(),
-        message: message.trim(),
-        university_id: universityId,
-      });
-      setSubmitted(true);
-    } catch { /* silent */ }
-    finally { setLoading(false); }
+    if (!user?.id || !code.trim() || !name.trim()) return;
+    await submitCourse.mutateAsync({
+      submitted_by: user.id,
+      university_id: universityId,
+      code: code.trim().toUpperCase(),
+      name: name.trim(),
+      subject: subject.trim(),
+      notes: notes.trim(),
+    });
+    onClose();
   };
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
       <SheetContent side="bottom" className="rounded-t-2xl pb-10">
         <SheetHeader className="mb-5">
-          <SheetTitle className="text-h2 font-display">Request a course</SheetTitle>
+          <SheetTitle className="text-h2 font-display">Submit a course</SheetTitle>
         </SheetHeader>
-        {submitted ? (
-          <div className="text-center py-8">
-            <div className="w-14 h-14 rounded-full bg-accent-light flex items-center justify-center mx-auto mb-4">
-              <SearchIcon size={22} className="text-accent" />
-            </div>
-            <p className="text-body font-medium text-foreground mb-1">Request submitted!</p>
-            <p className="text-body-sm text-ink-muted">
-              We'll notify you when a tutor is available for {courseCode}.
-            </p>
+        <div className="space-y-3 mb-5">
+          <div>
+            <label className="text-label text-ink-muted block mb-1.5">Course code <span className="text-red-400">*</span></label>
+            <input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CMPS 200"
+              style={{ fontSize: "16px" }}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors" />
           </div>
-        ) : (
-          <>
-            <div className="space-y-3 mb-5">
-              <div>
-                <label className="text-label text-ink-muted block mb-1.5">Course code</label>
-                <input
-                  value={courseCode}
-                  onChange={e => setCourseCode(e.target.value)}
-                  placeholder="e.g. CMPS 200"
-                  style={{ fontSize: "16px" }}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors"
-                />
-              </div>
-              <div>
-                <label className="text-label text-ink-muted block mb-1.5">Message (optional)</label>
-                <textarea
-                  value={message}
-                  onChange={e => setMessage(e.target.value)}
-                  placeholder="Any specific topics you need help with?"
-                  rows={3}
-                  style={{ fontSize: "16px" }}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted resize-none focus:outline-none focus:border-accent transition-colors"
-                />
-              </div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              transition={springs.snappy}
-              onClick={handleSubmit}
-              disabled={loading || !courseCode.trim()}
-              className="w-full h-13 rounded-xl bg-accent text-white text-label font-semibold disabled:opacity-50"
-            >
-              {loading ? "Submitting…" : "Submit request"}
-            </motion.button>
-          </>
-        )}
+          <div>
+            <label className="text-label text-ink-muted block mb-1.5">Course name <span className="text-red-400">*</span></label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Introduction to Computer Science"
+              style={{ fontSize: "16px" }}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors" />
+          </div>
+          <div>
+            <label className="text-label text-ink-muted block mb-1.5">Subject / department</label>
+            <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Computer Science"
+              style={{ fontSize: "16px" }}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors" />
+          </div>
+          <div>
+            <label className="text-label text-ink-muted block mb-1.5">Notes (optional)</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)}
+              placeholder="Any additional context…" rows={2} style={{ fontSize: "16px" }}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-muted resize-none focus:outline-none focus:border-accent transition-colors" />
+          </div>
+        </div>
+        <motion.button whileTap={{ scale: 0.97 }} transition={springs.snappy}
+          onClick={handleSubmit}
+          disabled={submitCourse.isPending || !code.trim() || !name.trim()}
+          className="w-full h-13 rounded-xl bg-accent text-white text-label font-semibold disabled:opacity-50">
+          {submitCourse.isPending ? "Submitting…" : "Submit course"}
+        </motion.button>
       </SheetContent>
     </Sheet>
   );
@@ -328,6 +316,7 @@ const SearchPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { selectedUniversity } = useUniversity();
+  const { user } = useAuth();
 
   const [rawQuery, setRawQuery] = useState(searchParams.get("subject") || "");
   const [query, setQuery] = useState(rawQuery);
@@ -361,6 +350,7 @@ const SearchPage = () => {
   const { data: courses = [] } = useCourses(selectedUniversity);
   const { data: tutors = [] } = useTutors(selectedUniversity);
   const { data: universities = [] } = useUniversities();
+  const { data: blockedIds } = useBlockedByIds(user?.id ?? "");
 
   const filteredCourses = useMemo(() => {
     if (!query) return courses;
@@ -383,7 +373,15 @@ const SearchPage = () => {
   }, [query, courses, codeOnly]);
 
   const filteredTutors = useMemo(() => {
-    let result = [...tutors];
+    // Filter: skip blocked users and inactive-subscription tutors
+    let result = tutors.filter((t: any) => {
+      if (blockedIds?.has(t.id)) return false;
+      // Subscription check: hide tutors whose subscription is inactive
+      const sub = t.tutor_subscriptions;
+      const s = Array.isArray(sub) ? sub[0] : sub;
+      if (s && s.status === "inactive") return false;
+      return true;
+    });
 
     if (query) {
       const q = query.toLowerCase();
@@ -618,7 +616,7 @@ const SearchPage = () => {
       </div>
 
       {/* Courses section */}
-      {(activeTab === "All" || activeTab === "Courses") && filteredCourses.length > 0 && (
+      {(activeTab === "All" || activeTab === "Courses") && (filteredCourses.length > 0 || !!rawQuery) && (
         <div className="mb-6">
           {activeTab === "All" && (
             <p className="text-overline text-ink-muted mb-2">Courses</p>
@@ -651,6 +649,15 @@ const SearchPage = () => {
                 </motion.div>
               );
             })}
+            {/* Don't see your course? */}
+            <motion.button
+              variants={variants.staggerItem}
+              whileTap={{ scale: 0.98 }} transition={springs.snappy}
+              onClick={() => setCourseRequestOpen(true)}
+              className="w-full text-left px-4 py-3 rounded-xl border border-dashed border-border text-body-sm text-ink-muted hover:border-accent hover:text-accent transition-colors"
+            >
+              Don't see your course? Submit it →
+            </motion.button>
           </motion.div>
         </div>
       )}
@@ -701,7 +708,7 @@ const SearchPage = () => {
       {/* Sheets */}
       <UniversitySwitcher open={uniSwitcherOpen} onClose={() => setUniSwitcherOpen(false)} />
       <FilterSheet open={filtersOpen} onClose={() => setFiltersOpen(false)} filters={appliedFilters} onApply={setAppliedFilters} />
-      <CourseRequestSheet open={courseRequestOpen} onClose={() => setCourseRequestOpen(false)} initialCourse={rawQuery} universityId={selectedUniversity} />
+      <CourseSubmissionSheet open={courseRequestOpen} onClose={() => setCourseRequestOpen(false)} initialCode={rawQuery} universityId={selectedUniversity} />
     </div>
   );
 };

@@ -43,6 +43,9 @@ const SavedTutorsPage = lazy(() => import("@/pages/SavedTutorsPage"));
 const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
 const MessageThreadPage = lazy(() => import("@/pages/MessageThreadPage"));
 const OfflinePage = lazy(() => import("@/pages/OfflinePage"));
+const BlockedUsersPage = lazy(() => import("@/pages/BlockedUsersPage"));
+const SupportPage = lazy(() => import("@/pages/SupportPage"));
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,6 +105,12 @@ const AppRoutes = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfUse />} />
         <Route path="/design-system" element={<DesignSystem />} />
+        <Route path="/support" element={<SupportPage />} />
+
+        {/* ── Admin (gated by VITE_ADMIN_USER_IDS) ───── */}
+        <Route path="/admin/:section?" element={
+          <RequireAuth><AdminPage /></RequireAuth>
+        } />
 
         {/* ── Role selection (authenticated but no role) ─ */}
         <Route path="/choose-role" element={<Navigate to="/?switch=1" replace />} />
@@ -142,6 +151,9 @@ const AppRoutes = () => {
           <RequireAuth>
             <StudentLayout><ProfilePage /></StudentLayout>
           </RequireAuth>
+        } />
+        <Route path="/profile/blocked" element={
+          <RequireAuth><BlockedUsersPage /></RequireAuth>
         } />
         <Route path="/saved" element={
           <RequireAuth>
