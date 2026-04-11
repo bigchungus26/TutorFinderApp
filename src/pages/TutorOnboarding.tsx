@@ -516,6 +516,16 @@ function TutorOnboarding() {
     setStep(next);
   };
 
+  const handleBackAction = () => {
+    if (step === 0) {
+      persistDraft(0);
+      navigate("/choose-role");
+      return;
+    }
+
+    goBack();
+  };
+
   const canContinue = [
     Boolean(fullName.trim() && selectedUni && selectedMajor),
     Boolean(selectedYear && selectedCourses.length > 0),
@@ -1018,18 +1028,14 @@ function TutorOnboarding() {
 
       <div className="shrink-0 border-t border-border/80 bg-background px-5 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-4 sm:px-6">
         <div className="mb-3 flex items-center justify-between">
-          {step > 0 ? (
-            <button
-              type="button"
-              onClick={goBack}
-              className="inline-flex items-center gap-2 text-sm font-medium text-ink-muted transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </button>
-          ) : (
-            <span />
-          )}
+          <button
+            type="button"
+            onClick={handleBackAction}
+            className="inline-flex items-center gap-2 text-sm font-medium text-ink-muted transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
           <Link to="/terms" target="_blank" className="text-xs text-ink-muted transition-colors hover:text-accent">
             Terms & privacy
           </Link>

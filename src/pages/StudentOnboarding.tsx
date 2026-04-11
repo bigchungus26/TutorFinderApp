@@ -133,6 +133,16 @@ const StudentOnboarding = () => {
     setStep(prev);
   };
 
+  const handleBackAction = () => {
+    if (step === 0) {
+      persistDraft(0);
+      navigate("/choose-role");
+      return;
+    }
+
+    goBack();
+  };
+
   const toggleCourse = (id: string) => {
     setSelectedCourseIds(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -250,17 +260,15 @@ const StudentOnboarding = () => {
 
       {/* Bottom nav */}
       <div className="px-5 pb-10 pt-4 space-y-3 bg-background z-10">
-        {step > 0 && (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            transition={springs.snappy}
-            onClick={goBack}
-            className="flex items-center gap-1.5 text-ink-muted text-body-sm"
-          >
-            <ArrowLeft size={16} />
-            Back
-          </motion.button>
-        )}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          transition={springs.snappy}
+          onClick={handleBackAction}
+          className="flex items-center gap-1.5 text-ink-muted text-body-sm"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </motion.button>
 
         {step < TOTAL_STEPS - 1 ? (
           <motion.button
