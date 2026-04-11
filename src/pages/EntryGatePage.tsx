@@ -6,11 +6,14 @@
 // ============================================================
 import { motion } from "framer-motion";
 import { useNavigate, Navigate, Link, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { getSelectedRole, getRoleLandingPath, setSelectedRole } from "@/lib/rolePreference";
+import { toast } from "@/components/ui/sonner";
 import { variants, springs } from "@/lib/motion";
 
 const EntryGatePage = () => {
   const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
   const [searchParams] = useSearchParams();
   const storedRole = getSelectedRole();
   const isSwitchMode = searchParams.get("switch") === "1";
@@ -19,8 +22,18 @@ const EntryGatePage = () => {
     return <Navigate to={getRoleLandingPath(storedRole)} replace />;
   }
 
-  const handleRoleSelect = (role: "student" | "tutor") => {
+  const handleRoleSelect = async (role: "student" | "tutor") => {
     setSelectedRole(role);
+
+    if (user && !profile?.onboarded_at) {
+      try {
+        await signOut();
+      } catch (error) {
+        toast("We couldn't reset your current session. Please try again.");
+        return;
+      }
+    }
+
     navigate("/signup");
   };
 
@@ -86,7 +99,7 @@ const EntryGatePage = () => {
           variants={variants.fadeSlideUp}
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
-          onClick={() => handleRoleSelect("student")}
+          onClick={() => void handleRoleSelect("student")}
           className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
           style={{
             background: "linear-gradient(160deg, rgba(43,166,106,0.12) 0%, rgba(43,166,106,0.05) 100%)",
@@ -115,7 +128,7 @@ const EntryGatePage = () => {
           variants={variants.fadeSlideUp}
           whileTap={{ scale: 0.97 }}
           transition={springs.snappy}
-          onClick={() => handleRoleSelect("tutor")}
+          onClick={() => void handleRoleSelect("tutor")}
           className="flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border border-border"
           style={{
             background: "linear-gradient(160deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.05) 100%)",
