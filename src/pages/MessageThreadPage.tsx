@@ -70,17 +70,12 @@ const MessageThreadPage = () => {
   const handleSend = () => {
     const trimmed = body.trim();
     if (!trimmed || !conversationId || !currentUserId) return;
-    sendMessage.mutate(
-      { conversationId, senderId: currentUserId, body: trimmed },
-      {
-        onSuccess: () => {
-          setBody("");
-          if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-          }
-        },
-      }
-    );
+    const messageBody = trimmed;
+    setBody("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+    sendMessage.mutate({ conversationId, senderId: currentUserId, body: messageBody });
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -169,7 +164,7 @@ const MessageThreadPage = () => {
         <motion.button
           whileTap={{ scale: 0.92 }}
           onClick={handleSend}
-          disabled={!body.trim() || sendMessage.isPending}
+          disabled={!body.trim()}
           aria-label="Send message"
           className="flex-shrink-0 w-10 h-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center disabled:opacity-40 transition-opacity"
         >
