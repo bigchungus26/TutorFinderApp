@@ -17,6 +17,7 @@ import { useCreateReport, ReportReason } from "@/hooks/useReports";
 import { useOpenConversation } from "@/hooks/useOpenConversation";
 import { useAuth } from "@/contexts/AuthContext";
 import { springs, variants } from "@/lib/motion";
+import type { TutorWithDetails } from "@/types/database";
 import { Avatar } from "@/components/Avatar";
 import { Skeleton } from "@/components/skeletons/Skeleton";
 import { QueryError } from "@/components/ErrorBoundary";
@@ -193,7 +194,7 @@ const TutorProfilePage = () => {
 
     if (!studentId) return;
     if (isSaved) unsaveTutor.mutate({ studentId, tutorId });
-    else saveTutor.mutate({ studentId, tutorId });
+    else saveTutor.mutate({ studentId, tutorId, tutor: tutor as TutorWithDetails });
   };
 
   const handleMessage = async () => {
