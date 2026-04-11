@@ -139,11 +139,11 @@ function Section({ title, overline, children }: SectionProps) {
       className="mb-8"
     >
       {overline && (
-        <motion.p variants={variants.staggerItem} className="text-overline text-ink-muted mb-1">
+        <motion.p variants={variants.staggerItem} className="text-overline mb-1 font-bold tracking-widest" style={{ color: "hsl(158 76% 32%)" }}>
           {overline}
         </motion.p>
       )}
-      <motion.h2 variants={variants.staggerItem} className="text-display-sm mb-3">
+      <motion.h2 variants={variants.staggerItem} className="text-display-sm mb-3 text-ink">
         {title}
       </motion.h2>
       {children}
@@ -319,20 +319,19 @@ const DiscoverPage = () => {
       {/* ── Scrollable container ───────────────────────────── */}
       <div
         ref={scrollRef}
-        className="overflow-y-auto h-full pb-6"
+        className="overflow-y-auto pb-6"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
           paddingTop: isRefreshing ? 48 : undefined,
           transition: "padding-top 0.2s",
+          background: "linear-gradient(160deg, hsl(152 60% 88%) 0%, hsl(152 25% 95%) 40%, hsl(35 55% 94%) 100%)",
+          minHeight: "100dvh",
         }}
       >
-        {/* ── Gradient header area ─────────────────────────── */}
-        <div
-          className="px-5 pt-14 pb-6 -mx-0"
-          style={{ background: "linear-gradient(180deg, hsl(152 55% 88%) 0%, hsl(152 40% 93%) 50%, transparent 100%)" }}
-        >
+        {/* ── Header area ─────────────────────────── */}
+        <div className="px-5 pt-14 pb-5">
           {/* ── 1. Greeting header ──────────────────────────── */}
           <motion.div
             variants={variants.fadeSlideDown}

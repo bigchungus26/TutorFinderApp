@@ -4,7 +4,6 @@ import { Sparkles, Search, Calendar, User } from "lucide-react";
 import { ReactNode } from "react";
 import { Footer } from "@/components/Footer";
 import { tabVariants } from "@/lib/motion";
-import { AmbientBackground } from "@/components/AmbientBackground";
 
 const tabs = [
   { path: "/discover", icon: Sparkles, label: "Discover" },
@@ -24,8 +23,7 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
   )?.path ?? "/discover";
 
   return (
-    <div className="min-h-[100dvh] relative overflow-x-hidden">
-      <AmbientBackground />
+    <div className="min-h-[100dvh] relative overflow-x-hidden bg-background">
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
@@ -41,8 +39,8 @@ export const StudentLayout = ({ children }: { children: ReactNode }) => {
       <Footer />
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-48px)] max-w-[392px]">
         <nav
-          className="bg-surface rounded-2xl border border-hairline flex items-center justify-around px-2 py-2"
-          style={{ boxShadow: "0 8px 32px rgba(20,20,20,0.10), 0 2px 8px rgba(20,20,20,0.06)" }}
+          className="rounded-2xl border border-white/60 flex items-center justify-around px-2 py-2"
+          style={{ background: "rgba(255,255,255,0.82)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", boxShadow: "0 8px 32px rgba(20,20,20,0.12), 0 2px 8px rgba(20,20,20,0.06)" }}
           aria-label="Main navigation"
         >
           {tabs.map(tab => {
