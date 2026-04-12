@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   LogOut, ChevronRight, X, Moon, Sun, Monitor,
-  BookOpen, PenLine, Check, Heart, MessageCircle, UserX, HelpCircle,
+  BookOpen, PenLine, Heart, MessageCircle, UserX, HelpCircle, ArrowLeft, Plus,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUniversity } from "@/contexts/UniversityContext";
@@ -156,6 +156,7 @@ function EditProfileSheet({ profile, onClose }: {
 function CoursesEditSheet({ studentId, currentCourseIds, universityId, onClose }: {
   studentId: string; currentCourseIds: string[]; universityId?: string | null; onClose: () => void;
 }) {
+  const [view, setView] = useState<"edit" | "search">("edit");
   const [selected, setSelected] = useState<Set<string>>(new Set(currentCourseIds));
   const [search, setSearch] = useState("");
   const setStudentCourses = useSetStudentCourses();
@@ -172,16 +173,16 @@ function CoursesEditSheet({ studentId, currentCourseIds, universityId, onClose }
     return () => { cancelled = true; };
   }, [universityId]);
 
-  const filtered = courses.filter(c =>
-    c.code.toLowerCase().includes(search.toLowerCase()) ||
-    c.name.toLowerCase().includes(search.toLowerCase())
+  const selectedCourses = courses.filter(c => selected.has(c.id));
+  const searchResults = courses.filter(c =>
+    !selected.has(c.id) && (
+      c.code.toLowerCase().includes(search.toLowerCase()) ||
+      c.name.toLowerCase().includes(search.toLowerCase())
+    )
   );
 
-  const toggle = (id: string) => setSelected(prev => {
-    const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
-    return next;
-  });
+  const remove = (id: string) => setSelected(prev => { const next = new Set(prev); next.delete(id); return next; });
+  const add    = (id: string) => setSelected(prev => new Set(prev).add(id));
 
   const handleSave = useCallback(async () => {
     try {
@@ -190,6 +191,9 @@ function CoursesEditSheet({ studentId, currentCourseIds, universityId, onClose }
       onClose();
     } catch (err) { toastError(err); }
   }, [studentId, selected, setStudentCourses, onClose]);
+
+  const goToSearch = () => { setSearch(""); setView("search"); };
+  const goToEdit   = () => { setSearch(""); setView("edit"); };
 
   return (
     <>
@@ -205,59 +209,118 @@ function CoursesEditSheet({ studentId, currentCourseIds, universityId, onClose }
         style={{ maxHeight: "88dvh" }}
         role="dialog" aria-modal="true" aria-label="Edit courses"
       >
+        {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-10 h-1 rounded-full bg-border" />
         </div>
+
+        {/* Header */}
         <div className="flex items-center justify-between px-5 pt-2 pb-3 flex-shrink-0">
-          <h2 className="text-h2 font-display text-foreground">My courses</h2>
+          {view === "search" ? (
+            <motion.button whileTap={{ scale: 0.96 }} transition={springs.snappy}
+              onClick={goToEdit}
+              className="p-2 -ml-2 rounded-xl hover:bg-muted" aria-label="Back">
+              <ArrowLeft size={20} className="text-ink-muted" />
+            </motion.button>
+          ) : (
+            <div className="w-9" />
+          )}
+          <h2 className="text-h2 font-display text-foreground">
+            {view === "edit" ? "My courses" : "Add courses"}
+          </h2>
           <motion.button whileTap={{ scale: 0.96 }} transition={springs.snappy} onClick={onClose}
             className="p-2 -mr-2 rounded-xl hover:bg-muted" aria-label="Close">
             <X size={20} className="text-ink-muted" />
           </motion.button>
         </div>
-        <div className="px-5 pb-3 flex-shrink-0">
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search courses…" style={{ fontSize: "16px" }}
-            className="w-full h-11 rounded-xl border border-border bg-background px-3.5 text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors"
-          />
-        </div>
-        <div className="flex-1 overflow-y-auto px-5 pb-2">
-          {filtered.length === 0 ? (
-            <p className="text-body-sm text-ink-muted text-center py-8">No courses found.</p>
-          ) : (
-            <div className="space-y-1">
-              {filtered.map(course => {
-                const isSel = selected.has(course.id);
-                return (
-                  <motion.button
-                    key={course.id}
-                    whileTap={{ scale: 0.98 }} transition={springs.snappy}
-                    onClick={() => toggle(course.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-colors ${isSel ? "bg-accent-light" : "hover:bg-muted"}`}
-                  >
-                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${isSel ? "bg-accent border-accent" : "border-border"}`}>
-                      {isSel && <Check size={12} className="text-white" />}
+
+        {view === "edit" ? (
+          <>
+            {/* Selected courses list */}
+            <div className="flex-1 overflow-y-auto px-5 pb-2">
+              {selectedCourses.length === 0 ? (
+                <p className="text-body-sm text-ink-muted text-center py-8">No courses added yet.</p>
+              ) : (
+                <div className="space-y-2 mb-3">
+                  {selectedCourses.map(course => (
+                    <div key={course.id} className="flex items-center gap-3 px-3 py-3 rounded-xl bg-accent-light">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-label font-medium text-accent">{course.code}</p>
+                        <p className="text-caption text-ink-muted truncate">{course.name}</p>
+                      </div>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }} transition={springs.snappy}
+                        onClick={() => remove(course.id)}
+                        className="w-7 h-7 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0"
+                        aria-label={`Remove ${course.code}`}
+                      >
+                        <X size={14} className="text-accent" />
+                      </motion.button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-label font-medium ${isSel ? "text-accent" : "text-foreground"}`}>{course.code}</p>
-                      <p className="text-caption text-ink-muted truncate">{course.name}</p>
-                    </div>
-                  </motion.button>
-                );
-              })}
+                  ))}
+                </div>
+              )}
+              {/* Add button */}
+              <motion.button
+                whileTap={{ scale: 0.97 }} transition={springs.snappy}
+                onClick={goToSearch}
+                className="w-full py-3 rounded-xl border border-dashed border-accent/50 text-body-sm text-accent font-medium hover:bg-accent-light transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Plus size={15} />
+                Add courses
+              </motion.button>
             </div>
-          )}
-        </div>
-        <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-border bg-surface">
-          <motion.button
-            whileTap={{ scale: 0.97 }} transition={springs.snappy}
-            onClick={handleSave} disabled={setStudentCourses.isPending}
-            className="w-full h-14 rounded-2xl bg-accent text-white text-label font-semibold disabled:opacity-40"
-          >
-            {setStudentCourses.isPending ? "Saving…" : `Save (${selected.size} selected)`}
-          </motion.button>
-        </div>
+
+            {/* Save */}
+            <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-border bg-surface">
+              <motion.button
+                whileTap={{ scale: 0.97 }} transition={springs.snappy}
+                onClick={handleSave} disabled={setStudentCourses.isPending}
+                className="w-full h-14 rounded-2xl bg-accent text-white text-label font-semibold disabled:opacity-40"
+              >
+                {setStudentCourses.isPending ? "Saving…" : `Save${selected.size > 0 ? ` (${selected.size})` : ""}`}
+              </motion.button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Search input */}
+            <div className="px-5 pb-3 flex-shrink-0">
+              <input
+                autoFocus
+                value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Search courses…" style={{ fontSize: "16px" }}
+                className="w-full h-11 rounded-xl border border-border bg-background px-3.5 text-foreground placeholder:text-ink-muted focus:outline-none focus:border-accent transition-colors"
+              />
+            </div>
+
+            {/* Course results */}
+            <div className="flex-1 overflow-y-auto px-5 pb-8">
+              {searchResults.length === 0 ? (
+                <p className="text-body-sm text-ink-muted text-center py-8">
+                  {search ? "No matching courses." : "All available courses already added."}
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  {searchResults.map(course => (
+                    <motion.button
+                      key={course.id}
+                      whileTap={{ scale: 0.98 }} transition={springs.snappy}
+                      onClick={() => add(course.id)}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left hover:bg-muted transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-label font-medium text-foreground">{course.code}</p>
+                        <p className="text-caption text-ink-muted truncate">{course.name}</p>
+                      </div>
+                      <Plus size={16} className="text-ink-muted flex-shrink-0" />
+                    </motion.button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </motion.div>
     </>
   );
