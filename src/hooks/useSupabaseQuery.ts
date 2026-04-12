@@ -11,6 +11,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/types/database";
 import { toast, toastError } from "@/components/ui/sonner";
+import {
+  clearSupabaseResourceMissing,
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 // ============================================================
 // UNIVERSITIES
@@ -219,18 +225,55 @@ export function useSessions(userId: string, role: "student" | "tutor") {
   return useQuery({
     queryKey: ["sessions", userId, role],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("sessions")) {
+        return [];
+      }
+
       const column = role === "student" ? "student_id" : "tutor_id";
-      const { data, error } = await supabase
-        .from("sessions")
-        .select(`
+      const richSelect = `
           *,
           tutor:profiles!sessions_tutor_id_fkey (full_name, avatar_url, cancellation_hours),
           student:profiles!sessions_student_id_fkey (full_name, avatar_url),
           course:courses (code, name)
-        `)
+        `;
+      const fallbackSelect = `
+          *,
+          tutor:profiles!sessions_tutor_id_fkey (full_name, avatar_url),
+          student:profiles!sessions_student_id_fkey (full_name, avatar_url),
+          course:courses (code, name)
+        `;
+
+      const { data, error } = await supabase
+        .from("sessions")
+        .select(richSelect)
         .eq(column, userId)
         .order("date", { ascending: false });
-      if (error) throw error;
+
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("sessions");
+          return [];
+        }
+
+        const fallbackResult = await supabase
+          .from("sessions")
+          .select(fallbackSelect)
+          .eq(column, userId)
+          .order("date", { ascending: false });
+
+        if (fallbackResult.error) {
+          if (isMissingSupabaseResourceError(fallbackResult.error)) {
+            markSupabaseResourceMissing("sessions");
+            return [];
+          }
+          throw fallbackResult.error;
+        }
+
+        clearSupabaseResourceMissing("sessions");
+        return fallbackResult.data;
+      }
+
+      clearSupabaseResourceMissing("sessions");
       return data;
     },
     enabled: !!userId,

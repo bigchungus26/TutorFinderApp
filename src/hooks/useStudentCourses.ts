@@ -47,17 +47,35 @@ export function useSetStudentCourses() {
       courseIds: string[];
       semester: string;
     }) => {
+      if (isSupabaseResourceMissing("student_courses")) {
+        return;
+      }
+
       // Snapshot existing rows so we can roll back on insert failure
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from("student_courses")
         .select("course_id, semester")
         .eq("student_id", studentId);
+
+      if (existingError) {
+        if (isMissingSupabaseResourceError(existingError)) {
+          markSupabaseResourceMissing("student_courses");
+          return;
+        }
+        throw existingError;
+      }
 
       const { error: delError } = await supabase
         .from("student_courses")
         .delete()
         .eq("student_id", studentId);
-      if (delError) throw delError;
+      if (delError) {
+        if (isMissingSupabaseResourceError(delError)) {
+          markSupabaseResourceMissing("student_courses");
+          return;
+        }
+        throw delError;
+      }
 
       if (courseIds.length > 0) {
         const rows = courseIds.map(course_id => ({
@@ -69,6 +87,10 @@ export function useSetStudentCourses() {
           .from("student_courses")
           .insert(rows);
         if (insError) {
+          if (isMissingSupabaseResourceError(insError)) {
+            markSupabaseResourceMissing("student_courses");
+            return;
+          }
           // Roll back: restore previous courses so the student doesn't lose data
           if (existing?.length) {
             await supabase.from("student_courses").insert(
