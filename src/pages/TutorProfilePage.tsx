@@ -449,7 +449,7 @@ const TutorProfilePage = () => {
                       <p className="text-caption text-ink-muted mb-2">{dateLabel}</p>
                       <div className="space-y-1.5">
                         {daySlots.map(slot => {
-                          const canBook = tutor.verification_status === "approved";
+                          const canBook = true; // TODO: restore verification_status === "approved" check after testing
                           return (
                             <motion.button
                               key={slot.id ?? `${slot.day_of_week}-${slot.start_time}`}
@@ -576,7 +576,7 @@ const TutorProfilePage = () => {
       {/* Sticky bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 max-w-[440px] mx-auto bg-surface/95 backdrop-blur-sm border-t border-border px-4 py-3 shadow-lg"
         style={{ paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))` }}>
-        {tutor.verification_status !== "approved" ? (
+        {false /* TODO: restore tutor.verification_status !== "approved" check after testing */ ? (
           <div
             className="rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-center text-body-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-950/40 dark:text-amber-200"
             role="status"
