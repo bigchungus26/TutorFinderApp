@@ -35,8 +35,8 @@ const EntryGatePage = () => {
       }
     : {
         background:
-          "linear-gradient(160deg, rgba(43,166,106,0.19) 0%, rgba(43,166,106,0.1) 100%)",
-        boxShadow: "0 12px 32px rgba(43,166,106,0.12), 0 0 0 1px rgba(43,166,106,0.08) inset",
+          "linear-gradient(160deg, rgba(43,166,106,0.31) 0%, rgba(43,166,106,0.18) 100%)",
+        boxShadow: "0 18px 42px rgba(43,166,106,0.16), 0 0 0 1px rgba(43,166,106,0.14) inset",
       };
   const tutorCardStyle = isDarkMode
     ? {
@@ -46,8 +46,8 @@ const EntryGatePage = () => {
       }
     : {
         background:
-          "linear-gradient(160deg, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0.09) 100%)",
-        boxShadow: "0 12px 32px rgba(245,158,11,0.12), 0 0 0 1px rgba(245,158,11,0.08) inset",
+          "linear-gradient(160deg, rgba(245,158,11,0.29) 0%, rgba(245,158,11,0.17) 100%)",
+        boxShadow: "0 18px 42px rgba(245,158,11,0.16), 0 0 0 1px rgba(245,158,11,0.14) inset",
       };
 
   if (!isSwitchMode && activeRole && !isStartingFlow) {
@@ -158,7 +158,7 @@ const EntryGatePage = () => {
           onClick={() => void handleRoleSelect("student")}
           disabled={isStartingFlow}
           className={`flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border transition-colors ${
-            isDarkMode ? "border-white/10" : "border-[#cfe2d8]"
+            isDarkMode ? "border-white/10" : "border-[#acd0bc]"
           }`}
           style={studentCardStyle}
           aria-label="I'm a student — find tutors"
@@ -187,7 +187,7 @@ const EntryGatePage = () => {
           onClick={() => void handleRoleSelect("tutor")}
           disabled={isStartingFlow}
           className={`flex-1 rounded-2xl flex flex-col items-center justify-center gap-3 min-h-0 border transition-colors ${
-            isDarkMode ? "border-white/10" : "border-[#ead9bb]"
+            isDarkMode ? "border-white/10" : "border-[#dfc58f]"
           }`}
           style={tutorCardStyle}
           aria-label="I'm a tutor — teach students"
