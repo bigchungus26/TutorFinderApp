@@ -1,9 +1,7 @@
-const STORAGE_KEY = "tutr:missing-supabase-resources";
+const STORAGE_KEY = "tutr:missing-supabase-resources:v2";
 const DEFAULT_MISSING_RESOURCES = [
   "student_courses",
   "saved_tutors",
-  "conversations",
-  "messages",
   "availability",
   "notifications",
   "trending_tutors",

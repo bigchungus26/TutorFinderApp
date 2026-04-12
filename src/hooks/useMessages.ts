@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toastError } from "@/components/ui/sonner";
 import {
+  clearSupabaseResourceMissing,
   isMissingSupabaseResourceError,
   isSupabaseResourceMissing,
   markSupabaseResourceMissing,
@@ -137,6 +138,7 @@ export function useConversations(userId: string) {
         throw error;
       }
 
+      clearSupabaseResourceMissing("conversations");
       return (data ?? []).map((conversation: any) => summarizeConversation(conversation, userId));
     },
     enabled: !!userId,
@@ -170,6 +172,7 @@ export function useConversation(conversationId: string) {
         throw error;
       }
 
+      clearSupabaseResourceMissing("conversations");
       return data;
     },
     enabled: !!conversationId,
@@ -198,6 +201,7 @@ export function useMessages(conversationId: string, poll = true) {
         throw error;
       }
 
+      clearSupabaseResourceMissing("messages");
       return data;
     },
     enabled: !!conversationId,
@@ -256,6 +260,9 @@ export function useSendMessage() {
 
       if (error) {
         markSupabaseResourceMissing("messages");
+      }
+      if (!error) {
+        clearSupabaseResourceMissing("messages");
       }
 
       return {
@@ -324,6 +331,7 @@ export function useGetOrCreateConversation() {
         .single();
 
       if (!createError && created?.id) {
+        clearSupabaseResourceMissing("conversations");
         return created.id;
       }
 
@@ -394,6 +402,9 @@ export function useMarkMessagesRead() {
 
       if (error) {
         markSupabaseResourceMissing("messages");
+      }
+      if (!error) {
+        clearSupabaseResourceMissing("messages");
       }
 
       return updatedConversations;
