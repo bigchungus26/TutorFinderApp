@@ -1,12 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, Dispatch, ReactNode, SetStateAction } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, Check, Search, Upload, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUniversity } from "@/contexts/UniversityContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCourses, useSetTutorCourses, useUniversities, useUpdateProfile } from "@/hooks/useSupabaseQuery";
+import { useCourses, useSetTutorCourses, useUniversities, useUpdateProfile, useVerificationDocuments } from "@/hooks/useSupabaseQuery";
 import { useUpsertAvailability } from "@/hooks/useAvailability";
+import {
+  deleteVerificationDocument,
+  NON_STUDENT_TRACK_DOC_TYPES,
+  STUDENT_TRACK_DOC_TYPES,
+  uploadVerificationDocument,
+  VERIFICATION_DOC_LABELS,
+  VerificationUploadError,
+} from "@/lib/verification";
+import type { VerificationDocument, VerificationDocType } from "@/types/database";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
 import { toast } from "@/components/ui/sonner";
 import { springs } from "@/lib/motion";
@@ -54,6 +63,7 @@ type Draft = {
   selectedMajor: string;
   selectedYear: string;
   tutorType: "student" | "non_student" | null;
+  nonStudentCredentials: string;
   avatarPreview: string;
   avatarFileName: string;
   selectedCourses: CourseSelection[];
@@ -333,6 +343,7 @@ function TutorOnboarding() {
   const [courseSearch, setCourseSearch] = useState("");
   const [bio, setBio] = useState("");
   const [tutorType, setTutorType] = useState<"student" | "non_student" | null>(null);
+  const [nonStudentCredentials, setNonStudentCredentials] = useState("");
   const [teachingStyles, setTeachingStyles] = useState<string[]>([]);
   const [languages, setLanguages] = useState<string[]>([]);
   const [mode, setMode] = useState<TutorMode>("both");
@@ -344,6 +355,11 @@ function TutorOnboarding() {
   const [previousExperience, setPreviousExperience] = useState(false);
   const [yearsExperience, setYearsExperience] = useState("");
   const [subscriptionAccepted, setSubscriptionAccepted] = useState(false);
+
+  const [selectedDocType, setSelectedDocType] = useState<VerificationDocType | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { data: verificationDocs = [], refetch: refetchDocs } = useVerificationDocuments(user?.id ?? "");
 
   const { data: allCourses = [] } = useCourses(selectedUni || profile?.university_id || undefined);
 
@@ -378,6 +394,7 @@ function TutorOnboarding() {
       setGpa(draft.gpa ?? "");
       setBio(draft.bio ?? "");
       setTutorType(draft.tutorType ?? null);
+      setNonStudentCredentials(draft.nonStudentCredentials ?? "");
       setTeachingStyles(draft.teachingStyles ?? []);
       setLanguages(draft.languages ?? []);
       setMode(draft.mode ?? "both");
@@ -432,6 +449,7 @@ function TutorOnboarding() {
         selectedMajor,
         selectedYear,
         tutorType,
+        nonStudentCredentials,
         avatarPreview,
         avatarFileName,
         selectedCourses,
@@ -461,6 +479,7 @@ function TutorOnboarding() {
       languages,
       maxStudents,
       mode,
+      nonStudentCredentials,
       previousExperience,
       proofFileName,
       proofPreview,
@@ -495,6 +514,32 @@ function TutorOnboarding() {
       setProofFileName(file.name);
     } catch (error) {
       toast((error as Error).message);
+    }
+  };
+
+  const handleDocUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedDocType || !user) return;
+    setUploadingDoc(true);
+    try {
+      await uploadVerificationDocument({ userId: user.id, file, docType: selectedDocType });
+      await refetchDocs();
+      toast("Document uploaded.");
+    } catch (error) {
+      toast(error instanceof VerificationUploadError ? error.message : "Upload failed. Please try again.");
+    } finally {
+      setUploadingDoc(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDocDelete = async (doc: VerificationDocument) => {
+    try {
+      await deleteVerificationDocument(doc);
+      await refetchDocs();
+      toast("Document removed.");
+    } catch {
+      toast("Couldn't remove that document.");
     }
   };
 
@@ -547,10 +592,12 @@ function TutorOnboarding() {
 
   const canContinue = [
     Boolean(fullName.trim() && selectedUni && selectedMajor),
-    Boolean(selectedYear && selectedCourses.length > 0),
+    tutorType === "non_student"
+      ? nonStudentCredentials.trim().length >= 20
+      : Boolean(selectedCourses.length > 0 && selectedYear),
     Boolean(bio.trim().length >= 20 && teachingStyles.length > 0 && languages.length > 0),
     Boolean(Number(rate) > 0 && availabilityPreferences.length > 0),
-    Boolean(!previousExperience || yearsExperience !== ""),
+    true,
     subscriptionAccepted,
   ][step];
 
@@ -760,7 +807,7 @@ function TutorOnboarding() {
               </StepShell>
             ) : null}
 
-            {step === 1 ? (
+            {step === 1 && tutorType !== "non_student" ? (
               <StepShell
                 eyebrow="Academic credibility"
                 title="Show what you can actually teach."
@@ -865,6 +912,57 @@ function TutorOnboarding() {
                       </select>
                     </label>
                   </div>
+                </div>
+              </StepShell>
+            ) : null}
+
+            {step === 1 && tutorType === "non_student" ? (
+              <StepShell
+                eyebrow="Your background"
+                title="Tell us about your expertise."
+                description="Share your professional background, certifications, or relevant experience so students understand why you're qualified to teach."
+              >
+                <div className="space-y-5">
+                  <TextArea
+                    label="Credentials & background"
+                    value={nonStudentCredentials}
+                    onChange={setNonStudentCredentials}
+                    placeholder="Share your degrees, certifications, years of industry experience, or anything that shows why you're the right person to teach this subject..."
+                    maxLength={600}
+                  />
+
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">Previous tutoring experience</p>
+                    <div className="grid gap-2.5 sm:grid-cols-2">
+                      {[
+                        { label: "No, just starting", value: false },
+                        { label: "Yes, I have taught before", value: true },
+                      ].map((option) => (
+                        <button
+                          key={String(option.value)}
+                          type="button"
+                          onClick={() => setPreviousExperience(option.value)}
+                          className={`rounded-[1.35rem] border px-4 py-3 text-left text-sm font-medium transition-all ${
+                            previousExperience === option.value
+                              ? "border-accent bg-accent/8 text-accent shadow-[0_14px_32px_rgba(31,122,99,0.12)]"
+                              : "border-border bg-surface text-foreground hover:border-accent/30 hover:bg-accent/5"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {previousExperience ? (
+                    <Input
+                      label="Years of experience"
+                      value={yearsExperience}
+                      onChange={setYearsExperience}
+                      placeholder="0"
+                      type="number"
+                    />
+                  ) : null}
                 </div>
               </StepShell>
             ) : null}
@@ -981,51 +1079,87 @@ function TutorOnboarding() {
 
             {step === 4 ? (
               <StepShell
-                eyebrow="Trust boosters"
-                title="Give students extra confidence."
-                description="These details are optional, but they make it much easier for a student to choose you over someone generic."
+                eyebrow="Verification"
+                title="Upload your documents."
+                description="Upload at least one document so we can verify your identity and credibility."
               >
-                <div className="space-y-5">
-                  <FilePicker
-                    label="Proof of credibility"
-                    helper="Optional transcript, certificate, or any supporting screenshot that helps students trust your profile."
-                    preview={proofPreview}
-                    fileName={proofFileName}
-                    accept="image/*,.pdf"
-                    onChange={handleProofChange}
-                  />
+                <div className="space-y-6">
+                  <p className="rounded-2xl border border-border bg-surface px-4 py-3.5 text-sm text-ink-muted">
+                    Uploading is optional — you can add documents later from your dashboard.
+                  </p>
 
                   <div>
-                    <p className="mb-2 text-sm font-medium text-foreground">Previous tutoring experience</p>
-                    <div className="grid gap-2.5 sm:grid-cols-2">
-                      {[
-                        { label: "No, just starting", value: false },
-                        { label: "Yes, I have taught before", value: true },
-                      ].map((option) => (
-                        <button
-                          key={String(option.value)}
-                          type="button"
-                          onClick={() => setPreviousExperience(option.value)}
-                          className={`rounded-[1.35rem] border px-4 py-3 text-left text-sm font-medium transition-all ${
-                            previousExperience === option.value
-                              ? "border-accent bg-accent/8 text-accent shadow-[0_14px_32px_rgba(31,122,99,0.12)]"
-                              : "border-border bg-surface text-foreground hover:border-accent/30 hover:bg-accent/5"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
+                    <p className="mb-3 text-sm font-medium text-foreground">Document type</p>
+                    <div className="flex flex-wrap gap-2.5">
+                      {(tutorType === "non_student" ? NON_STUDENT_TRACK_DOC_TYPES : STUDENT_TRACK_DOC_TYPES).map(
+                        (docType) => (
+                          <SelectableChip
+                            key={docType}
+                            active={selectedDocType === docType}
+                            label={VERIFICATION_DOC_LABELS[docType]}
+                            onClick={() => setSelectedDocType(docType)}
+                          />
+                        ),
+                      )}
                     </div>
                   </div>
 
-                  {previousExperience ? (
-                    <Input
-                      label="Years of experience"
-                      value={yearsExperience}
-                      onChange={setYearsExperience}
-                      placeholder="0"
-                      type="number"
-                    />
+                  <div>
+                    <p className="mb-2 text-sm font-medium text-foreground">
+                      {selectedDocType
+                        ? `Upload ${VERIFICATION_DOC_LABELS[selectedDocType]}`
+                        : "Select a document type above"}
+                    </p>
+                    <div className="rounded-[1.5rem] border border-dashed border-border bg-surface p-4">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,application/pdf"
+                        disabled={!selectedDocType || uploadingDoc}
+                        onChange={handleDocUpload}
+                        className="block w-full text-sm text-foreground file:mr-3 file:rounded-full file:border-0 file:bg-accent/10 file:px-4 file:py-2 file:font-medium file:text-accent disabled:pointer-events-none disabled:opacity-50"
+                      />
+                      <p className="mt-2 text-xs text-ink-muted">PNG, JPEG or PDF · max 10 MB</p>
+                    </div>
+                    {uploadingDoc ? (
+                      <div className="mt-2 flex items-center gap-2 text-sm text-ink-muted">
+                        <motion.span
+                          className="h-3.5 w-3.5 rounded-full border-2 border-accent/30 border-t-accent"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+                        />
+                        Uploading…
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {verificationDocs.length > 0 ? (
+                    <div>
+                      <p className="mb-3 text-sm font-medium text-foreground">Uploaded documents</p>
+                      <div className="space-y-2.5">
+                        {verificationDocs.map((doc) => (
+                          <div
+                            key={doc.id}
+                            className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5"
+                          >
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-foreground">{doc.file_name}</p>
+                              <p className="text-xs text-ink-muted">
+                                {VERIFICATION_DOC_LABELS[doc.doc_type as VerificationDocType]}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDocDelete(doc as VerificationDocument)}
+                              className="ml-3 shrink-0 rounded-full p-1.5 text-ink-muted transition-colors hover:text-red-500"
+                              aria-label="Remove document"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   ) : null}
                 </div>
               </StepShell>
