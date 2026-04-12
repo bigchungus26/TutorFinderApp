@@ -733,7 +733,7 @@ const TutorProfilePage = () => {
             icon={MessageCircle}
             label="Messages"
             sublabel="Open conversations with students"
-            onClick={() => navigate("/messages")}
+            onClick={() => navigate("/tutor/messages")}
           />
 
           {/* Story 28: Pause bookings */}

@@ -70,7 +70,7 @@ const MessagesPage = () => {
                 key={conv.id}
                 variants={variants.staggerItem}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/messages/${conv.id}`)}
+                onClick={() => navigate(profile?.role === "tutor" ? `/tutor/messages/${conv.id}` : `/messages/${conv.id}`)}
                 className="w-full flex items-center gap-3 py-3.5 text-left"
               >
                 {/* Avatar with unread dot */}

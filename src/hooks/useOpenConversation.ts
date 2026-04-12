@@ -37,7 +37,7 @@ export function useOpenConversation() {
         studentId: resolvedStudentId,
         tutorId,
       });
-      navigate(`/messages/${conversationId}`);
+      navigate(profile?.role === "tutor" ? `/tutor/messages/${conversationId}` : `/messages/${conversationId}`);
       return conversationId;
     } catch (err) {
       toastError(err, "We couldn't open this conversation right now.");

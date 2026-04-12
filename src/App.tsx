@@ -177,6 +177,20 @@ const AppRoutes = () => {
             </RequireRole>
           </RequireAuth>
         } />
+        <Route path="/tutor/messages" element={
+          <RequireAuth>
+            <RequireRole role="tutor">
+              <TutorLayout><MessagesPage /></TutorLayout>
+            </RequireRole>
+          </RequireAuth>
+        } />
+        <Route path="/tutor/messages/:id" element={
+          <RequireAuth>
+            <RequireRole role="tutor">
+              <TutorLayout><MessageThreadPage /></TutorLayout>
+            </RequireRole>
+          </RequireAuth>
+        } />
         <Route path="/tutor/schedule" element={
           <RequireAuth>
             <RequireRole role="tutor">

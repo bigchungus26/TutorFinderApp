@@ -3,11 +3,12 @@
 // Wraps tutor app pages. Floating BottomNav with 4 tutor tabs.
 // ============================================================
 import type { ReactNode } from "react";
-import { Inbox, CalendarDays, DollarSign, User } from "lucide-react";
+import { Inbox, CalendarDays, DollarSign, User, MessageCircle } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 import type { NavItem } from "./BottomNav";
 
 const tutorNavItems: NavItem[] = [
+  { label: "Inbox",     path: "/tutor/messages",  icon: MessageCircle },
   { label: "Requests",  path: "/tutor/requests",  icon: Inbox        },
   { label: "Schedule",  path: "/tutor/schedule",  icon: CalendarDays },
   { label: "Earnings",  path: "/tutor/earnings",  icon: DollarSign   },
