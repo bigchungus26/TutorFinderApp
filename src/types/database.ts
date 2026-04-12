@@ -77,6 +77,11 @@ export type Database = {
           role: "student" | "tutor";
           full_name: string;
           avatar_url: string;
+          phone_number: string;
+          gender: "female" | "male" | "non_binary" | "prefer_not_to_say" | "other" | null;
+          date_of_birth: string | null;
+          city: string;
+          country: string;
           university_id: string | null;
           major: string;
           year: string;
@@ -105,6 +110,8 @@ export type Database = {
           verification_notes: string;
           non_student_credentials: string;
           cancellation_hours: number;
+          accepting_students: boolean;
+          deactivated_at: string | null;
           paused_until: string | null;
           suspended_until: string | null;
           onboarded_at: string | null;
@@ -116,6 +123,11 @@ export type Database = {
           role?: "student" | "tutor";
           full_name?: string;
           avatar_url?: string;
+          phone_number?: string;
+          gender?: "female" | "male" | "non_binary" | "prefer_not_to_say" | "other" | null;
+          date_of_birth?: string | null;
+          city?: string;
+          country?: string;
           university_id?: string | null;
           major?: string;
           year?: string;
@@ -143,6 +155,8 @@ export type Database = {
           verification_notes?: string;
           non_student_credentials?: string;
           cancellation_hours?: number;
+          accepting_students?: boolean;
+          deactivated_at?: string | null;
           paused_until?: string | null;
           suspended_until?: string | null;
           agreed_terms_at?: string | null;
@@ -155,6 +169,11 @@ export type Database = {
           role?: "student" | "tutor";
           full_name?: string;
           avatar_url?: string;
+          phone_number?: string;
+          gender?: "female" | "male" | "non_binary" | "prefer_not_to_say" | "other" | null;
+          date_of_birth?: string | null;
+          city?: string;
+          country?: string;
           university_id?: string | null;
           major?: string;
           year?: string;
@@ -182,6 +201,8 @@ export type Database = {
           verification_notes?: string;
           non_student_credentials?: string;
           cancellation_hours?: number;
+          accepting_students?: boolean;
+          deactivated_at?: string | null;
           paused_until?: string | null;
           suspended_until?: string | null;
           agreed_terms_at?: string | null;
