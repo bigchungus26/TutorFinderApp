@@ -5,6 +5,7 @@ const DEFAULT_MISSING_RESOURCES = [
   "conversations",
   "messages",
   "availability",
+  "notifications",
   "trending_tutors",
 ] as const;
 

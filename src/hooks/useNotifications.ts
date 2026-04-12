@@ -2,6 +2,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { toastError } from "@/components/ui/sonner";
+import {
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 export interface Notification {
   id: string;
@@ -18,13 +23,23 @@ export function useNotifications(userId: string) {
   return useQuery({
     queryKey: ["notifications", userId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("notifications")) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50);
-      if (error) throw error;
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("notifications");
+          return [];
+        }
+        throw error;
+      }
       return data as Notification[];
     },
     enabled: !!userId,
@@ -41,12 +56,22 @@ export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
+      if (isSupabaseResourceMissing("notifications")) {
+        return;
+      }
+
       const { error } = await supabase
         .from("notifications")
         .update({ read: true })
         .eq("id", id)
         .eq("user_id", userId);
-      if (error) throw error;
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("notifications");
+          return;
+        }
+        throw error;
+      }
     },
     onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
@@ -58,12 +83,22 @@ export function useMarkAllNotificationsRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
+      if (isSupabaseResourceMissing("notifications")) {
+        return;
+      }
+
       const { error } = await supabase
         .from("notifications")
         .update({ read: true })
         .eq("user_id", userId)
         .eq("read", false);
-      if (error) throw error;
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("notifications");
+          return;
+        }
+        throw error;
+      }
     },
     onSuccess: (_, userId) => {
       queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
@@ -78,7 +113,7 @@ export function useNotificationsRealtime(userId: string) {
 
   // Note: this is a side-effect hook called from components with useEffect
   const subscribe = () => {
-    if (!userId) return () => {};
+    if (!userId || isSupabaseResourceMissing("notifications")) return () => {};
 
     const channel = supabase
       .channel(`notifications:${userId}`)
@@ -94,7 +129,12 @@ export function useNotificationsRealtime(userId: string) {
           queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          markSupabaseResourceMissing("notifications");
+          supabase.removeChannel(channel);
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);

@@ -119,8 +119,26 @@ export function useTutors(universityId?: string) {
         .eq("role", "tutor");
       if (universityId) query = query.eq("university_id", universityId);
       const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      if (!error) return data;
+
+      if (error.code === "PGRST200" || error.code === "PGRST201" || error.code === "PGRST204") {
+        let fallbackQuery = supabase
+          .from("profiles")
+          .select(`
+            *,
+            tutor_stats (*),
+            tutor_courses (*, course:courses(*))
+          `)
+          .eq("role", "tutor");
+
+        if (universityId) fallbackQuery = fallbackQuery.eq("university_id", universityId);
+
+        const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+        if (fallbackError) throw fallbackError;
+        return fallbackData;
+      }
+
+      throw error;
     },
   });
 }
@@ -417,13 +435,23 @@ export function useNotifications(userId: string) {
   return useQuery({
     queryKey: ["notifications", userId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("notifications")) {
+        return [];
+      }
+
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50);
-      if (error) throw error;
+      if (error) {
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("notifications");
+          return [];
+        }
+        throw error;
+      }
       return data;
     },
     enabled: !!userId,

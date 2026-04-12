@@ -33,6 +33,11 @@ import {
 } from "@/hooks/useSupabaseQuery";
 import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStudentCourses";
 import { supabase } from "@/lib/supabase";
+import {
+  isMissingSupabaseResourceError,
+  isSupabaseResourceMissing,
+  markSupabaseResourceMissing,
+} from "@/lib/supabaseResourceFallback";
 
 import { TutorCard } from "@/components/TutorCard";
 import { NotificationSheet } from "@/components/NotificationSheet";
@@ -76,6 +81,10 @@ function useTrendingTutors(universityId: string) {
   return useQuery({
     queryKey: ["trending-tutors", universityId],
     queryFn: async () => {
+      if (isSupabaseResourceMissing("trending_tutors")) {
+        return [] as Profile[];
+      }
+
       const { data, error } = await supabase
         .from("trending_tutors" as never)
         .select(`
@@ -86,8 +95,10 @@ function useTrendingTutors(universityId: string) {
         .eq("university_id", universityId)
         .limit(5);
       if (error) {
-        // View may not exist yet — return empty gracefully
-        console.warn("trending_tutors view not available:", error.message);
+        if (isMissingSupabaseResourceError(error)) {
+          markSupabaseResourceMissing("trending_tutors");
+          return [] as Profile[];
+        }
         return [] as Profile[];
       }
       return (data ?? []) as Profile[];
@@ -370,11 +381,6 @@ const DiscoverPage = () => {
                 >
                   <Bell size={18} className="text-ink-muted" />
                 </button>
-                {/* Notification dot — always shown; no handler yet */}
-                <span
-                  className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-accent border-2 border-background"
-                  aria-hidden="true"
-                />
               </div>
               {/* Avatar */}
               <img
