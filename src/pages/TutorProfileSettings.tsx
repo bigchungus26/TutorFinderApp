@@ -168,7 +168,6 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
             { label: "Full name", value: name, onChange: setName, placeholder: "Your name" },
             { label: "Major", value: major, onChange: setMajor, placeholder: "e.g. Computer Science" },
             { label: "Year", value: year, onChange: setYear, placeholder: "e.g. Junior" },
-            { label: "Hourly rate ($)", value: rate, onChange: setRate, placeholder: "e.g. 25" },
           ].map((field) => (
             <div key={field.label}>
               <label className="text-caption text-ink-muted uppercase tracking-wider block mb-1.5">
@@ -182,6 +181,25 @@ function EditProfileSheet({ profile, onClose }: EditProfileSheetProps) {
               />
             </div>
           ))}
+
+          <div>
+            <label className="text-caption text-ink-muted uppercase tracking-wider block mb-1.5">
+              Hourly rate ($)
+            </label>
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="1"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              placeholder="e.g. 25"
+              className="w-full h-11 rounded-lg border border-border bg-background px-3 text-body text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+            />
+            <p className="mt-1.5 text-caption text-ink-muted">
+              This updates the amount students see on your profile and booking flow.
+            </p>
+          </div>
 
           <div>
             <label className="text-caption text-ink-muted uppercase tracking-wider block mb-1.5">Bio</label>
