@@ -1,7 +1,7 @@
 import { type ChangeEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useBlocker, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import {
   ArrowLeft,
@@ -214,22 +214,6 @@ function snapshotFromState(
 }
 
 function useUnsavedChangesGuard(hasUnsavedChanges: boolean) {
-  const blocker = useBlocker(hasUnsavedChanges);
-
-  useEffect(() => {
-    if (blocker.state !== "blocked") return;
-
-    const shouldLeave = window.confirm(
-      "You have unsaved changes. Leave this page and lose them?",
-    );
-
-    if (shouldLeave) {
-      blocker.proceed();
-    } else {
-      blocker.reset();
-    }
-  }, [blocker]);
-
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
       if (!hasUnsavedChanges) return;
