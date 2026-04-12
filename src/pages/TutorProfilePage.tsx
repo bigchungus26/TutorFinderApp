@@ -441,28 +441,20 @@ const TutorProfilePage = () => {
                       <p className="text-label text-foreground font-semibold mb-0.5">{label}</p>
                       <p className="text-caption text-ink-muted mb-2">{dateLabel}</p>
                       <div className="space-y-1.5">
-                        {daySlots.map(slot => {
-                          const canBook = tutor.verification_status === "approved";
-                          return (
+                        {daySlots.map(slot => (
                             <motion.button
                               key={slot.id ?? `${slot.day_of_week}-${slot.start_time}`}
-                              whileTap={{ scale: canBook ? 0.97 : 1 }}
+                              whileTap={{ scale: 0.97 }}
                               transition={springs.snappy}
                               onClick={() => {
-                                if (!canBook) {
-                                  toast("This tutor isn't verified yet — booking is paused.");
-                                  return;
-                                }
                                 setSelectedSlot({ day: slot.day_of_week, start_time: slot.start_time, end_time: slot.end_time });
                                 setBookingOpen(true);
                               }}
-                              disabled={!canBook}
-                              className="w-full text-center px-2 py-1 rounded-lg bg-accent-light text-accent text-caption font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full text-center px-2 py-1 rounded-lg bg-accent-light text-accent text-caption font-medium"
                             >
                               {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
                             </motion.button>
-                          );
-                        })}
+                          ))}
                       </div>
                     </div>
                   );
@@ -569,16 +561,7 @@ const TutorProfilePage = () => {
       {/* Sticky bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 z-40 max-w-[440px] mx-auto bg-surface/95 backdrop-blur-sm border-t border-border px-4 py-3 shadow-lg"
         style={{ paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))` }}>
-        {tutor.verification_status !== "approved" ? (
-          <div
-            className="rounded-xl border border-amber-300/40 bg-amber-50 px-4 py-3 text-center text-body-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-950/40 dark:text-amber-200"
-            role="status"
-            aria-live="polite"
-          >
-            This tutor is not verified yet — booking is paused while we review their profile.
-          </div>
-        ) : (
-          <div className="flex gap-3">
+        <div className="flex gap-3">
             <motion.button
               whileTap={{ scale: 0.97 }}
               transition={springs.snappy}
@@ -599,7 +582,6 @@ const TutorProfilePage = () => {
               Book a session
             </motion.button>
           </div>
-        )}
       </div>
 
       {/* BookingSheet */}
