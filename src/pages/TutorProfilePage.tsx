@@ -433,7 +433,8 @@ const TutorProfilePage = () => {
 
           {/* Availability */}
           <section>
-            <h2 className="text-h3 text-foreground mb-3">Availability</h2>
+            <h2 className="text-h3 text-foreground mb-0.5">Availability</h2>
+            <p className="text-caption text-ink-muted mb-3">Tap a slot to book that time</p>
             {availLoading ? (
               <Skeleton className="h-24 rounded-xl" />
             ) : availability.length === 0 ? (
@@ -464,7 +465,7 @@ const TutorProfilePage = () => {
                                 setBookingOpen(true);
                               }}
                               disabled={!canBook}
-                              className="w-full text-center px-2 py-1 rounded-lg bg-accent-light text-accent text-caption font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full text-center px-2 py-1.5 rounded-lg bg-accent/10 text-accent text-caption font-medium cursor-pointer transition-colors hover:bg-accent hover:text-white active:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {formatTime(slot.start_time)}–{formatTime(slot.end_time)}
                             </motion.button>
@@ -601,7 +602,7 @@ const TutorProfilePage = () => {
               whileTap={{ scale: 0.97 }}
               transition={springs.snappy}
               onClick={() => { setSelectedSlot(null); setBookingOpen(true); }}
-              className="flex-1 h-12 rounded-xl bg-accent text-white text-label font-semibold"
+              className="flex-1 h-12 rounded-xl bg-accent text-white text-label font-semibold shadow-[0_4px_14px_rgba(43,166,106,0.35)]"
             >
               Book a session
             </motion.button>
