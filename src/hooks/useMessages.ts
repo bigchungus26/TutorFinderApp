@@ -142,6 +142,8 @@ export function useConversations(userId: string) {
       return (data ?? []).map((conversation: any) => summarizeConversation(conversation, userId));
     },
     enabled: !!userId,
+    refetchInterval: !isSupabaseResourceMissing("conversations") ? 3000 : false,
+    refetchIntervalInBackground: true,
     staleTime: 10 * 1000,
   });
 }
