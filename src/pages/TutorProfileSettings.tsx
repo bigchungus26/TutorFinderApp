@@ -3,7 +3,7 @@
 // Tutor's own profile page: header skeleton on load, courses
 // taught, availability link, dark mode toggle, save with toast.
 // ============================================================
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -729,14 +729,21 @@ function TutorCoursesSheet({
     new Map(currentCourseIds.map((id) => [id, "A"]))
   );
   const [search, setSearch] = useState("");
+  const [subject, setSubject] = useState("");
   const setTutorCourses = useSetTutorCourses();
   const { data: allCourses = [] } = useCourses(universityId ?? undefined);
 
-  const filtered = allCourses.filter(
-    (c) =>
-      c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.name.toLowerCase().includes(search.toLowerCase())
+  const subjects = useMemo(
+    () => [...new Set(allCourses.map((c: any) => c.subject).filter(Boolean))].sort() as string[],
+    [allCourses]
   );
+
+  const filtered = allCourses.filter((c: any) => {
+    if (subject && c.subject !== subject) return false;
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+  });
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -796,11 +803,25 @@ function TutorCoursesSheet({
             <X size={20} className="text-ink-muted" />
           </motion.button>
         </div>
-        <div className="px-5 pb-3 flex-shrink-0">
+        <div className="px-5 pb-2 flex-shrink-0 space-y-2">
+          {subjects.length > 0 && (
+            <select
+              value={subject}
+              onChange={(e) => { setSubject(e.target.value); setSearch(""); }}
+              style={{ fontSize: "16px" }}
+              className="w-full h-10 rounded-lg border border-border bg-background px-3 text-body-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+            >
+              <option value="">All subjects</option>
+              {subjects.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          )}
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search courses…"
+            placeholder={subject ? `Search in ${subject}…` : "Search courses…"}
+            style={{ fontSize: "16px" }}
             className="w-full h-10 rounded-lg border border-border bg-background px-3 text-body-sm text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
           />
         </div>

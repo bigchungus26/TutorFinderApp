@@ -341,6 +341,7 @@ function TutorOnboarding() {
   const [selectedCourses, setSelectedCourses] = useState<CourseSelection[]>([]);
   const [gpa, setGpa] = useState("");
   const [courseSearch, setCourseSearch] = useState("");
+  const [courseSubject, setCourseSubject] = useState("");
   const [bio, setBio] = useState("");
   const [tutorType, setTutorType] = useState<"student" | "non_student" | null>(null);
   const [nonStudentCredentials, setNonStudentCredentials] = useState("");
@@ -363,15 +364,19 @@ function TutorOnboarding() {
 
   const { data: allCourses = [] } = useCourses(selectedUni || profile?.university_id || undefined);
 
+  const courseSubjects = useMemo(
+    () => [...new Set(allCourses.map((c: any) => c.subject).filter(Boolean))].sort() as string[],
+    [allCourses]
+  );
+
   const filteredCourses = useMemo(() => {
-    const normalizedQuery = courseSearch.trim().toLowerCase();
-    if (!normalizedQuery) return allCourses;
-    return allCourses.filter(
-      (course) =>
-        course.code.toLowerCase().includes(normalizedQuery) ||
-        course.name.toLowerCase().includes(normalizedQuery),
-    );
-  }, [allCourses, courseSearch]);
+    return allCourses.filter((course: any) => {
+      if (courseSubject && course.subject !== courseSubject) return false;
+      const q = courseSearch.trim().toLowerCase();
+      if (!q) return true;
+      return course.code.toLowerCase().includes(q) || course.name.toLowerCase().includes(q);
+    });
+  }, [allCourses, courseSearch, courseSubject]);
 
   useEffect(() => {
     try {
@@ -817,15 +822,30 @@ function TutorOnboarding() {
                 <div className="space-y-5">
                   <div>
                     <p className="mb-2 text-sm font-medium text-foreground">Courses you can teach</p>
-                    <div className="relative">
-                      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-                      <input
-                        value={courseSearch}
-                        onChange={(event) => setCourseSearch(event.target.value)}
-                        placeholder={selectedUni ? "Search MATH101, BIO201, ECON..." : "Choose a university first"}
-                        style={{ fontSize: "16px" }}
-                        className="w-full rounded-2xl border border-border bg-surface py-3.5 pl-11 pr-4 text-foreground outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
-                      />
+                    <div className="space-y-2">
+                      {courseSubjects.length > 0 && (
+                        <select
+                          value={courseSubject}
+                          onChange={(e) => { setCourseSubject(e.target.value); setCourseSearch(""); }}
+                          style={{ fontSize: "16px" }}
+                          className="w-full rounded-2xl border border-border bg-surface px-4 py-3.5 text-foreground outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
+                        >
+                          <option value="">Browse by subject…</option>
+                          {courseSubjects.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      )}
+                      <div className="relative">
+                        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
+                        <input
+                          value={courseSearch}
+                          onChange={(event) => setCourseSearch(event.target.value)}
+                          placeholder={courseSubject ? `Search in ${courseSubject}…` : selectedUni ? "Or search by code / name…" : "Choose a university first"}
+                          style={{ fontSize: "16px" }}
+                          className="w-full rounded-2xl border border-border bg-surface py-3.5 pl-11 pr-4 text-foreground outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/10"
+                        />
+                      </div>
                     </div>
                   </div>
 
