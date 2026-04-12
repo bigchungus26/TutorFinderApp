@@ -257,7 +257,7 @@ function SelectableChip({
       className={`rounded-full border px-4 py-2.5 text-sm font-medium transition-all ${
         active
           ? "border-accent bg-accent text-white shadow-[0_10px_24px_rgba(31,122,99,0.18)]"
-          : "border-border bg-white text-foreground hover:border-accent/30 hover:bg-accent/5"
+          : "border-border bg-surface text-foreground hover:border-accent/30 hover:bg-accent/5"
       }`}
     >
       {label}
@@ -283,7 +283,7 @@ function FilePicker({
   return (
     <label className="block">
       <span className="mb-2 block text-sm font-medium text-foreground">{label}</span>
-      <div className="rounded-[1.5rem] border border-dashed border-border bg-white p-4">
+      <div className="rounded-[1.5rem] border border-dashed border-border bg-surface p-4">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-accent/10">
             {preview ? (
@@ -311,7 +311,7 @@ function FilePicker({
 function TutorOnboarding() {
   const navigate = useNavigate();
   const { setSelectedUniversity } = useUniversity();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile, signOut } = useAuth();
   const { data: universities = [] } = useUniversities();
   const updateProfile = useUpdateProfile();
   const setTutorCourses = useSetTutorCourses();
@@ -534,10 +534,11 @@ function TutorOnboarding() {
     setStep(next);
   };
 
-  const handleBackAction = () => {
+  const handleBackAction = async () => {
     if (step === 0) {
       persistDraft(0);
-      navigate("/?switch=1");
+      try { await signOut(); } catch { /* ignore */ }
+      navigate("/welcome");
       return;
     }
 
@@ -696,7 +697,7 @@ function TutorOnboarding() {
                           className={`flex w-full items-center gap-4 rounded-[1.35rem] border px-4 py-4 text-left transition-all ${
                             selectedUni === university.id
                               ? "border-accent bg-accent/8 shadow-[0_16px_40px_rgba(31,122,99,0.12)]"
-                              : "border-border bg-white hover:border-accent/30 hover:bg-accent/5"
+                              : "border-border bg-surface hover:border-accent/30 hover:bg-accent/5"
                           }`}
                         >
                           <div
@@ -781,7 +782,7 @@ function TutorOnboarding() {
                   </div>
 
                   {currentCourses.length > 0 ? (
-                    <div className="max-h-56 space-y-3 overflow-y-auto rounded-[1.6rem] border border-border bg-white p-3">
+                    <div className="max-h-56 space-y-3 overflow-y-auto rounded-[1.6rem] border border-border bg-surface p-3">
                       {currentCourses.map(({ selection, course }) => (
                         <div key={selection.courseId} className="rounded-[1.35rem] border border-accent/15 bg-accent/5 p-3.5">
                           <div className="flex items-start gap-3">
@@ -792,7 +793,7 @@ function TutorOnboarding() {
                             <button
                               type="button"
                               onClick={() => toggleCourse(selection.courseId)}
-                              className="rounded-full p-1 text-ink-muted transition-colors hover:bg-white hover:text-foreground"
+                              className="rounded-full p-1 text-ink-muted transition-colors hover:bg-surface hover:text-foreground"
                               aria-label={`Remove ${course.code}`}
                             >
                               <X className="h-4 w-4" />
@@ -813,7 +814,7 @@ function TutorOnboarding() {
                     </div>
                   ) : null}
 
-                  <div className="rounded-[1.6rem] border border-border bg-white">
+                  <div className="rounded-[1.6rem] border border-border bg-surface">
                     <div className="max-h-64 overflow-y-auto p-2">
                       {availableCourseResults.length > 0 ? (
                         availableCourseResults.map((course) => (
@@ -922,7 +923,7 @@ function TutorOnboarding() {
                           className={`rounded-[1.35rem] border px-4 py-3 text-sm font-medium capitalize transition-all ${
                             mode === option
                               ? "border-accent bg-accent/8 text-accent shadow-[0_14px_32px_rgba(31,122,99,0.12)]"
-                              : "border-border bg-white text-foreground hover:border-accent/30 hover:bg-accent/5"
+                              : "border-border bg-surface text-foreground hover:border-accent/30 hover:bg-accent/5"
                           }`}
                         >
                           {option}
@@ -1008,7 +1009,7 @@ function TutorOnboarding() {
                           className={`rounded-[1.35rem] border px-4 py-3 text-left text-sm font-medium transition-all ${
                             previousExperience === option.value
                               ? "border-accent bg-accent/8 text-accent shadow-[0_14px_32px_rgba(31,122,99,0.12)]"
-                              : "border-border bg-white text-foreground hover:border-accent/30 hover:bg-accent/5"
+                              : "border-border bg-surface text-foreground hover:border-accent/30 hover:bg-accent/5"
                           }`}
                         >
                           {option.label}
@@ -1037,7 +1038,7 @@ function TutorOnboarding() {
                 description="Keep this simple and clear. Your listing goes live, students can discover you, and you receive inquiries from your campus community."
               >
                 <div className="space-y-5">
-                  <div className="rounded-[1.75rem] border border-border bg-white p-5 shadow-[0_24px_60px_rgba(17,24,39,0.06)]">
+                  <div className="rounded-[1.75rem] border border-border bg-surface p-5 shadow-[0_24px_60px_rgba(17,24,39,0.06)]">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Tutor membership</p>
@@ -1060,7 +1061,7 @@ function TutorOnboarding() {
                     </div>
                   </div>
 
-                  <label className="flex items-start gap-3 rounded-[1.4rem] border border-border bg-white px-4 py-4">
+                  <label className="flex items-start gap-3 rounded-[1.4rem] border border-border bg-surface px-4 py-4">
                     <input
                       type="checkbox"
                       checked={subscriptionAccepted}

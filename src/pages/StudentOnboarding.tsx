@@ -70,7 +70,7 @@ function ProgressBar({ step, total }: { step: number; total: number }) {
 const StudentOnboarding = () => {
   const navigate = useNavigate();
   const { setSelectedUniversity } = useUniversity();
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, signOut } = useAuth();
   const { data: universities = [] } = useUniversities();
   const updateProfile = useUpdateProfile();
   const setStudentCourses = useSetStudentCourses();
@@ -151,10 +151,11 @@ const StudentOnboarding = () => {
     setStep(prev);
   };
 
-  const handleBackAction = () => {
+  const handleBackAction = async () => {
     if (step === 0) {
       persistDraft(0);
-      navigate("/?switch=1");
+      try { await signOut(); } catch { /* ignore */ }
+      navigate("/welcome");
       return;
     }
 

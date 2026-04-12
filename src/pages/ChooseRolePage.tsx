@@ -92,7 +92,7 @@ const ChooseRolePage = () => {
                 }`}
               >
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm text-accent">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-surface shadow-sm text-accent">
                     <Icon size={22} />
                   </span>
                   <div>
