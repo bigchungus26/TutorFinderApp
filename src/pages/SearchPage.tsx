@@ -354,14 +354,22 @@ const SearchPage = () => {
 
   const filteredCourses = useMemo(() => {
     if (!query) return courses;
-    const q = query.toLowerCase();
-    const matched = courses.filter(c =>
-      codeOnly
-        ? c.code.toLowerCase().includes(q)
-        : (c.code.toLowerCase().includes(q) ||
-           c.name.toLowerCase().includes(q) ||
-           c.subject?.toLowerCase().includes(q))
-    );
+    const q = query.toLowerCase().trim();
+    // Split query into whitespace-separated tokens so "physics 211"
+    // splits into ["physics","211"]. A course matches when every token
+    // hits at least one of: code, name, or subject (AND across tokens).
+    const tokens = q.split(/\s+/).filter(Boolean);
+    const matched = courses.filter(c => {
+      const code = c.code.toLowerCase();
+      const name = c.name.toLowerCase();
+      const subject = c.subject?.toLowerCase() ?? "";
+      if (codeOnly) {
+        return tokens.every(t => code.includes(t));
+      }
+      return tokens.every(t =>
+        code.includes(t) || name.includes(t) || subject.includes(t)
+      );
+    });
     // Sort: exact code match first, then starts-with code, then rest
     return matched.sort((a, b) => {
       const aCode = a.code.toLowerCase();
@@ -384,12 +392,18 @@ const SearchPage = () => {
     });
 
     if (query) {
-      const q = query.toLowerCase();
-      result = result.filter(t =>
-        t.full_name.toLowerCase().includes(q) ||
-        (t.major ?? "").toLowerCase().includes(q) ||
-        (t.tutor_courses ?? []).some((tc: any) => tc.course?.code?.toLowerCase().includes(q))
-      );
+      const tokens = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
+      result = result.filter(t => {
+        const name = t.full_name.toLowerCase();
+        const major = (t.major ?? "").toLowerCase();
+        const courseCodes = (t.tutor_courses ?? [])
+          .map((tc: any) => tc.course?.code?.toLowerCase() ?? "")
+          .join(" ");
+        // Every token must match at least one field
+        return tokens.every(tok =>
+          name.includes(tok) || major.includes(tok) || courseCodes.includes(tok)
+        );
+      });
     }
 
     const minP = appliedFilters.minPrice ? Number(appliedFilters.minPrice) : null;
