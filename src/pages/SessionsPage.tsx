@@ -452,7 +452,11 @@ const SessionsPage = () => {
   const reviewPromptSession = completedSessions.find(s => {
     if (isDismissed(s.id) || dismissedIds.has(s.id)) return false;
     const diff = (Date.now() - new Date(s.date).getTime()) / (1000 * 60 * 60 * 24);
-    return diff <= 7;
+    if (diff > 7) return false;
+    // Only prompt after session has ended + 30 min grace period
+    const [h = 0, m = 0] = (s.time ?? "00:00").split(":").map(Number);
+    const sessionEnd = new Date(s.date + "T00:00:00").getTime() + (h * 60 + m + (s.duration ?? 60)) * 60_000;
+    return Date.now() >= sessionEnd + 30 * 60_000;
   }) ?? null;
 
   const upcoming = (allSessions as SessionWithDetails[]).filter(s => s.status === "upcoming");

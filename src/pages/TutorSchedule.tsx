@@ -112,7 +112,7 @@ function SessionCard({ session, onMarkCompleted }: {
             <span
               className={`text-caption px-2 py-0.5 rounded-full font-medium ${statusColor(session.status)}`}
             >
-              {session.status}
+              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
             </span>
           </div>
           <p className="text-body-sm text-accent font-medium mb-1">{courseName}</p>
@@ -122,7 +122,7 @@ function SessionCard({ session, onMarkCompleted }: {
             {session.duration && (
               <span className="flex items-center gap-1">
                 <Clock size={11} />
-                {session.duration}h
+                {session.duration} min
               </span>
             )}
             {session.location === "online" ? (

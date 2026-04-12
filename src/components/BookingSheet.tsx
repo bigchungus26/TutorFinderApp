@@ -5,14 +5,16 @@
 //   Step 2: Optional message to tutor
 //   Step 3: Review & confirm
 // ============================================================
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, X, Video, MapPin, Clock, BadgeCheck } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar } from "@/components/Avatar";
-import { useCreateRequest } from "@/hooks/useSupabaseQuery";
+import { useCreateRequest, useSessions } from "@/hooks/useSupabaseQuery";
+import { useAvailability } from "@/hooks/useAvailability";
+import type { AvailabilitySlot } from "@/hooks/useAvailability";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
 import { toast } from "@/components/ui/sonner";
 import { variants, transitions } from "@/lib/motion";
@@ -20,7 +22,14 @@ import type { TutorWithDetails } from "@/types/database";
 
 // ── Types ──────────────────────────────────────────────────────
 interface SelectedSlot {
-  day: number;        // 0–6 (Sunday–Saturday)
+  day: number;        // Mon-based (0=Mon, 6=Sun) from AvailabilitySlot.day_of_week
+  start_time: string; // "HH:MM"
+  end_time: string;   // "HH:MM"
+}
+
+interface LocalSlot {
+  date: string;       // "YYYY-MM-DD" — the concrete date
+  dayOfWeek: number;  // JS convention 0=Sun
   start_time: string; // "HH:MM"
   end_time: string;   // "HH:MM"
 }
@@ -135,11 +144,54 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
   // ── Success overlay ────────────────────────────────────────
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // ── Availability & sessions ────────────────────────────────
+  const { data: availability = [] } = useAvailability(tutor.id);
+  const { data: tutorSessions = [] } = useSessions(tutor.id, "tutor");
+  const [localSlot, setLocalSlot] = useState<LocalSlot | null>(null);
+
   // ── Derived values ─────────────────────────────────────────
   const selectedCourse = taughtCourses.find(
     (tc) => tc.course_id === selectedCourseId
   );
   const price = formatPrice(tutor.hourly_rate, duration);
+
+  // ── Calendar data ──────────────────────────────────────────
+  const next7Days = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const jsDay = d.getDay(); // 0=Sun
+      return {
+        date: d,
+        dateStr: d.toISOString().split("T")[0],
+        jsDay,
+        monDay: jsDay === 0 ? 6 : jsDay - 1, // Mon-based 0=Mon
+        label: i === 0 ? "Today" : i === 1 ? "Tmrw" : d.toLocaleDateString("en-US", { weekday: "short" }),
+        dateLabel: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      };
+    });
+  }, []);
+
+  const slotsByMonDay = useMemo(() => {
+    const map: Record<number, AvailabilitySlot[]> = {};
+    for (const slot of availability) {
+      if (!map[slot.day_of_week]) map[slot.day_of_week] = [];
+      map[slot.day_of_week].push(slot);
+    }
+    return map;
+  }, [availability]);
+
+  const bookedSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of tutorSessions as any[]) {
+      if (s.status === "upcoming") {
+        set.add(`${s.date}_${(s.time ?? "").slice(0, 5)}`);
+      }
+    }
+    return set;
+  }, [tutorSessions]);
 
   // ── Handlers ───────────────────────────────────────────────
   const handleClose = useCallback(() => {
@@ -147,26 +199,39 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
     setStep(1);
     setMessage("");
     setShowSuccess(false);
+    setLocalSlot(null);
     onClose();
   }, [onClose]);
+
+  // Sync localSlot from selectedSlot when sheet opens
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!selectedSlot) return;
+    // selectedSlot.day is Mon-based (from AvailabilitySlot.day_of_week)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const monDay = d.getDay() === 0 ? 6 : d.getDay() - 1;
+      if (monDay === selectedSlot.day) {
+        setLocalSlot({
+          date: d.toISOString().split("T")[0],
+          dayOfWeek: d.getDay(),
+          start_time: selectedSlot.start_time,
+          end_time: selectedSlot.end_time,
+        });
+        return;
+      }
+    }
+  }, [isOpen, selectedSlot]);
 
   const handleConfirm = useCallback(async () => {
     if (!user?.id) return;
 
-    // Build date / time strings from selectedSlot or fallback defaults
-    const date = selectedSlot
-      ? (() => {
-          // Find next occurrence of this weekday
-          const today = new Date();
-          const targetDay = selectedSlot.day;
-          const daysUntil = (targetDay - today.getDay() + 7) % 7;
-          const d = new Date(today);
-          d.setDate(today.getDate() + daysUntil);
-          return d.toISOString().split("T")[0];
-        })()
-      : new Date().toISOString().split("T")[0];
-
-    const time = selectedSlot ? selectedSlot.start_time : "09:00";
+    // Use the locally selected slot date/time, or fall back to today/09:00
+    const date = localSlot?.date ?? new Date().toISOString().split("T")[0];
+    const time = localSlot?.start_time ?? "09:00";
 
     try {
       await createRequest.mutateAsync({
@@ -183,7 +248,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
     } catch (err: any) {
       toast(err?.message || "Failed to send request. Please try again.");
     }
-  }, [user, tutor, selectedCourseId, duration, locationMode, message, selectedSlot, createRequest]);
+  }, [user, tutor, selectedCourseId, duration, locationMode, message, localSlot, createRequest]);
 
   const handleSuccessDismiss = useCallback(() => {
     setShowSuccess(false);
@@ -283,20 +348,85 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                       exit="exit"
                       className="space-y-6"
                     >
-                      {/* Pre-selected slot info */}
-                      {selectedSlot && (
-                        <div className="bg-accent-light rounded-xl px-4 py-3 flex items-center gap-3">
-                          <Clock size={16} className="text-accent flex-shrink-0" />
-                          <div>
-                            <p className="text-label text-accent">
-                              {DAY_NAMES[selectedSlot.day]}
-                            </p>
-                            <p className="text-body-sm text-accent">
-                              {formatTime(selectedSlot.start_time)} – {formatTime(selectedSlot.end_time)}
+                      {/* Full availability calendar */}
+                      <div>
+                        <FieldLabel>Select a time</FieldLabel>
+                        {availability.length === 0 ? (
+                          <p className="text-body-sm text-ink-muted py-1">
+                            No availability set — you can still send a request.
+                          </p>
+                        ) : (
+                          <div className="flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+                            {next7Days.map(({ date: dayDate, dateStr, monDay, label, dateLabel }) => {
+                              const daySlots = slotsByMonDay[monDay] ?? [];
+                              const hasSlots = daySlots.length > 0;
+                              return (
+                                <div
+                                  key={dateStr}
+                                  className={`flex-shrink-0 w-[96px] rounded-xl border p-2.5 ${
+                                    hasSlots
+                                      ? "bg-surface border-border"
+                                      : "bg-muted/30 border-border/40 opacity-40"
+                                  }`}
+                                >
+                                  <p className={`text-label font-semibold mb-0.5 ${hasSlots ? "text-foreground" : "text-ink-muted"}`}>
+                                    {label}
+                                  </p>
+                                  <p className="text-caption text-ink-muted mb-2">{dateLabel}</p>
+                                  {hasSlots ? (
+                                    <div className="space-y-1.5">
+                                      {daySlots.map(slot => {
+                                        const bookKey = `${dateStr}_${slot.start_time.slice(0, 5)}`;
+                                        const isBooked = bookedSet.has(bookKey);
+                                        const isSelected =
+                                          localSlot?.date === dateStr &&
+                                          localSlot?.start_time === slot.start_time;
+                                        return (
+                                          <motion.button
+                                            key={slot.id ?? `${slot.day_of_week}-${slot.start_time}`}
+                                            whileTap={!isBooked ? { scale: 0.95 } : {}}
+                                            onClick={() => {
+                                              if (isBooked) return;
+                                              setLocalSlot({
+                                                date: dateStr,
+                                                dayOfWeek: dayDate.getDay(),
+                                                start_time: slot.start_time,
+                                                end_time: slot.end_time,
+                                              });
+                                            }}
+                                            disabled={isBooked}
+                                            className={`w-full text-center px-1.5 py-1.5 rounded-lg text-caption font-medium transition-colors ${
+                                              isSelected
+                                                ? "bg-accent text-white"
+                                                : isBooked
+                                                ? "bg-muted text-ink-muted line-through cursor-not-allowed opacity-50"
+                                                : "bg-accent/10 text-accent hover:bg-accent hover:text-white cursor-pointer"
+                                            }`}
+                                          >
+                                            {isBooked ? "Booked" : formatTime(slot.start_time)}
+                                          </motion.button>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <p className="text-caption text-ink-muted text-center py-1">—</p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {localSlot && (
+                          <div className="mt-2 flex items-center gap-2 bg-accent-light rounded-lg px-3 py-2">
+                            <Clock size={13} className="text-accent flex-shrink-0" />
+                            <p className="text-body-sm text-accent font-medium">
+                              {new Date(localSlot.date + "T00:00:00").toLocaleDateString("en-US", {
+                                weekday: "short", month: "short", day: "numeric",
+                              })} · {formatTime(localSlot.start_time)}–{formatTime(localSlot.end_time)}
                             </p>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
 
                       {/* Course picker */}
                       <div>
@@ -443,8 +573,8 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                         <div className="flex items-center justify-between px-4 py-3">
                           <span className="text-body-sm text-ink-muted">Date & time</span>
                           <span className="text-body-sm text-foreground font-medium text-right">
-                            {selectedSlot
-                              ? `${DAY_NAMES[selectedSlot.day]}, ${formatTime(selectedSlot.start_time)}`
+                            {localSlot
+                              ? `${new Date(localSlot.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}, ${formatTime(localSlot.start_time)}`
                               : "Flexible"}
                           </span>
                         </div>
@@ -493,7 +623,7 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setStep(2)}
-                    disabled={!selectedCourseId}
+                    disabled={!selectedCourseId || (availability.length > 0 && !localSlot)}
                     className="w-full h-14 rounded-lg bg-accent text-accent-foreground text-body font-semibold disabled:opacity-40 transition-opacity"
                   >
                     Next
