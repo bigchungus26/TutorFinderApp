@@ -170,7 +170,7 @@ const SignupPage = () => {
               <input
                 id="password" type={showPw ? "text" : "password"} value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="At least 8 characters" required minLength={8} autoComplete="new-password"
+                placeholder="Minimum 6 characters" required minLength={6} autoComplete="new-password"
                 style={{ fontSize: "16px" }}
                 className="w-full px-4 py-3.5 pr-12 rounded-xl border border-border bg-surface text-foreground placeholder:text-ink-subtle outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
               />
