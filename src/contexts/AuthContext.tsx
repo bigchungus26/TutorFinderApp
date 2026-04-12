@@ -52,27 +52,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    setLoading(true);
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const u = session?.user ?? null;
-      setUser(u);
-      if (u) fetchProfile(u.id).finally(() => setLoading(false));
-      else {
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-
+    // onAuthStateChange fires INITIAL_SESSION immediately on subscribe —
+    // that handles the first session check. Using getSession() in parallel
+    // causes a double fetchProfile race (both fire at once on cold load).
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setLoading(true);
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
         fetchProfile(u.id).finally(() => setLoading(false));
-      }
-      else {
+      } else {
         setProfile(null);
         setLoading(false);
       }

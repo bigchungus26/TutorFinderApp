@@ -165,7 +165,7 @@ const TutorProfilePage = () => {
     const key = `tutr:pv:${tutorId}:${new Date().toDateString()}`;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, "1");
-    supabase.from("profile_views").insert({ tutor_id: tutorId, viewer_id: user.id }).then();
+    supabase.from("profile_views").insert({ tutor_id: tutorId, viewer_id: user.id }).catch(() => {});
   }, [tutorId, user?.id]);
 
   const uni = universities.find(u => u.id === tutor?.university_id);

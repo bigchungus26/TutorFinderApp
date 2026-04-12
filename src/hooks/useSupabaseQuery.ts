@@ -580,7 +580,7 @@ export function useCurrentSemester(universityId?: string) {
     queryFn: async () => {
       let q = supabase.from("semesters").select("*").eq("is_current", true);
       if (universityId) q = q.eq("university_id", universityId);
-      const { data, error } = await q.limit(1).single();
+      const { data, error } = await q.limit(1).maybeSingle();
       if (error) return null;
       return data;
     },
