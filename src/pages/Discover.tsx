@@ -9,16 +9,7 @@ import {
   MessageCircle,
   Loader2,
   BookOpen,
-  Code,
-  FlaskConical,
   Calculator,
-  DollarSign,
-  Languages,
-  Brain,
-  Cpu,
-  PenTool,
-  Atom,
-  Landmark,
   Sparkles,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,7 +21,6 @@ import {
   useUniversities,
   useCourses,
   useTutors,
-  useSubjects,
 } from "@/hooks/useSupabaseQuery";
 import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStudentCourses";
 import { supabase } from "@/lib/supabase";
@@ -45,28 +35,11 @@ import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
 import { TutorCardSkeleton } from "@/components/skeletons/TutorCardSkeleton";
 import { CourseCardSkeleton } from "@/components/skeletons/CourseCardSkeleton";
-import { SubjectTileSkeleton } from "@/components/skeletons/SubjectTileSkeleton";
 import { SkeletonList } from "@/components/skeletons/Skeleton";
 import { useConversations, useConversationsRealtime } from "@/hooks/useMessages";
 
 import { variants } from "@/lib/motion";
 import type { Profile } from "@/types/database";
-
-// ── Subject icon map ──────────────────────────────────────────
-const subjectIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  "Computer Science": Code,
-  "Mathematics":      Calculator,
-  "Biology":          FlaskConical,
-  "Chemistry":        FlaskConical,
-  "Economics":        DollarSign,
-  "Languages":        Languages,
-  "Psychology":       Brain,
-  "Engineering":      Cpu,
-  "Architecture":     PenTool,
-  "Business":         BookOpen,
-  "Physics":          Atom,
-  "Humanities":       Landmark,
-};
 
 // ── Greeting helper ───────────────────────────────────────────
 function getGreeting(): "morning" | "afternoon" | "evening" {
@@ -165,53 +138,6 @@ function Section({ title, overline, children }: SectionProps) {
   );
 }
 
-// ── Subject tile component ────────────────────────────────────
-interface SubjectTileProps {
-  subject: string;
-  onNavigate: () => void;
-}
-
-// Unique hue per subject for colored tiles
-const subjectHues: Record<string, string> = {
-  "Computer Science": "var(--accent)",
-  "Mathematics":      "#7c3aed",
-  "Biology":          "#059669",
-  "Chemistry":        "#0891b2",
-  "Economics":        "#d97706",
-  "Languages":        "#db2777",
-  "Psychology":       "#7c3aed",
-  "Engineering":      "#ea580c",
-  "Architecture":     "#0284c7",
-  "Business":         "#16a34a",
-  "Physics":          "#6d28d9",
-  "Humanities":       "#b45309",
-};
-
-function SubjectTile({ subject, onNavigate }: SubjectTileProps) {
-  const Icon = subjectIcons[subject] ?? BookOpen;
-  const color = subjectHues[subject] ?? "var(--accent)";
-
-  return (
-    <motion.button
-      variants={variants.staggerItem}
-      whileTap={{ scale: 0.96 }}
-      onClick={onNavigate}
-      className="rounded-xl border border-border p-4 flex flex-col justify-between text-left h-28 bg-surface transition-colors duration-150 hover:border-accent/30"
-      aria-label={`Browse ${subject}`}
-    >
-      <Icon size={28} style={{ color }} className="flex-shrink-0" aria-hidden="true" />
-      <div>
-        <span
-          className="font-display font-semibold text-[17px] leading-snug line-clamp-1 block"
-          style={{ color: "var(--text-primary)" }}
-        >
-          {subject}
-        </span>
-      </div>
-    </motion.button>
-  );
-}
-
 // ── Main component ────────────────────────────────────────────
 const DiscoverPage = () => {
   const navigate = useNavigate();
@@ -240,7 +166,6 @@ const DiscoverPage = () => {
     isLoading: tutorsLoading,
     refetch: refetchTutors,
   } = useTutors(selectedUniversity);
-  const { data: subjects = [], isLoading: subjectsLoading } = useSubjects(selectedUniversity);
 
   // Student-specific data
   const studentId = profile?.id ?? "";
@@ -593,29 +518,6 @@ const DiscoverPage = () => {
               )}
             </div>
           </Section>
-
-          {/* ── 10. Browse by subject ───────────────────────── */}
-          {(subjects.length > 0 || subjectsLoading) && (
-            <Section title="Browse by subject" overline="EXPLORE">
-              {subjectsLoading ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <SkeletonList count={6} component={SubjectTileSkeleton} />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {subjects.map((subject) => (
-                    <SubjectTile
-                      key={subject}
-                      subject={subject}
-                      onNavigate={() =>
-                        navigate(`/search?subject=${encodeURIComponent(subject)}`)
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </Section>
-          )}
 
         </div>
       </div>
