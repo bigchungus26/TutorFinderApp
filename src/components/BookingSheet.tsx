@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, X, Video, MapPin, Clock, BadgeCheck } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar } from "@/components/Avatar";
 import { useCreateRequest } from "@/hooks/useSupabaseQuery";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
 import { toast } from "@/components/ui/sonner";
@@ -410,10 +411,10 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                     >
                       {/* Tutor summary row */}
                       <div className="flex items-center gap-3 bg-accent-light rounded-xl p-4">
-                        <img
-                          src={tutor.avatar_url || "https://i.pravatar.cc/100"}
-                          alt={tutor.full_name}
-                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        <Avatar
+                          src={tutor.avatar_url}
+                          name={tutor.full_name}
+                          size={48}
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1">

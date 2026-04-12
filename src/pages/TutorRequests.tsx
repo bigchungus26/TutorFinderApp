@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOpenConversation } from "@/hooks/useOpenConversation";
+import { Avatar } from "@/components/Avatar";
 import {
   useRequests,
   useUpdateRequest,
@@ -93,10 +94,10 @@ function RequestCard({ req, onAccept, onDecline, onMessage, actionPending, messa
 
       {/* Student row */}
       <div className="flex items-center gap-3 mb-3">
-        <img
-          src={req.student?.avatar_url || "https://i.pravatar.cc/100"}
-          alt={req.student?.full_name ?? "Student"}
-          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+        <Avatar
+          src={req.student?.avatar_url}
+          name={req.student?.full_name ?? "Student"}
+          size={40}
         />
         <div className="flex-1 min-w-0">
           <p className="text-body font-medium text-foreground truncate">

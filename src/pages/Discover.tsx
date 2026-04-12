@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { Avatar } from "@/components/Avatar";
 import { useUniversity } from "@/contexts/UniversityContext";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -401,10 +402,11 @@ const DiscoverPage = () => {
                 aria-label="Open profile"
                 className="rounded-full flex-shrink-0 transition-transform duration-150 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                <img
-                  src={profile?.avatar_url || "https://i.pravatar.cc/100?img=68"}
-                  alt={profile?.full_name ?? "Profile"}
-                  className="w-10 h-10 rounded-full object-cover border border-border"
+                <Avatar
+                  src={profile?.avatar_url}
+                  name={profile?.full_name ?? "Profile"}
+                  size={40}
+                  className="border border-border"
                 />
               </button>
             </div>

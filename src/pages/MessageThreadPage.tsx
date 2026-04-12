@@ -9,6 +9,7 @@ import {
   useSendMessage,
   useMarkMessagesRead,
 } from "@/hooks/useMessages";
+import { Avatar } from "@/components/Avatar";
 import { variants } from "@/lib/motion";
 
 function relativeTime(dateStr: string): string {
@@ -42,7 +43,7 @@ const MessageThreadPage = () => {
   const other = isStudent ? conversation?.tutor : conversation?.student;
   const otherId: string = (other as any)?.id ?? "";
   const otherName: string = (other as any)?.full_name ?? "User";
-  const otherAvatar: string = (other as any)?.avatar_url || "https://i.pravatar.cc/100";
+  const otherAvatar: string | null = (other as any)?.avatar_url ?? null;
   const otherProfilePath = isStudent ? `/tutor/${otherId}` : `/student/${otherId}`;
 
   // Auto-scroll to bottom whenever messages update
@@ -118,10 +119,11 @@ const MessageThreadPage = () => {
           className="min-w-0 flex flex-1 items-center gap-3 rounded-xl -ml-1 px-1 py-1 text-left transition-colors hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
           aria-label={`Open ${otherName}'s profile`}
         >
-          <img
+          <Avatar
             src={otherAvatar}
-            alt={otherName}
-            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+            name={otherName}
+            size={32}
+            className="flex-shrink-0"
           />
           <span className="text-body font-medium text-foreground truncate">{otherName}</span>
         </motion.button>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useConversations } from "@/hooks/useMessages";
+import { Avatar } from "@/components/Avatar";
 import { EmptyState } from "@/components/EmptyState";
 import { SkeletonList, MessageSkeleton } from "@/components/skeletons";
 import { variants } from "@/lib/motion";
@@ -61,7 +62,7 @@ const MessagesPage = () => {
             const isStudent = profile?.role === "student";
             const other = isStudent ? conv.tutor : conv.student;
             const otherName: string = other?.full_name ?? "Unknown";
-            const otherAvatar: string = other?.avatar_url || "https://i.pravatar.cc/100";
+            const otherAvatar: string | null = other?.avatar_url ?? null;
             const lastMsg = conv.lastMessage;
             const unread: number = conv.unreadCount ?? 0;
 
@@ -75,10 +76,10 @@ const MessagesPage = () => {
               >
                 {/* Avatar with unread dot */}
                 <div className="relative flex-shrink-0">
-                  <img
+                  <Avatar
                     src={otherAvatar}
-                    alt={otherName}
-                    className="w-11 h-11 rounded-full object-cover"
+                    name={otherName}
+                    size={44}
                   />
                   {unread > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-accent border-2 border-background" />

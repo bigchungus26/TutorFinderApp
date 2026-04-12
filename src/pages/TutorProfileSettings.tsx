@@ -36,6 +36,7 @@ import {
   useCourses,
   useTutorSubscription,
 } from "@/hooks/useSupabaseQuery";
+import { Avatar } from "@/components/Avatar";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { ProfileHeaderSkeleton } from "@/components/skeletons";
 import { variants, springs, transitions } from "@/lib/motion";
@@ -644,10 +645,11 @@ const TutorProfilePage = () => {
             animate="visible"
             className="flex flex-col items-center mb-6"
           >
-            <img
-              src={activeProfile?.avatar_url || "https://i.pravatar.cc/100?img=11"}
-              alt={activeProfile?.full_name ?? "Tutor"}
-              className="w-24 h-24 rounded-full object-cover mb-3"
+            <Avatar
+              src={activeProfile?.avatar_url}
+              name={activeProfile?.full_name ?? "Tutor"}
+              size={96}
+              className="mb-3"
             />
             <div className="flex items-center gap-1.5 mb-1">
               <h1 className="text-h1 font-display text-foreground">{activeProfile?.full_name ?? "Tutor"}</h1>

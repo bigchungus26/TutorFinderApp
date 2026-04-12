@@ -13,26 +13,17 @@ interface AvatarProps {
   className?: string;
 }
 
-function dicebearUrl(seed: string): string {
-  return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(seed)}&backgroundColor=ecfdf5,fef9ee,e0f2fe&fontFamily=serif&fontSize=42`;
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+function fallbackLetter(name: string): string {
+  const trimmed = name.trim();
+  return trimmed.charAt(0).toUpperCase() || "?";
 }
 
 export function Avatar({ src, name, size = 40, ring = false, className }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
 
   const displayName = name ?? "?";
-  // Use dicebear for missing/broken images OR pravatar placeholders
   const useFallback = !src || imgError || src.includes("pravatar.cc");
-  const avatarSrc = useFallback ? (name ? dicebearUrl(name) : null) : src;
+  const avatarSrc = useFallback ? null : src;
 
   const style = { width: size, height: size, minWidth: size, minHeight: size };
 
@@ -58,8 +49,9 @@ export function Avatar({ src, name, size = 40, ring = false, className }: Avatar
         <div
           style={style}
           className="flex items-center justify-center bg-accent-light text-accent font-semibold"
+          aria-label={displayName}
         >
-          <span style={{ fontSize: size * 0.36 }}>{initials(displayName)}</span>
+          <span style={{ fontSize: size * 0.42 }}>{fallbackLetter(displayName)}</span>
         </div>
       )}
     </div>
