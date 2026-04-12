@@ -142,9 +142,9 @@ export function useConversations(userId: string) {
       return (data ?? []).map((conversation: any) => summarizeConversation(conversation, userId));
     },
     enabled: !!userId,
-    refetchInterval: !isSupabaseResourceMissing("conversations") ? 3000 : false,
-    refetchIntervalInBackground: true,
-    staleTime: 10 * 1000,
+    refetchInterval: 4000,          // poll every 4 s — drives the unread dot
+    refetchIntervalInBackground: false, // pause when tab is hidden
+    staleTime: 0,                   // always consider data stale so refetch fires
   });
 }
 
