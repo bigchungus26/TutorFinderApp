@@ -152,6 +152,10 @@ export function useSaveTutor() {
     }) => {
       const localEntries = upsertLocalSavedTutor(studentId, tutor);
 
+      if (isSupabaseResourceMissing("saved_tutors")) {
+        return { localEntries };
+      }
+
       const { error } = await supabase
         .from("saved_tutors")
         .insert({ student_id: studentId, tutor_id: tutorId });
@@ -179,6 +183,10 @@ export function useUnsaveTutor() {
   return useMutation({
     mutationFn: async ({ studentId, tutorId }: { studentId: string; tutorId: string }) => {
       const localEntries = removeLocalSavedTutor(studentId, tutorId);
+
+      if (isSupabaseResourceMissing("saved_tutors")) {
+        return { localEntries };
+      }
 
       const { error } = await supabase
         .from("saved_tutors")
