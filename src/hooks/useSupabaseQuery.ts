@@ -43,11 +43,28 @@ export function useCourses(universityId?: string) {
   return useQuery({
     queryKey: ["courses", universityId],
     queryFn: async () => {
-      let query = supabase.from("courses").select("*").order("code");
-      if (universityId) query = query.eq("university_id", universityId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      // Supabase defaults to a 1000-row limit. We have universities with
+      // >1000 courses (AUB, NDU), so we page through until all rows are
+      // fetched.
+      const PAGE_SIZE = 1000;
+      const all: any[] = [];
+      let from = 0;
+      // Safety cap to avoid runaway loops; 10,000 rows per uni is plenty.
+      for (let i = 0; i < 10; i++) {
+        let q = supabase
+          .from("courses")
+          .select("*")
+          .order("code")
+          .range(from, from + PAGE_SIZE - 1);
+        if (universityId) q = q.eq("university_id", universityId);
+        const { data, error } = await q;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        if (data.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      return all;
     },
     staleTime: 1000 * 60 * 30,
   });
