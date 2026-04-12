@@ -30,7 +30,7 @@ const MAJORS = [
 ] as const;
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Graduate"] as const;
-const GRADES = ["A", "A-", "B+", "B", "B-"] as const;
+const GRADES = ["A", "A-"] as const;
 const ALLOWED_TUTOR_GRADES = new Set<string>(GRADES);
 const TEACHING_STYLES = [
   { value: "step-by-step", label: "Step-by-step" },
