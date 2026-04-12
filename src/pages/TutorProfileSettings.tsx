@@ -25,6 +25,8 @@ import {
   Zap,
   CreditCard,
   Bell,
+  Mail,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUniversity } from "@/contexts/UniversityContext";
@@ -76,6 +78,237 @@ function ThemeToggle() {
         </motion.button>
       ))}
     </div>
+  );
+}
+
+interface AccountSettingsSheetProps {
+  email: string;
+  onClose: () => void;
+  onSignedOut: () => Promise<void>;
+}
+
+function AccountSettingsSheet({ email, onClose, onSignedOut }: AccountSettingsSheetProps) {
+  const [nextEmail, setNextEmail] = useState(email);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fieldError, setFieldError] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const hasChanges = nextEmail.trim() !== email.trim() || newPassword.trim().length > 0;
+
+  const handleSave = useCallback(async () => {
+    const trimmedEmail = nextEmail.trim();
+    const wantsEmailChange = trimmedEmail !== email.trim();
+    const wantsPasswordChange = newPassword.trim().length > 0;
+
+    setFieldError("");
+
+    if (!wantsEmailChange && !wantsPasswordChange) {
+      onClose();
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setFieldError("Email can't be empty.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setFieldError("Enter a valid email address.");
+      return;
+    }
+
+    if (wantsPasswordChange) {
+      if (!currentPassword) {
+        setFieldError("Enter your current password to change it.");
+        return;
+      }
+      if (newPassword.trim().length < 6) {
+        setFieldError("New password must be at least 6 characters.");
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setFieldError("New password and confirmation do not match.");
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      if (wantsPasswordChange) {
+        const { error: verifyError } = await supabase.auth.signInWithPassword({
+          email,
+          password: currentPassword,
+        });
+        if (verifyError) {
+          setFieldError("Current password is incorrect.");
+          return;
+        }
+      }
+
+      const payload: { email?: string; password?: string } = {};
+      if (wantsEmailChange) payload.email = trimmedEmail;
+      if (wantsPasswordChange) payload.password = newPassword;
+
+      const { error } = await supabase.auth.updateUser(payload);
+      if (error) throw error;
+
+      toast.success(
+        wantsEmailChange
+          ? "Account settings updated. Check your email if confirmation is required."
+          : "Password updated.",
+      );
+      onClose();
+    } catch (err) {
+      toastError(err);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [confirmPassword, currentPassword, email, newPassword, nextEmail, onClose]);
+
+  return (
+    <>
+      <motion.div
+        key="account-settings-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={transitions.standard}
+        className="fixed inset-0 bg-foreground/30 z-[80]"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <motion.div
+        key="account-settings-sheet"
+        variants={variants.sheetIn}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="fixed bottom-0 left-0 right-0 z-[90] bg-surface rounded-t-2xl max-w-[440px] mx-auto flex flex-col"
+        style={{ maxHeight: "92dvh" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Account settings"
+      >
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+        <div className="flex items-center justify-between px-5 pt-2 pb-4 flex-shrink-0">
+          <div>
+            <h2 className="text-h2 font-display text-foreground">Account settings</h2>
+            <p className="text-body-sm text-ink-muted mt-1">Update your login email or password.</p>
+          </div>
+          <motion.button whileTap={{ scale: 0.96 }} onClick={onClose}
+            className="p-2 -mr-2 rounded-xl hover:bg-muted" aria-label="Close">
+            <X size={20} className="text-ink-muted" />
+          </motion.button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-4">
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <div className="flex items-start gap-3">
+              <Mail size={18} className="text-accent mt-0.5" />
+              <div>
+                <p className="text-label font-medium text-foreground">Login email</p>
+                <p className="text-caption text-ink-muted">This is the email you use to sign in.</p>
+              </div>
+            </div>
+            <input
+              value={nextEmail}
+              onChange={(e) => setNextEmail(e.target.value)}
+              type="email"
+              autoComplete="email"
+              className="mt-3 w-full h-11 rounded-lg border border-border bg-surface px-3 text-body text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              aria-label="Email address"
+            />
+          </div>
+
+          <div className="rounded-xl border border-border bg-background px-4 py-3 space-y-3">
+            <div className="flex items-start gap-3">
+              <ShieldCheck size={18} className="text-accent mt-0.5" />
+              <div>
+                <p className="text-label font-medium text-foreground">Change password</p>
+                <p className="text-caption text-ink-muted">
+                  Confirm your current password before setting a new one.
+                </p>
+              </div>
+            </div>
+
+            <input
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              type="password"
+              autoComplete="current-password"
+              placeholder="Current password"
+              className="w-full h-11 rounded-lg border border-border bg-surface px-3 text-body text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              aria-label="Current password"
+            />
+            <input
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              type="password"
+              autoComplete="new-password"
+              placeholder="New password"
+              className="w-full h-11 rounded-lg border border-border bg-surface px-3 text-body text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              aria-label="New password"
+            />
+            <input
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              type="password"
+              autoComplete="new-password"
+              placeholder="Confirm new password"
+              className="w-full h-11 rounded-lg border border-border bg-surface px-3 text-body text-foreground placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+              aria-label="Confirm new password"
+            />
+          </div>
+
+          {fieldError && (
+            <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+              <p className="text-body-sm text-destructive">{fieldError}</p>
+            </div>
+          )}
+
+          <div className="rounded-xl border border-border bg-background px-4 py-3">
+            <p className="text-label font-medium text-foreground mb-1">Session</p>
+            <p className="text-caption text-ink-muted mb-3">
+              Need to sign out on this device? You can do it here too.
+            </p>
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={onSignedOut}
+              className="w-full h-11 rounded-lg border border-border bg-surface text-body font-medium text-foreground hover:bg-muted"
+            >
+              Sign out
+            </motion.button>
+          </div>
+        </div>
+
+        <div className="flex-shrink-0 px-5 pt-3 pb-8 border-t border-border bg-surface">
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleSave}
+            disabled={isSaving || !hasChanges}
+            className="w-full h-14 rounded-lg bg-accent text-accent-foreground text-body font-semibold disabled:opacity-40 flex items-center justify-center gap-2"
+          >
+            {isSaving ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                  className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full"
+                />
+                Saving…
+              </>
+            ) : (
+              "Save account settings"
+            )}
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -533,6 +766,7 @@ const TutorProfilePage = () => {
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editCoursesOpen, setEditCoursesOpen] = useState(false);
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const isPaused = !!(profile as any)?.paused_until && new Date((profile as any).paused_until) > new Date();
 
   // Subscription state from tutor_subscriptions table
@@ -801,6 +1035,8 @@ const TutorProfilePage = () => {
           <SettingsRow
             icon={Settings}
             label="Account settings"
+            sublabel="Manage sign-in email and password"
+            onClick={() => setAccountSettingsOpen(true)}
           />
           <SettingsRow
             icon={ArrowRightLeft}
@@ -857,6 +1093,17 @@ const TutorProfilePage = () => {
             currentCourseIds={currentCourseIds}
             universityId={activeProfile?.university_id}
             onClose={() => setEditCoursesOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {accountSettingsOpen && user && (
+          <AccountSettingsSheet
+            key="account-settings-sheet"
+            email={user.email ?? ""}
+            onClose={() => setAccountSettingsOpen(false)}
+            onSignedOut={handleSignOut}
           />
         )}
       </AnimatePresence>
