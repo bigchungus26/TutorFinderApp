@@ -1,17 +1,23 @@
-const STORAGE_KEY = "tutr:missing-supabase-resources:v2";
-const DEFAULT_MISSING_RESOURCES = [
-  "student_courses",
-  "saved_tutors",
-  "availability",
-  "notifications",
-  "trending_tutors",
-] as const;
+// ============================================================
+// Supabase resource fallback
+// ============================================================
+// Historically some tables didn't exist yet (availability, saved_tutors,
+// notifications, messages, etc.) so the app fell back to localStorage.
+// Now that every table is created by the migrations, the real Supabase
+// path should always be attempted first. We keep the helpers so hooks
+// don't need to change, but the default state is "nothing is missing".
+//
+// A table only gets flagged as missing at runtime if a query actually
+// returns a "relation does not exist" style error — at which point the
+// hook can fall back until the next page load.
+// ============================================================
+
+const STORAGE_KEY = "tutr:missing-supabase-resources:v3";
 
 const missingResources = new Set<string>();
 
 function syncFromStorage() {
   missingResources.clear();
-  DEFAULT_MISSING_RESOURCES.forEach((resource) => missingResources.add(resource));
 
   if (typeof window === "undefined") return;
 
@@ -39,6 +45,17 @@ function syncToStorage() {
     window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(missingResources)));
   } catch {
     // Ignore storage write failures.
+  }
+}
+
+// Best-effort: on module load, clear any stale v2 flag from before the
+// schema was complete. Without this, users who hit the old fallback code
+// would stay locked into localStorage-only mode.
+if (typeof window !== "undefined") {
+  try {
+    window.sessionStorage.removeItem("tutr:missing-supabase-resources:v2");
+  } catch {
+    // Ignore.
   }
 }
 

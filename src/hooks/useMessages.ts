@@ -224,6 +224,26 @@ export function useSendMessage() {
       senderId: string;
       body: string;
     }) => {
+      // Try Supabase first — this is the real path
+      const { data, error } = await supabase
+        .from("messages")
+        .insert({ conversation_id: conversationId, sender_id: senderId, body })
+        .select(`*, sender:profiles!messages_sender_id_fkey (full_name, avatar_url, id)`)
+        .single();
+
+      if (!error && data) {
+        clearSupabaseResourceMissing("messages");
+        return { message: data, usedLocal: false };
+      }
+
+      // Real error (not a missing-table fallback) — surface it
+      if (error && !isMissingSupabaseResourceError(error)) {
+        throw error;
+      }
+
+      // Fallback: messages table doesn't exist — write to localStorage
+      markSupabaseResourceMissing("messages");
+
       const localConversation = getLocalConversationById(conversationId);
       const sender =
         localConversation?.student?.id === senderId
@@ -242,42 +262,29 @@ export function useSendMessage() {
         sender,
       };
 
-      const updatedConversations = updateLocalConversation(conversationId, (conversation) => ({
+      updateLocalConversation(conversationId, (conversation) => ({
         ...conversation,
         last_message_at: localMessage.created_at,
         messages: [...conversation.messages, localMessage],
       }));
 
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({ conversation_id: conversationId, sender_id: senderId, body })
-        .select(`*, sender:profiles!messages_sender_id_fkey (full_name, avatar_url, id)`)
-        .single();
-
-      if (error && !isMissingSupabaseResourceError(error)) {
-        throw error;
-      }
-
-      if (error) {
-        markSupabaseResourceMissing("messages");
-      }
-      if (!error) {
-        clearSupabaseResourceMissing("messages");
-      }
-
-      return {
-        message: data ?? localMessage,
-        updatedConversations,
-      };
+      return { message: localMessage, usedLocal: true };
     },
-    onSuccess: ({ message, updatedConversations }, { conversationId }) => {
+    onSuccess: ({ message, usedLocal }, { conversationId }) => {
+      // Append the new message to the messages cache so it shows instantly
       queryClient.setQueryData(["messages", conversationId], (current: any[] | undefined) => {
         const existing = current ?? [];
         if (existing.some((entry) => entry.id === message.id)) return existing;
         return [...existing, message];
       });
-      queryClient.setQueryData(["conversation", conversationId], getLocalConversationById(conversationId));
-      queryClient.setQueryData(["conversations"], updatedConversations);
+
+      // Only overwrite conversation cache from localStorage when we're in fallback mode
+      if (usedLocal) {
+        const local = getLocalConversationById(conversationId);
+        if (local) queryClient.setQueryData(["conversation", conversationId], local);
+      }
+
+      // Invalidate conversations list so sidebar reorders (real refetch, not a replace)
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (err) => toastError(err),
@@ -382,13 +389,7 @@ export function useMarkMessagesRead() {
       conversationId: string;
       readerId: string;
     }) => {
-      const updatedConversations = updateLocalConversation(conversationId, (conversation) => ({
-        ...conversation,
-        messages: conversation.messages.map((message) =>
-          message.sender_id !== readerId ? { ...message, read: true } : message,
-        ),
-      }));
-
+      // Try real Supabase first
       const { error } = await supabase
         .from("messages")
         .update({ read: true })
@@ -396,23 +397,36 @@ export function useMarkMessagesRead() {
         .neq("sender_id", readerId)
         .eq("read", false);
 
-      if (error && !isMissingSupabaseResourceError(error)) {
+      if (!error) {
+        clearSupabaseResourceMissing("messages");
+        return { usedLocal: false };
+      }
+
+      if (!isMissingSupabaseResourceError(error)) {
         throw error;
       }
 
-      if (error) {
-        markSupabaseResourceMissing("messages");
-      }
-      if (!error) {
-        clearSupabaseResourceMissing("messages");
-      }
-
-      return updatedConversations;
+      // Fallback: mark as read in localStorage only
+      markSupabaseResourceMissing("messages");
+      updateLocalConversation(conversationId, (conversation) => ({
+        ...conversation,
+        messages: conversation.messages.map((message) =>
+          message.sender_id !== readerId ? { ...message, read: true } : message,
+        ),
+      }));
+      return { usedLocal: true };
     },
-    onSuccess: (updatedConversations, { conversationId }) => {
-      queryClient.setQueryData(["conversation", conversationId], getLocalConversationById(conversationId));
-      queryClient.setQueryData(["messages", conversationId], getLocalConversationById(conversationId)?.messages ?? []);
-      queryClient.setQueryData(["conversations"], updatedConversations);
+    onSuccess: ({ usedLocal }, { conversationId }) => {
+      if (usedLocal) {
+        const local = getLocalConversationById(conversationId);
+        if (local) {
+          queryClient.setQueryData(["conversation", conversationId], local);
+          queryClient.setQueryData(["messages", conversationId], local.messages);
+        }
+      } else {
+        // Real path: just invalidate so the next poll picks up the read state
+        queryClient.invalidateQueries({ queryKey: ["messages", conversationId] });
+      }
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
     onError: (err) => toastError(err),
