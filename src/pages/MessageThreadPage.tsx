@@ -94,7 +94,7 @@ const MessageThreadPage = () => {
     <div className="flex h-[100dvh] min-h-0 flex-col bg-background">
       {/* Header */}
       <div
-        className="flex items-center gap-3 border-b border-border bg-background px-4 pb-3 pt-12 flex-shrink-0"
+        className="sticky top-0 z-10 flex flex-shrink-0 items-center gap-3 border-b border-border bg-background/95 px-4 pb-3 pt-12 backdrop-blur supports-[backdrop-filter]:bg-background/80"
         style={{ paddingTop: "max(3rem, calc(env(safe-area-inset-top, 0px) + 1rem))" }}
       >
         <motion.button
@@ -117,7 +117,10 @@ const MessageThreadPage = () => {
       <div
         ref={scrollRef}
         className="min-h-0 flex-1 overflow-y-auto px-4 py-4 space-y-3"
-        style={{ paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))" }}
+        style={{
+          paddingTop: "0.75rem",
+          paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 6rem))",
+        }}
       >
         {isLoading && (
           <div className="flex justify-center py-8">
