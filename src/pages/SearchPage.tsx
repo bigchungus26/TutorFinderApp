@@ -20,7 +20,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 
 // ── Constants ────────────────────────────────────────────────
 const RECENT_KEY = "tutr:recent-searches";
-const MAX_RECENT = 8;
+const MAX_RECENT = 3;
 
 type FilterTab = "All" | "Courses" | "Tutors";
 type SortBy = "rating" | "price_asc" | "price_desc" | "newest";
