@@ -24,7 +24,9 @@ const EntryGatePage = () => {
   const isSwitchMode = searchParams.get("switch") === "1";
   const roleFromQuery = searchParams.get("role");
   const activeRole = isSelectedRole(roleFromQuery) ? roleFromQuery : storedRole;
-  const isDarkMode = theme === "dark";
+  const isDarkMode =
+    theme === "dark" ||
+    (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const studentCardStyle = isDarkMode
     ? {
         background:

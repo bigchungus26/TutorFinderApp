@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Tell Safari/iOS this app handles dark mode itself — prevents white flash -->
+    <meta name="color-scheme" content="light dark" />
     <title>TUTR — Peer Tutoring for Lebanese Universities</title>
     <meta name="description" content="Connect with top peer tutors at AUB, LAU, and NDU. Find students who aced your exact courses and book one-on-one sessions." />
     <meta name="keywords" content="peer tutoring, AUB tutors, LAU tutors, NDU tutors, Lebanese university tutoring, student tutoring, Beirut tutoring" />
@@ -14,6 +16,29 @@
     <meta property="og:description" content="Connect with top peer tutors at AUB, LAU, and NDU. Find students who aced your exact courses." />
     <meta property="og:url" content="https://teachme.app/" />
     <meta property="og:type" content="website" />
+
+    <!--
+      Blocking theme script — runs before any CSS or React mounts.
+      Reads stored preference and applies .dark class + data-theme instantly
+      so there is zero flash of wrong theme on mobile.
+    -->
+    <script>
+      (function () {
+        var stored = '';
+        try { stored = localStorage.getItem('tutr:theme') || ''; } catch (e) {}
+        var effective;
+        if (stored === 'dark') {
+          effective = 'dark';
+        } else if (stored === 'light') {
+          effective = 'light';
+        } else {
+          effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        var root = document.documentElement;
+        root.setAttribute('data-theme', effective);
+        if (effective === 'dark') root.classList.add('dark');
+      })();
+    </script>
 
     <!-- Fonts: Plus Jakarta Sans (headings) + Inter (body) + Fraunces (TUTR wordmark only) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

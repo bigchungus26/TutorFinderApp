@@ -23,7 +23,7 @@ export function clearSelectedRole() {
 }
 
 export function getRoleLandingPath(role: SelectedRole) {
-  return role === "tutor" ? "/tutor" : "/student";
+  return role === "tutor" ? `/login?role=tutor` : `/login?role=student`;
 }
 
 export function getRoleAppPath(role: SelectedRole) {

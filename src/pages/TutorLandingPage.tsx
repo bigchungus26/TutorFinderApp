@@ -6,7 +6,7 @@ const TutorLandingPage = () => {
   const navigate = useNavigate();
   useEffect(() => {
     setSelectedRole("tutor");
-    navigate("/signup", { replace: true });
+    navigate("/login?role=tutor", { replace: true });
   }, [navigate]);
   return null;
 };
