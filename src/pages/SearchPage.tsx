@@ -631,44 +631,37 @@ const SearchPage = () => {
           {activeTab === "All" && (
             <p className="text-overline text-ink-muted mb-2">Courses</p>
           )}
-          <motion.div
-            variants={variants.staggerChildren}
-            initial="hidden"
-            animate="visible"
-            className="space-y-2"
-          >
-            {filteredCourses.map((c, i) => {
+          <div className="space-y-2">
+            {filteredCourses.map((c) => {
               const uni = universities.find(u => u.id === c.university_id);
               return (
-                <motion.div key={c.id} variants={variants.staggerItem} custom={i}>
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    transition={springs.snappy}
-                    onClick={() => navigate(`/course/${c.id}`)}
-                    className="w-full relative overflow-hidden bg-surface rounded-xl border border-border p-4 text-left flex items-center gap-3"
-                  >
-                    <div
-                      className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
-                      style={{ backgroundColor: uni?.color ?? "#2ba66a" }}
-                    />
-                    <div className="flex-1 pl-4">
-                      <div className="text-label text-foreground font-medium">{c.code}</div>
-                      <div className="text-body-sm text-ink-muted">{c.name}</div>
-                    </div>
-                  </motion.button>
-                </motion.div>
+                <motion.button
+                  key={c.id}
+                  whileTap={{ scale: 0.98 }}
+                  transition={springs.snappy}
+                  onClick={() => navigate(`/course/${c.id}`)}
+                  className="w-full relative overflow-hidden bg-surface rounded-xl border border-border p-4 text-left flex items-center gap-3"
+                >
+                  <div
+                    className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
+                    style={{ backgroundColor: uni?.color ?? "#2ba66a" }}
+                  />
+                  <div className="flex-1 pl-4">
+                    <div className="text-label text-foreground font-medium">{c.code}</div>
+                    <div className="text-body-sm text-ink-muted">{c.name}</div>
+                  </div>
+                </motion.button>
               );
             })}
             {/* Don't see your course? */}
             <motion.button
-              variants={variants.staggerItem}
               whileTap={{ scale: 0.98 }} transition={springs.snappy}
               onClick={() => setCourseRequestOpen(true)}
               className="w-full text-left px-4 py-3 rounded-xl border border-dashed border-border text-body-sm text-ink-muted hover:border-accent hover:text-accent transition-colors"
             >
               Don't see your course? Submit it →
             </motion.button>
-          </motion.div>
+          </div>
         </div>
       )}
 

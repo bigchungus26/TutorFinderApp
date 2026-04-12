@@ -12,7 +12,7 @@ import { ArrowLeft, X, Video, MapPin, Clock, BadgeCheck } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar } from "@/components/Avatar";
-import { useCreateRequest, useSessions } from "@/hooks/useSupabaseQuery";
+import { useCreateRequest } from "@/hooks/useSupabaseQuery";
 import { useAvailability } from "@/hooks/useAvailability";
 import type { AvailabilitySlot } from "@/hooks/useAvailability";
 import { SuccessOverlay } from "@/components/SuccessOverlay";
@@ -144,9 +144,8 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
   // ── Success overlay ────────────────────────────────────────
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // ── Availability & sessions ────────────────────────────────
+  // ── Availability ───────────────────────────────────────────
   const { data: availability = [] } = useAvailability(tutor.id);
-  const { data: tutorSessions = [] } = useSessions(tutor.id, "tutor");
   const [localSlot, setLocalSlot] = useState<LocalSlot | null>(null);
 
   // ── Derived values ─────────────────────────────────────────
@@ -183,15 +182,6 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
     return map;
   }, [availability]);
 
-  const bookedSet = useMemo(() => {
-    const set = new Set<string>();
-    for (const s of tutorSessions as any[]) {
-      if (s.status === "upcoming") {
-        set.add(`${s.date}_${(s.time ?? "").slice(0, 5)}`);
-      }
-    }
-    return set;
-  }, [tutorSessions]);
 
   // ── Handlers ───────────────────────────────────────────────
   const handleClose = useCallback(() => {
@@ -376,34 +366,26 @@ export function BookingSheet({ isOpen, onClose, tutor, selectedSlot }: BookingSh
                                   {hasSlots ? (
                                     <div className="space-y-1.5">
                                       {daySlots.map(slot => {
-                                        const bookKey = `${dateStr}_${slot.start_time.slice(0, 5)}`;
-                                        const isBooked = bookedSet.has(bookKey);
                                         const isSelected =
                                           localSlot?.date === dateStr &&
                                           localSlot?.start_time === slot.start_time;
                                         return (
                                           <motion.button
                                             key={slot.id ?? `${slot.day_of_week}-${slot.start_time}`}
-                                            whileTap={!isBooked ? { scale: 0.95 } : {}}
-                                            onClick={() => {
-                                              if (isBooked) return;
-                                              setLocalSlot({
-                                                date: dateStr,
-                                                dayOfWeek: dayDate.getDay(),
-                                                start_time: slot.start_time,
-                                                end_time: slot.end_time,
-                                              });
-                                            }}
-                                            disabled={isBooked}
-                                            className={`w-full text-center px-1.5 py-1.5 rounded-lg text-caption font-medium transition-colors ${
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={() => setLocalSlot({
+                                              date: dateStr,
+                                              dayOfWeek: dayDate.getDay(),
+                                              start_time: slot.start_time,
+                                              end_time: slot.end_time,
+                                            })}
+                                            className={`w-full text-center px-1.5 py-1.5 rounded-lg text-caption font-medium transition-colors cursor-pointer ${
                                               isSelected
                                                 ? "bg-accent text-white"
-                                                : isBooked
-                                                ? "bg-muted text-ink-muted line-through cursor-not-allowed opacity-50"
-                                                : "bg-accent/10 text-accent hover:bg-accent hover:text-white cursor-pointer"
+                                                : "bg-accent/10 text-accent hover:bg-accent hover:text-white"
                                             }`}
                                           >
-                                            {isBooked ? "Booked" : formatTime(slot.start_time)}
+                                            {formatTime(slot.start_time)}
                                           </motion.button>
                                         );
                                       })}
