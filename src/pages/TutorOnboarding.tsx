@@ -621,12 +621,14 @@ function TutorOnboarding() {
         online: mode !== "in-person",
         in_person: mode !== "online",
         onboarded_at: new Date().toISOString(),
+        tutor_type: tutorType,
+        verification_status: "pending",
+        verification_submitted_at: new Date().toISOString(),
       });
 
       try {
         await updateProfile.mutateAsync({
           id: user.id,
-          tutor_type: tutorType,
           gpa: gpa ? Number(gpa) : null,
           teaching_styles: teachingStyles,
           languages,
@@ -634,8 +636,7 @@ function TutorOnboarding() {
           max_students_per_session: maxStudents ? Number(maxStudents) : null,
           previous_tutoring_experience: previousExperience,
           years_of_experience: previousExperience && yearsExperience ? Number(yearsExperience) : null,
-          proof_asset_url: proofPreview || "",
-          proof_asset_name: proofFileName || "",
+          non_student_credentials: tutorType === "non_student" ? nonStudentCredentials : "",
           subscription_plan: "tutor_monthly",
           subscription_status: "pending",
         });
