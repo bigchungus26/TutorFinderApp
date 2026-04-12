@@ -573,13 +573,13 @@ function TutorOnboarding() {
         hourly_rate: Number(rate),
         online: mode !== "in-person",
         in_person: mode !== "online",
-        tutor_status: tutorStatus,
         onboarded_at: new Date().toISOString(),
       });
 
       try {
         await updateProfile.mutateAsync({
           id: user.id,
+          tutor_status: tutorStatus,
           gpa: gpa ? Number(gpa) : null,
           teaching_styles: teachingStyles,
           languages,

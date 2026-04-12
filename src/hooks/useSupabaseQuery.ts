@@ -413,13 +413,24 @@ export function useUpdateProfile() {
       id,
       ...updates
     }: Partial<Profile> & { id: string }) => {
-      const { data, error } = await supabase
+      const { data: updated, error: updateError } = await supabase
         .from("profiles")
-        .upsert({ id, ...updates }, { onConflict: "id" })
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .maybeSingle();
+
+      if (updateError) throw updateError;
+      if (updated) return updated;
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("profiles")
+        .insert({ id, ...updates })
         .select()
         .single();
-      if (error) throw error;
-      return data;
+
+      if (insertError) throw insertError;
+      return inserted;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["profile", data.id] });
