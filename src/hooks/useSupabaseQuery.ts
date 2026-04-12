@@ -124,11 +124,6 @@ export function useTutors(universityId?: string) {
   return useQuery({
     queryKey: ["tutors", universityId],
     queryFn: async () => {
-      const filterVisibleTutors = (rows: any[] | null | undefined) =>
-        (rows ?? []).filter(
-          (row) => row?.accepting_students !== false && !row?.deactivated_at,
-        );
-
       let query = supabase
         .from("profiles")
         .select(`
@@ -142,7 +137,7 @@ export function useTutors(universityId?: string) {
         .eq("verification_status", "approved");
       if (universityId) query = query.eq("university_id", universityId);
       const { data, error } = await query;
-      if (!error) return filterVisibleTutors(data);
+      if (!error) return data;
 
       if (error.code === "PGRST200" || error.code === "PGRST201" || error.code === "PGRST204") {
         let fallbackQuery = supabase
@@ -158,7 +153,7 @@ export function useTutors(universityId?: string) {
 
         const { data: fallbackData, error: fallbackError } = await fallbackQuery;
         if (fallbackError) throw fallbackError;
-        return filterVisibleTutors(fallbackData);
+        return fallbackData;
       }
 
       throw error;
@@ -203,9 +198,7 @@ export function useTutorsByCourse(courseId: string) {
         .eq("course_id", courseId)
         .eq("tutor.verification_status", "approved");
       if (error) throw error;
-      return (data ?? []).filter(
-        (row: any) => row?.tutor?.accepting_students !== false && !row?.tutor?.deactivated_at,
-      );
+      return data;
     },
     enabled: !!courseId,
   });
@@ -460,23 +453,8 @@ export function useUpdateProfile() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["profile", data.id] });
-      queryClient.invalidateQueries({ queryKey: ["tutor", data.id] });
       queryClient.invalidateQueries({ queryKey: ["tutors"] });
     },
-  });
-}
-
-export function useDeleteOwnAccount() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc("delete_own_account");
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.clear();
-    },
-    onError: (err) => toastError(err),
   });
 }
 

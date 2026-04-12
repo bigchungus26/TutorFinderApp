@@ -176,7 +176,6 @@ export function useTutorsForStudentCourses(studentId: string, universityId?: str
           if (!row.tutor) return;
           const tutor = row.tutor as any;
           if (universityId && tutor.university_id !== universityId) return;
-          if (tutor.accepting_students === false || tutor.deactivated_at) return;
           if (!tutorMap.has(tutor.id)) tutorMap.set(tutor.id, tutor);
         });
 
@@ -222,7 +221,6 @@ export function useTutorsForStudentCourses(studentId: string, universityId?: str
         if (!row.tutor) return;
         const t = row.tutor as any;
         if (universityId && t.university_id !== universityId) return;
-        if (t.accepting_students === false || t.deactivated_at) return;
         if (!tutorMap.has(t.id)) tutorMap.set(t.id, t);
       });
 
