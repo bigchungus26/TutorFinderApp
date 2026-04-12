@@ -17,6 +17,8 @@ import { TutorCardSkeleton } from "@/components/skeletons";
 import { initAuthListener } from "@/lib/authListener";
 import { useTheme } from "@/hooks/useTheme";
 import ProfilePage from "@/pages/ProfilePage";
+import MessagesPage from "@/pages/MessagesPage";
+import MessageThreadPage from "@/pages/MessageThreadPage";
 // ── Lazy-load all pages for performance (J4) ─────────────────
 const EntryGatePage = lazy(() => import("@/pages/EntryGatePage"));
 const StudentLandingPage = lazy(() => import("@/pages/StudentLandingPage"));
@@ -40,8 +42,6 @@ const TermsOfUse = lazy(() => import("@/pages/TermsOfUse"));
 const SplashPage = lazy(() => import("@/pages/SplashPage"));
 const DesignSystem = lazy(() => import("@/pages/DesignSystem"));
 const SavedTutorsPage = lazy(() => import("@/pages/SavedTutorsPage"));
-const MessagesPage = lazy(() => import("@/pages/MessagesPage"));
-const MessageThreadPage = lazy(() => import("@/pages/MessageThreadPage"));
 const OfflinePage = lazy(() => import("@/pages/OfflinePage"));
 const BlockedUsersPage = lazy(() => import("@/pages/BlockedUsersPage"));
 const SupportPage = lazy(() => import("@/pages/SupportPage"));
