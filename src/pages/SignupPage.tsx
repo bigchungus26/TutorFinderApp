@@ -134,7 +134,7 @@ const SignupPage = () => {
           {role === "tutor" ? "Joining as a tutor ✏️" : "Joining as a student 🎓"}
           <button
             type="button"
-            onClick={handleBackToRolePicker}
+            onClick={() => setRole(r => r === "student" ? "tutor" : "student")}
             className="underline underline-offset-2 text-caption opacity-70 ml-1 min-h-0 min-w-0"
           >
             change
