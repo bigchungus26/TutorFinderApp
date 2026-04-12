@@ -1009,24 +1009,7 @@ const TutorProfilePage = () => {
     <>
       <div className="px-5 pt-14 pb-28 overflow-y-auto">
 
-        {/* ── Subscription banners ── */}
-        {isInactive && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-            <p className="text-label font-semibold text-red-700 mb-1">Membership inactive</p>
-            <p className="text-body-sm text-red-600">
-              Your TUTR membership is inactive. Your profile is hidden from search.
-              Renew your $50/month subscription — payment instructions will be sent separately.
-            </p>
-          </div>
-        )}
-        {isGrace && (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-            <p className="text-label font-semibold text-amber-700 mb-1">Renewal needed</p>
-            <p className="text-body-sm text-amber-600">
-              Your subscription is in its grace period. Renew within 7 days to stay visible in search.
-            </p>
-          </div>
-        )}
+        {/* ── Subscription banners — disabled for testing ── */}
 
         {/* ── Profile header ── */}
         {loading && !activeProfile ? (
