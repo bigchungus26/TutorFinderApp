@@ -538,7 +538,7 @@ function TutorOnboarding() {
     if (step === 0) {
       persistDraft(0);
       try { await signOut(); } catch { /* ignore */ }
-      navigate("/welcome");
+      navigate("/welcome?switch=1", { replace: true });
       return;
     }
 

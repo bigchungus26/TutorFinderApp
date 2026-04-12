@@ -113,7 +113,7 @@ const AppRoutes = () => {
         } />
 
         {/* ── Role selection (authenticated but no role) ─ */}
-        <Route path="/choose-role" element={<Navigate to="/?switch=1" replace />} />
+        <Route path="/choose-role" element={<Navigate to="/welcome?switch=1" replace />} />
 
         {/* ── Onboarding ──────────────────────────────── */}
         <Route path="/onboarding/student" element={

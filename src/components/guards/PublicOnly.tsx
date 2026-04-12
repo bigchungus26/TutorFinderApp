@@ -15,7 +15,8 @@ const PublicOnly = ({ children }: PublicOnlyProps) => {
       ? user.user_metadata.role
       : null;
   const allowEntryGateWhileOnboarding =
-    location.pathname === "/" && new URLSearchParams(location.search).get("switch") === "1";
+    ["/", "/welcome"].includes(location.pathname) &&
+    new URLSearchParams(location.search).get("switch") === "1";
 
   if (loading) {
     return (

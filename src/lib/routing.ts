@@ -35,6 +35,9 @@ export function resolveDestination({
 
   // 2. Unauthenticated
   if (!user) {
+    if (deepLink) {
+      return `/student?redirect=${encodeURIComponent(deepLink)}`;
+    }
     return "/welcome";
   }
 
