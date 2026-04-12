@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
-  Bell,
+  MessageCircle,
   Loader2,
   BookOpen,
   Code,
@@ -32,6 +32,7 @@ import {
   useSubjects,
 } from "@/hooks/useSupabaseQuery";
 import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStudentCourses";
+import { useConversations } from "@/hooks/useMessages";
 import { supabase } from "@/lib/supabase";
 import {
   isMissingSupabaseResourceError,
@@ -40,7 +41,6 @@ import {
 } from "@/lib/supabaseResourceFallback";
 
 import { TutorCard } from "@/components/TutorCard";
-import { NotificationSheet } from "@/components/NotificationSheet";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
 import { TutorCardSkeleton } from "@/components/skeletons/TutorCardSkeleton";
@@ -219,7 +219,6 @@ const DiscoverPage = () => {
   const { profile } = useAuth();
 
   const [uniSwitcherOpen, setUniSwitcherOpen] = useState(false);
-  const [notifSheetOpen, setNotifSheetOpen] = useState(false);
 
   // Pull-to-refresh state
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -244,6 +243,10 @@ const DiscoverPage = () => {
 
   // Student-specific data
   const studentId = profile?.id ?? "";
+  const { data: conversations = [] } = useConversations(studentId);
+  const hasUnreadMessages = conversations.some(
+    (conversation: any) => (conversation.unreadCount ?? 0) > 0,
+  );
   const { data: studentCourses = [], isLoading: studentCoursesLoading } = useStudentCourses(studentId);
   const hasEnrolledCourses = studentCourses.length > 0;
   const {
@@ -371,16 +374,23 @@ const DiscoverPage = () => {
               )}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0 ml-3 mt-1">
-              {/* Notification bell with dot */}
+              {/* Messages button with unread dot */}
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setNotifSheetOpen(true)}
-                  aria-label="Notifications"
-                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface"
+                  onClick={() => navigate("/messages")}
+                  aria-label="Open messages"
+                  className="w-9 h-9 rounded-full flex items-center justify-center border border-border bg-surface transition-colors hover:border-accent/35 hover:text-accent"
                 >
-                  <Bell size={18} className="text-ink-muted" />
+                  <MessageCircle size={18} className="text-ink-muted" />
                 </button>
+                {hasUnreadMessages && (
+                  <span
+                    className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-accent"
+                    style={{ boxShadow: "0 0 0 2px var(--bg-primary)" }}
+                    aria-hidden="true"
+                  />
+                )}
               </div>
               {/* Avatar */}
               <button
@@ -613,11 +623,6 @@ const DiscoverPage = () => {
       />
 
       {/* ── Notification sheet ───────────────────────────── */}
-      <NotificationSheet
-        isOpen={notifSheetOpen}
-        onClose={() => setNotifSheetOpen(false)}
-        userId={profile?.id ?? ""}
-      />
     </>
   );
 };
