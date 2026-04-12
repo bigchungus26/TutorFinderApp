@@ -70,12 +70,17 @@ const MessageThreadPage = () => {
   const handleSend = () => {
     const trimmed = body.trim();
     if (!trimmed || !conversationId || !currentUserId) return;
-    const messageBody = trimmed;
-    setBody("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-    sendMessage.mutate({ conversationId, senderId: currentUserId, body: messageBody });
+    sendMessage.mutate(
+      { conversationId, senderId: currentUserId, body: trimmed },
+      {
+        onSuccess: () => {
+          setBody("");
+          if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+          }
+        },
+      }
+    );
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -86,9 +91,12 @@ const MessageThreadPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex h-[100dvh] min-h-0 flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-12 pb-3 border-b border-border bg-background flex-shrink-0">
+      <div
+        className="flex items-center gap-3 border-b border-border bg-background px-4 pb-3 pt-12 flex-shrink-0"
+        style={{ paddingTop: "max(3rem, calc(env(safe-area-inset-top, 0px) + 1rem))" }}
+      >
         <motion.button
           whileTap={{ scale: 0.93 }}
           onClick={() => navigate(-1)}
@@ -108,7 +116,8 @@ const MessageThreadPage = () => {
       {/* Messages list */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-3"
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-4 space-y-3"
+        style={{ paddingBottom: "max(1rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))" }}
       >
         {isLoading && (
           <div className="flex justify-center py-8">
@@ -150,7 +159,10 @@ const MessageThreadPage = () => {
       </div>
 
       {/* Compose bar */}
-      <div className="flex-shrink-0 px-4 py-3 border-t border-border bg-background flex items-end gap-2">
+      <div
+        className="sticky bottom-0 z-10 flex flex-shrink-0 items-end gap-2 border-t border-border bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+        style={{ paddingBottom: "max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.4rem))" }}
+      >
         <textarea
           ref={textareaRef}
           value={body}
@@ -164,7 +176,7 @@ const MessageThreadPage = () => {
         <motion.button
           whileTap={{ scale: 0.92 }}
           onClick={handleSend}
-          disabled={!body.trim()}
+          disabled={!body.trim() || sendMessage.isPending}
           aria-label="Send message"
           className="flex-shrink-0 w-10 h-10 rounded-xl bg-accent text-accent-foreground flex items-center justify-center disabled:opacity-40 transition-opacity"
         >
