@@ -434,3 +434,39 @@ export function useMarkMessagesRead() {
     onError: (err) => toastError(err),
   });
 }
+
+// ============================================================
+// REALTIME: invalidate conversations when any message lands.
+// Lights up the unread dot on the Discover page bell instantly.
+// ============================================================
+export function useConversationsRealtime(userId: string) {
+  const queryClient = useQueryClient();
+
+  const subscribe = () => {
+    if (!userId) return () => {};
+
+    const channel = supabase
+      .channel(`messages-realtime:${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["conversations", userId] });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["conversations", userId] });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  return { subscribe };
+}

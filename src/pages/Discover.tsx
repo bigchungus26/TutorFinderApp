@@ -32,7 +32,6 @@ import {
   useSubjects,
 } from "@/hooks/useSupabaseQuery";
 import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStudentCourses";
-import { useConversations } from "@/hooks/useMessages";
 import { supabase } from "@/lib/supabase";
 import {
   isMissingSupabaseResourceError,
@@ -47,6 +46,7 @@ import { TutorCardSkeleton } from "@/components/skeletons/TutorCardSkeleton";
 import { CourseCardSkeleton } from "@/components/skeletons/CourseCardSkeleton";
 import { SubjectTileSkeleton } from "@/components/skeletons/SubjectTileSkeleton";
 import { SkeletonList } from "@/components/skeletons/Skeleton";
+import { useConversations, useConversationsRealtime } from "@/hooks/useMessages";
 
 import { variants } from "@/lib/motion";
 import type { Profile } from "@/types/database";
@@ -247,6 +247,8 @@ const DiscoverPage = () => {
   const hasUnreadMessages = conversations.some(
     (conversation: any) => (conversation.unreadCount ?? 0) > 0,
   );
+  const { subscribe: subscribeMessages } = useConversationsRealtime(studentId);
+  useEffect(() => subscribeMessages(), [studentId]);
   const { data: studentCourses = [], isLoading: studentCoursesLoading } = useStudentCourses(studentId);
   const hasEnrolledCourses = studentCourses.length > 0;
   const {
@@ -622,7 +624,6 @@ const DiscoverPage = () => {
         onClose={() => setUniSwitcherOpen(false)}
       />
 
-      {/* ── Notification sheet ───────────────────────────── */}
     </>
   );
 };

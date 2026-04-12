@@ -107,7 +107,7 @@ export function TutorCard({
                 <span className="truncate text-body font-semibold text-foreground">
                   {tutor.full_name}
                 </span>
-                {tutor.verified && (
+                {tutor.verification_status === "approved" && (
                   <BadgeCheck size={15} className="flex-shrink-0 text-accent" aria-label="Verified tutor" />
                 )}
               </div>

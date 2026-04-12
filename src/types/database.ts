@@ -98,8 +98,15 @@ export type Database = {
           subscription_status: string;
           agreed_terms_at: string | null;
           tutor_status: "student" | "alumni" | null;
+          tutor_type: "student" | "non_student" | null;
+          verification_status: "pending" | "approved" | "rejected" | null;
+          verification_submitted_at: string | null;
+          verification_reviewed_at: string | null;
+          verification_notes: string;
+          non_student_credentials: string;
           cancellation_hours: number;
           paused_until: string | null;
+          suspended_until: string | null;
           onboarded_at: string | null;
           created_at: string;
           updated_at: string;
@@ -129,8 +136,15 @@ export type Database = {
           subscription_plan?: string;
           subscription_status?: string;
           tutor_status?: "student" | "alumni" | null;
+          tutor_type?: "student" | "non_student" | null;
+          verification_status?: "pending" | "approved" | "rejected" | null;
+          verification_submitted_at?: string | null;
+          verification_reviewed_at?: string | null;
+          verification_notes?: string;
+          non_student_credentials?: string;
           cancellation_hours?: number;
           paused_until?: string | null;
+          suspended_until?: string | null;
           agreed_terms_at?: string | null;
           onboarded_at?: string | null;
           created_at?: string;
@@ -161,8 +175,15 @@ export type Database = {
           subscription_plan?: string;
           subscription_status?: string;
           tutor_status?: "student" | "alumni" | null;
+          tutor_type?: "student" | "non_student" | null;
+          verification_status?: "pending" | "approved" | "rejected" | null;
+          verification_submitted_at?: string | null;
+          verification_reviewed_at?: string | null;
+          verification_notes?: string;
+          non_student_credentials?: string;
           cancellation_hours?: number;
           paused_until?: string | null;
+          suspended_until?: string | null;
           agreed_terms_at?: string | null;
           onboarded_at?: string | null;
           created_at?: string;
@@ -424,6 +445,60 @@ export type Database = {
           created_at?: string;
         };
       };
+
+      verification_documents: {
+        Row: {
+          id: string;
+          tutor_id: string;
+          doc_type:
+            | "student_id"
+            | "transcript"
+            | "enrollment_proof"
+            | "diploma"
+            | "employer_letter"
+            | "license"
+            | "other";
+          storage_path: string;
+          file_name: string;
+          mime_type: string;
+          size_bytes: number;
+          uploaded_at: string;
+        };
+        Insert: {
+          id?: string;
+          tutor_id: string;
+          doc_type?:
+            | "student_id"
+            | "transcript"
+            | "enrollment_proof"
+            | "diploma"
+            | "employer_letter"
+            | "license"
+            | "other";
+          storage_path: string;
+          file_name: string;
+          mime_type: string;
+          size_bytes: number;
+          uploaded_at?: string;
+        };
+        Update: {
+          id?: string;
+          tutor_id?: string;
+          doc_type?:
+            | "student_id"
+            | "transcript"
+            | "enrollment_proof"
+            | "diploma"
+            | "employer_letter"
+            | "license"
+            | "other";
+          storage_path?: string;
+          file_name?: string;
+          mime_type?: string;
+          size_bytes?: number;
+          uploaded_at?: string;
+        };
+      };
     };
 
     Enums: {
@@ -440,8 +515,25 @@ export type Database = {
         | "new_message"
         | "session_cancelled"
         | "review_prompt"
-        | "subscription_inactive";
+        | "subscription_inactive"
+        | "no_show_reported"
+        | "semester_ended"
+        | "account_suspended"
+        | "verification_approved"
+        | "verification_rejected"
+        | "verification_resubmission_requested"
+        | "verification_submitted";
       subscription_tier_status: "active" | "grace_period" | "inactive";
+      tutor_type: "student" | "non_student";
+      verification_status: "pending" | "approved" | "rejected";
+      verification_doc_type:
+        | "student_id"
+        | "transcript"
+        | "enrollment_proof"
+        | "diploma"
+        | "employer_letter"
+        | "license"
+        | "other";
     };
   };
 };
@@ -460,6 +552,10 @@ export type TutorStats         = Database["public"]["Tables"]["tutor_stats"]["Ro
 export type ProfileView        = Database["public"]["Tables"]["profile_views"]["Row"];
 export type TutorSubscription  = Database["public"]["Tables"]["tutor_subscriptions"]["Row"];
 export type TutorBoost         = Database["public"]["Tables"]["tutor_boosts"]["Row"];
+export type VerificationDocument = Database["public"]["Tables"]["verification_documents"]["Row"];
+export type TutorType            = Database["public"]["Enums"]["tutor_type"];
+export type VerificationStatus   = Database["public"]["Enums"]["verification_status"];
+export type VerificationDocType  = Database["public"]["Enums"]["verification_doc_type"];
 
 // Tutor profile with joined stats and courses
 export type TutorWithDetails = Profile & {

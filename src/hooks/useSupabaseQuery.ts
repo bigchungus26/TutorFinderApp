@@ -116,7 +116,8 @@ export function useTutors(universityId?: string) {
           tutor_boosts (*),
           tutor_subscriptions (*)
         `)
-        .eq("role", "tutor");
+        .eq("role", "tutor")
+        .eq("verification_status", "approved");
       if (universityId) query = query.eq("university_id", universityId);
       const { data, error } = await query;
       if (!error) return data;
@@ -172,12 +173,13 @@ export function useTutorsByCourse(courseId: string) {
         .from("tutor_courses")
         .select(`
           *,
-          tutor:profiles (
+          tutor:profiles!inner (
             *,
             tutor_stats (*)
           )
         `)
-        .eq("course_id", courseId);
+        .eq("course_id", courseId)
+        .eq("tutor.verification_status", "approved");
       if (error) throw error;
       return data;
     },
@@ -801,6 +803,83 @@ export function useAdminTutors() {
       return data;
     },
     staleTime: 30_000,
+  });
+}
+
+// ============================================================
+// VERIFICATION (admin + tutor)
+// ============================================================
+export function useVerificationDocuments(tutorId: string) {
+  return useQuery({
+    queryKey: ["verification-docs", tutorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("verification_documents")
+        .select("*")
+        .eq("tutor_id", tutorId)
+        .order("uploaded_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!tutorId,
+  });
+}
+
+export function usePendingVerifications() {
+  return useQuery({
+    queryKey: ["admin-verifications", "pending"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`*, tutor_courses (*, course:courses(*))`)
+        .eq("role", "tutor")
+        .eq("verification_status", "pending")
+        .order("verification_submitted_at", { ascending: true, nullsFirst: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 15_000,
+  });
+}
+
+export function useAdminUpdateVerification() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      tutor_id: string;
+      status: "approved" | "rejected" | "pending";
+      notes?: string;
+    }) => {
+      const update: Record<string, unknown> = {
+        verification_status: payload.status,
+        verification_reviewed_at: new Date().toISOString(),
+      };
+      if (payload.status === "approved") update.verified = true;
+      if (payload.status === "rejected") update.verified = false;
+      if (payload.notes !== undefined) update.verification_notes = payload.notes;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(update)
+        .eq("id", payload.tutor_id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-verifications"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", vars.tutor_id] });
+      queryClient.invalidateQueries({ queryKey: ["tutors"] });
+      toast.success(
+        vars.status === "approved"
+          ? "Tutor approved."
+          : vars.status === "rejected"
+            ? "Verification rejected."
+            : "Tutor sent back for resubmission.",
+      );
+    },
+    onError: (err) => toastError(err),
   });
 }
 
