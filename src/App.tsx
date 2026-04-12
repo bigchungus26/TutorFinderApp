@@ -29,6 +29,7 @@ const DiscoverPage = lazy(() => import("@/pages/Discover"));
 const SearchPage = lazy(() => import("@/pages/SearchPage"));
 const CourseDetail = lazy(() => import("@/pages/CourseDetail"));
 const TutorProfilePage = lazy(() => import("@/pages/TutorProfilePage"));
+const StudentPublicProfilePage = lazy(() => import("@/pages/StudentPublicProfilePage"));
 const SessionsPage = lazy(() => import("@/pages/SessionsPage"));
 const TutorRequests = lazy(() => import("@/pages/TutorRequests"));
 const TutorSchedule = lazy(() => import("@/pages/TutorSchedule"));
@@ -140,6 +141,9 @@ const AppRoutes = () => {
         } />
         <Route path="/tutor/:id" element={
           <ErrorBoundary compact><TutorProfilePage /></ErrorBoundary>
+        } />
+        <Route path="/student/:id" element={
+          <RequireAuth><ErrorBoundary compact><StudentPublicProfilePage /></ErrorBoundary></RequireAuth>
         } />
         <Route path="/sessions" element={
           <RequireAuth>
