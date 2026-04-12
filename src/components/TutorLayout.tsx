@@ -5,7 +5,7 @@
 // tutors always know what's happening with their account.
 // ============================================================
 import type { ReactNode } from "react";
-import { Inbox, CalendarDays, DollarSign, User, MessageCircle } from "lucide-react";
+import { Inbox, CalendarDays, User, MessageCircle } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 import type { NavItem } from "./BottomNav";
 import { TutorVerificationBanner } from "./TutorVerificationBanner";
@@ -14,7 +14,6 @@ const tutorNavItems: NavItem[] = [
   { label: "Inbox",     path: "/tutor/messages",  icon: MessageCircle },
   { label: "Requests",  path: "/tutor/requests",  icon: Inbox        },
   { label: "Schedule",  path: "/tutor/schedule",  icon: CalendarDays },
-  { label: "Earnings",  path: "/tutor/earnings",  icon: DollarSign   },
   { label: "Profile",   path: "/tutor/profile",   icon: User         },
 ];
 

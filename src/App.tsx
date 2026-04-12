@@ -32,7 +32,6 @@ const TutorProfilePage = lazy(() => import("@/pages/TutorProfilePage"));
 const SessionsPage = lazy(() => import("@/pages/SessionsPage"));
 const TutorRequests = lazy(() => import("@/pages/TutorRequests"));
 const TutorSchedule = lazy(() => import("@/pages/TutorSchedule"));
-const TutorEarnings = lazy(() => import("@/pages/TutorEarnings"));
 const TutorProfileSettings = lazy(() => import("@/pages/TutorProfileSettings"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
@@ -201,7 +200,7 @@ const AppRoutes = () => {
         <Route path="/tutor/earnings" element={
           <RequireAuth>
             <RequireRole role="tutor">
-              <TutorLayout><TutorEarnings /></TutorLayout>
+              <Navigate to="/tutor/requests" replace />
             </RequireRole>
           </RequireAuth>
         } />
