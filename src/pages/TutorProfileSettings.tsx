@@ -87,6 +87,156 @@ interface AccountSettingsSheetProps {
   onSignedOut: () => Promise<void>;
 }
 
+interface SubscriptionSheetProps {
+  planLabel: string;
+  status: "active" | "grace_period" | "inactive" | "pending";
+  periodEnd?: string | null;
+  onClose: () => void;
+  onContactSupport: () => void;
+}
+
+function SubscriptionSheet({
+  planLabel,
+  status,
+  periodEnd,
+  onClose,
+  onContactSupport,
+}: SubscriptionSheetProps) {
+  const statusMeta =
+    status === "active"
+      ? {
+          label: "Active",
+          tone: "bg-emerald-100 text-emerald-700",
+          title: "Your tutor membership is active",
+          body: "Students can discover your profile, message you, and send session requests.",
+          cta: "Need billing help?",
+        }
+      : status === "grace_period"
+        ? {
+            label: "Grace period",
+            tone: "bg-amber-100 text-amber-700",
+            title: "Your membership needs attention",
+            body: "You're still visible right now, but renewing soon will keep your profile active in search.",
+            cta: "Renew or get help",
+          }
+        : status === "pending"
+          ? {
+              label: "Pending",
+              tone: "bg-sky-100 text-sky-700",
+              title: "Your membership is being reviewed",
+              body: "Your tutor listing is almost ready. We'll confirm the next step for activation separately.",
+              cta: "Need an update?",
+            }
+          : {
+              label: "Inactive",
+              tone: "bg-red-100 text-red-700",
+              title: "Your tutor membership is inactive",
+              body: "Your profile may be hidden from students until membership is renewed.",
+              cta: "Reactivate membership",
+            };
+
+  const formattedPeriodEnd = periodEnd
+    ? new Date(periodEnd).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+
+  return (
+    <>
+      <motion.div
+        key="subscription-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={transitions.standard}
+        className="fixed inset-0 bg-foreground/30 z-[80]"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <motion.div
+        key="subscription-sheet"
+        variants={variants.sheetIn}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="fixed bottom-0 left-0 right-0 z-[90] bg-surface rounded-t-2xl max-w-[440px] mx-auto flex flex-col"
+        style={{ maxHeight: "90dvh" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Subscription details"
+      >
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full bg-border" />
+        </div>
+        <div className="flex items-center justify-between px-5 pt-2 pb-4 flex-shrink-0">
+          <div>
+            <h2 className="text-h2 font-display text-foreground">Subscription</h2>
+            <p className="text-body-sm text-ink-muted mt-1">
+              Manage your tutor membership status and support options.
+            </p>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={onClose}
+            className="p-2 -mr-2 rounded-xl hover:bg-muted"
+            aria-label="Close"
+          >
+            <X size={20} className="text-ink-muted" />
+          </motion.button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-4">
+          <div className="rounded-2xl border border-border bg-background px-4 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-caption uppercase tracking-wider text-ink-muted">
+                  Current plan
+                </p>
+                <p className="text-h3 font-display text-foreground mt-1">{planLabel}</p>
+              </div>
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-caption font-semibold ${statusMeta.tone}`}
+              >
+                {statusMeta.label}
+              </span>
+            </div>
+            <p className="text-body text-foreground mt-4">{statusMeta.title}</p>
+            <p className="text-body-sm text-ink-muted mt-1">{statusMeta.body}</p>
+            {formattedPeriodEnd && (
+              <div className="mt-4 rounded-xl bg-surface px-3 py-2 border border-border">
+                <p className="text-caption text-ink-muted">Current period ends</p>
+                <p className="text-label font-medium text-foreground mt-0.5">{formattedPeriodEnd}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-border bg-background px-4 py-4">
+            <div className="flex items-start gap-3">
+              <Bell size={18} className="text-accent mt-0.5" />
+              <div>
+                <p className="text-label font-medium text-foreground">{statusMeta.cta}</p>
+                <p className="text-body-sm text-ink-muted mt-1">
+                  Billing and renewals are handled manually right now. We&apos;ll take you to support so you can get help quickly.
+                </p>
+              </div>
+            </div>
+
+            <motion.button
+              whileTap={{ scale: 0.98 }}
+              onClick={onContactSupport}
+              className="mt-4 w-full h-11 rounded-lg bg-accent text-accent-foreground text-body font-semibold"
+            >
+              Open support
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 function AccountSettingsSheet({ email, onClose, onSignedOut }: AccountSettingsSheetProps) {
   const [nextEmail, setNextEmail] = useState(email);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -767,13 +917,22 @@ const TutorProfilePage = () => {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editCoursesOpen, setEditCoursesOpen] = useState(false);
   const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const isPaused = !!(profile as any)?.paused_until && new Date((profile as any).paused_until) > new Date();
 
   // Subscription state from tutor_subscriptions table
   const { data: subscription } = useTutorSubscription(user?.id ?? "");
-  const subStatus = subscription?.status ?? "inactive";
+  const subStatus = (subscription?.status ?? profile?.subscription_status ?? "inactive") as
+    | "active"
+    | "grace_period"
+    | "inactive"
+    | "pending";
   const isGrace = subStatus === "grace_period";
   const isInactive = subStatus === "inactive";
+  const subscriptionPlanLabel =
+    profile?.subscription_plan === "tutor_monthly"
+      ? "Tutor Monthly"
+      : profile?.subscription_plan || "Free";
 
   useEffect(() => {
     if (searchParams.get("edit") !== "1") return;
@@ -1019,7 +1178,8 @@ const TutorProfilePage = () => {
           <SettingsRow
             icon={CreditCard}
             label="Subscription"
-            sublabel={`Plan: ${profile?.subscription_plan ?? "Free"} · ${profile?.subscription_status ?? "—"}`}
+            sublabel={`Plan: ${subscriptionPlanLabel} · ${subStatus.replace("_", " ")}`}
+            onClick={() => setSubscriptionOpen(true)}
             right={<ChevronRight size={16} className="text-ink-muted flex-shrink-0" />}
           />
 
@@ -1104,6 +1264,22 @@ const TutorProfilePage = () => {
             email={user.email ?? ""}
             onClose={() => setAccountSettingsOpen(false)}
             onSignedOut={handleSignOut}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {subscriptionOpen && (
+          <SubscriptionSheet
+            key="subscription-sheet"
+            planLabel={subscriptionPlanLabel}
+            status={subStatus}
+            periodEnd={subscription?.current_period_end}
+            onClose={() => setSubscriptionOpen(false)}
+            onContactSupport={() => {
+              setSubscriptionOpen(false);
+              navigate("/support");
+            }}
           />
         )}
       </AnimatePresence>
