@@ -381,13 +381,9 @@ const SearchPage = () => {
   }, [query, courses, codeOnly]);
 
   const filteredTutors = useMemo(() => {
-    // Filter: skip blocked users and inactive-subscription tutors
+    // Filter: skip blocked users (subscription check temporarily disabled for testing)
     let result = tutors.filter((t: any) => {
       if (blockedIds?.has(t.id)) return false;
-      // Subscription check: hide tutors whose subscription is inactive
-      const sub = t.tutor_subscriptions;
-      const s = Array.isArray(sub) ? sub[0] : sub;
-      if (s && s.status === "inactive") return false;
       return true;
     });
 
