@@ -641,7 +641,7 @@ const SearchPage = () => {
             animate="visible"
             className="space-y-2"
           >
-            {filteredCourses.slice(0, activeTab === "All" ? 4 : undefined).map((c, i) => {
+            {filteredCourses.map((c, i) => {
               const uni = universities.find(u => u.id === c.university_id);
               return (
                 <motion.div key={c.id} variants={variants.staggerItem} custom={i}>
@@ -688,7 +688,7 @@ const SearchPage = () => {
             animate="visible"
             className="space-y-3"
           >
-            {filteredTutors.slice(0, activeTab === "All" ? 3 : undefined).map((t, i) => {
+            {filteredTutors.map((t, i) => {
               const boost = (t as any).tutor_boosts;
               const b = Array.isArray(boost) ? boost[0] : boost;
               const isFeatured = b?.active && (!b?.ends_at || new Date(b.ends_at) > new Date());
