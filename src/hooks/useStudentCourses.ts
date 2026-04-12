@@ -8,12 +8,40 @@ import {
   clearSupabaseResourceMissing,
 } from "@/lib/supabaseResourceFallback";
 
+type LocalStudentCourse = {
+  course_id: string;
+  semester: string;
+  created_at: string;
+};
+
+function getStudentCoursesStorageKey(studentId: string) {
+  return `studentCourses:${studentId}`;
+}
+
+function readLocalStudentCourses(studentId: string): LocalStudentCourse[] {
+  if (typeof window === "undefined" || !studentId) return [];
+
+  try {
+    const raw = window.localStorage.getItem(getStudentCoursesStorageKey(studentId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalStudentCourses(studentId: string, entries: LocalStudentCourse[]) {
+  if (typeof window === "undefined" || !studentId) return;
+  window.localStorage.setItem(getStudentCoursesStorageKey(studentId), JSON.stringify(entries));
+}
+
 export function useStudentCourses(studentId: string) {
   return useQuery({
     queryKey: ["student-courses", studentId],
     queryFn: async () => {
       if (isSupabaseResourceMissing("student_courses")) {
-        return [];
+        return readLocalStudentCourses(studentId);
       }
 
       const { data, error } = await supabase
@@ -24,7 +52,7 @@ export function useStudentCourses(studentId: string) {
       if (error) {
         if (isMissingSupabaseResourceError(error)) {
           markSupabaseResourceMissing("student_courses");
-          return [];
+          return readLocalStudentCourses(studentId);
         }
         throw error;
       }
@@ -47,7 +75,14 @@ export function useSetStudentCourses() {
       courseIds: string[];
       semester: string;
     }) => {
+      const localEntries = courseIds.map((course_id) => ({
+        course_id,
+        semester,
+        created_at: new Date().toISOString(),
+      }));
+
       if (isSupabaseResourceMissing("student_courses")) {
+        writeLocalStudentCourses(studentId, localEntries);
         return;
       }
 
@@ -60,6 +95,7 @@ export function useSetStudentCourses() {
       if (existingError) {
         if (isMissingSupabaseResourceError(existingError)) {
           markSupabaseResourceMissing("student_courses");
+          writeLocalStudentCourses(studentId, localEntries);
           return;
         }
         throw existingError;
@@ -72,6 +108,7 @@ export function useSetStudentCourses() {
       if (delError) {
         if (isMissingSupabaseResourceError(delError)) {
           markSupabaseResourceMissing("student_courses");
+          writeLocalStudentCourses(studentId, localEntries);
           return;
         }
         throw delError;
@@ -89,6 +126,7 @@ export function useSetStudentCourses() {
         if (insError) {
           if (isMissingSupabaseResourceError(insError)) {
             markSupabaseResourceMissing("student_courses");
+            writeLocalStudentCourses(studentId, localEntries);
             return;
           }
           // Roll back: restore previous courses so the student doesn't lose data
@@ -117,7 +155,33 @@ export function useTutorsForStudentCourses(studentId: string, universityId?: str
     queryKey: ["tutors-for-courses", studentId, universityId],
     queryFn: async () => {
       if (isSupabaseResourceMissing("student_courses")) {
-        return [];
+        const localCourseIds = readLocalStudentCourses(studentId).map((course) => course.course_id);
+        if (!localCourseIds.length) return [];
+
+        const { data, error } = await supabase
+          .from("tutor_courses")
+          .select(`
+            tutor:profiles!tutor_courses_tutor_id_fkey (
+              *,
+              tutor_stats (*),
+              tutor_courses (*, course:courses(*))
+            )
+          `)
+          .in("course_id", localCourseIds);
+
+        if (error) throw error;
+
+        const tutorMap = new Map<string, any>();
+        data?.forEach((row) => {
+          if (!row.tutor) return;
+          const tutor = row.tutor as any;
+          if (universityId && tutor.university_id !== universityId) return;
+          if (!tutorMap.has(tutor.id)) tutorMap.set(tutor.id, tutor);
+        });
+
+        return Array.from(tutorMap.values()).sort(
+          (a, b) => (b.tutor_stats?.rating ?? 0) - (a.tutor_stats?.rating ?? 0),
+        );
       }
 
       // Get student's course IDs first

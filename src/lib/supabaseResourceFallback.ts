@@ -1,8 +1,19 @@
 const STORAGE_KEY = "tutr:missing-supabase-resources";
+const DEFAULT_MISSING_RESOURCES = [
+  "student_courses",
+  "saved_tutors",
+  "conversations",
+  "messages",
+  "availability",
+  "trending_tutors",
+] as const;
 
 const missingResources = new Set<string>();
 
 function syncFromStorage() {
+  missingResources.clear();
+  DEFAULT_MISSING_RESOURCES.forEach((resource) => missingResources.add(resource));
+
   if (typeof window === "undefined") return;
 
   try {
@@ -12,7 +23,6 @@ function syncFromStorage() {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return;
 
-    missingResources.clear();
     parsed.forEach((resource) => {
       if (typeof resource === "string" && resource) {
         missingResources.add(resource);

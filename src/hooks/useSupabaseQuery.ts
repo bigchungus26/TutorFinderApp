@@ -225,18 +225,8 @@ export function useSessions(userId: string, role: "student" | "tutor") {
   return useQuery({
     queryKey: ["sessions", userId, role],
     queryFn: async () => {
-      if (isSupabaseResourceMissing("sessions")) {
-        return [];
-      }
-
       const column = role === "student" ? "student_id" : "tutor_id";
-      const richSelect = `
-          *,
-          tutor:profiles!sessions_tutor_id_fkey (full_name, avatar_url, cancellation_hours),
-          student:profiles!sessions_student_id_fkey (full_name, avatar_url),
-          course:courses (code, name)
-        `;
-      const fallbackSelect = `
+      const select = `
           *,
           tutor:profiles!sessions_tutor_id_fkey (full_name, avatar_url),
           student:profiles!sessions_student_id_fkey (full_name, avatar_url),
@@ -245,7 +235,7 @@ export function useSessions(userId: string, role: "student" | "tutor") {
 
       const { data, error } = await supabase
         .from("sessions")
-        .select(richSelect)
+        .select(select)
         .eq(column, userId)
         .order("date", { ascending: false });
 
@@ -254,23 +244,7 @@ export function useSessions(userId: string, role: "student" | "tutor") {
           markSupabaseResourceMissing("sessions");
           return [];
         }
-
-        const fallbackResult = await supabase
-          .from("sessions")
-          .select(fallbackSelect)
-          .eq(column, userId)
-          .order("date", { ascending: false });
-
-        if (fallbackResult.error) {
-          if (isMissingSupabaseResourceError(fallbackResult.error)) {
-            markSupabaseResourceMissing("sessions");
-            return [];
-          }
-          throw fallbackResult.error;
-        }
-
-        clearSupabaseResourceMissing("sessions");
-        return fallbackResult.data;
+        throw error;
       }
 
       clearSupabaseResourceMissing("sessions");
