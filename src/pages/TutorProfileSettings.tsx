@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUniversity } from "@/contexts/UniversityContext";
 import {
   useUniversities,
+  useTutor,
   useUpdateProfile,
   useSetTutorCourses,
   useCourses,
@@ -503,10 +504,12 @@ const TutorProfilePage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, loading, signOut, refreshProfile } = useAuth();
+  const { data: tutorProfile } = useTutor(user?.id ?? "");
   const { selectedUniversity } = useUniversity();
   const { data: universities = [] } = useUniversities();
+  const activeProfile = (tutorProfile as typeof profile) ?? profile;
   const uni = universities.find(
-    (u) => u.id === (profile?.university_id || selectedUniversity)
+    (u) => u.id === (activeProfile?.university_id || selectedUniversity)
   );
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -564,20 +567,20 @@ const TutorProfilePage = () => {
 
   // Gather tutor's courses from profile (populated by useTutor)
   const tutorCourses: { course_id: string; course?: { code: string; name: string } }[] =
-    (profile as any)?.tutor_courses ?? [];
-  const tutorStats = (profile as any)?.tutor_stats ?? null;
+    (tutorProfile as any)?.tutor_courses ?? [];
+  const tutorStats = (tutorProfile as any)?.tutor_stats ?? null;
 
   const switchToStudent = useCallback(async () => {
     if (!user) return;
     await supabase.from("profiles").update({ role: "student" }).eq("id", user.id);
     await refreshProfile();
     // Story 32: route to student onboarding if student profile not yet set up
-    if (!profile?.major) {
+    if (!activeProfile?.major) {
       navigate("/onboarding/student");
     } else {
       navigate("/");
     }
-  }, [user, profile, refreshProfile, navigate]);
+  }, [user, activeProfile, refreshProfile, navigate]);
 
   const handleSignOut = useCallback(async () => {
     try {
@@ -614,7 +617,7 @@ const TutorProfilePage = () => {
         )}
 
         {/* ── Profile header ── */}
-        {loading ? (
+        {loading && !activeProfile ? (
           <ProfileHeaderSkeleton />
         ) : (
           <motion.div
@@ -624,13 +627,13 @@ const TutorProfilePage = () => {
             className="flex flex-col items-center mb-6"
           >
             <img
-              src={profile?.avatar_url || "https://i.pravatar.cc/100?img=11"}
-              alt={profile?.full_name ?? "Tutor"}
+              src={activeProfile?.avatar_url || "https://i.pravatar.cc/100?img=11"}
+              alt={activeProfile?.full_name ?? "Tutor"}
               className="w-24 h-24 rounded-full object-cover mb-3"
             />
             <div className="flex items-center gap-1.5 mb-1">
-              <h1 className="text-h1 font-display text-foreground">{profile?.full_name ?? "Tutor"}</h1>
-              {profile?.verified && (
+              <h1 className="text-h1 font-display text-foreground">{activeProfile?.full_name ?? "Tutor"}</h1>
+              {activeProfile?.verified && (
                 <BadgeCheck size={18} className="text-accent flex-shrink-0" />
               )}
             </div>
@@ -643,7 +646,7 @@ const TutorProfilePage = () => {
               </span>
             )}
             <p className="text-body-sm text-ink-muted">
-              {[profile?.major, profile?.year].filter(Boolean).join(", ")}
+              {[activeProfile?.major, activeProfile?.year].filter(Boolean).join(", ")}
             </p>
           </motion.div>
         )}
@@ -670,7 +673,7 @@ const TutorProfilePage = () => {
             <div className="w-px h-8 bg-border" />
             <div className="text-center">
               <div className="text-h2 font-display text-foreground font-semibold mb-0.5">
-                ${profile?.hourly_rate ?? 0}
+                ${activeProfile?.hourly_rate ?? 0}
               </div>
               <span className="text-caption text-ink-muted">Per hour</span>
             </div>
@@ -813,10 +816,14 @@ const TutorProfilePage = () => {
 
       {/* Modals */}
       <AnimatePresence>
-        {editProfileOpen && profile && (
+        {editProfileOpen && (activeProfile ?? profile) && (
           <EditProfileSheet
             key="tutor-edit-profile"
-            profile={{ ...profile, tutor_status: (profile as any).tutor_status ?? null, cancellation_hours: profile.cancellation_hours ?? 4 }}
+            profile={{
+              ...(activeProfile ?? profile),
+              tutor_status: ((activeProfile ?? profile) as any)?.tutor_status ?? null,
+              cancellation_hours: (activeProfile ?? profile)?.cancellation_hours ?? 4,
+            }}
             onClose={() => setEditProfileOpen(false)}
           />
         )}
@@ -828,7 +835,7 @@ const TutorProfilePage = () => {
             key="tutor-courses-sheet"
             tutorId={user.id}
             currentCourseIds={currentCourseIds}
-            universityId={profile?.university_id}
+            universityId={activeProfile?.university_id}
             onClose={() => setEditCoursesOpen(false)}
           />
         )}

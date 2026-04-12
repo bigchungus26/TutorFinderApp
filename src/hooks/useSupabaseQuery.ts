@@ -915,8 +915,10 @@ export function useSetTutorCourses() {
         if (insError) throw insError;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tutors"] });
+      queryClient.invalidateQueries({ queryKey: ["tutor", variables.tutorId] });
+      queryClient.invalidateQueries({ queryKey: ["profile", variables.tutorId] });
     },
   });
 }
