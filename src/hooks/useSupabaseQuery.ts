@@ -116,8 +116,7 @@ export function useTutors(universityId?: string) {
           tutor_boosts (*),
           tutor_subscriptions (*)
         `)
-        .eq("role", "tutor")
-        .eq("verification_status", "approved");
+        .eq("role", "tutor"); // TODO: restore .eq("verification_status", "approved") after testing
       if (universityId) query = query.eq("university_id", universityId);
       const { data, error } = await query;
       if (!error) return data;
@@ -178,8 +177,7 @@ export function useTutorsByCourse(courseId: string) {
             tutor_stats (*)
           )
         `)
-        .eq("course_id", courseId)
-        .eq("tutor.verification_status", "approved");
+        .eq("course_id", courseId); // TODO: restore .eq("tutor.verification_status", "approved") after testing
       if (error) throw error;
       return data;
     },
