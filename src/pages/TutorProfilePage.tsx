@@ -204,11 +204,18 @@ const TutorProfilePage = () => {
   }, [availability]);
 
   const rate = tutor?.hourly_rate ?? 0;
+  const canSaveTutor = profile?.role === "student" && !!studentId;
 
   const handleToggleSave = () => {
-    if (!studentId) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (!canSaveTutor) return;
+
     if (isSaved) unsaveTutor.mutate({ studentId, tutorId });
-    else saveTutor.mutate({ studentId, tutorId });
+    else saveTutor.mutate({ studentId, tutorId, tutor });
   };
 
   const handleMessage = async () => {
@@ -288,7 +295,7 @@ const TutorProfilePage = () => {
                 whileTap={{ scale: 0.88 }}
                 transition={springs.bouncy}
                 onClick={handleToggleSave}
-                disabled={saveTutor.isPending || unsaveTutor.isPending}
+                disabled={!canSaveTutor || saveTutor.isPending || unsaveTutor.isPending}
                 className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center"
                 aria-label={isSaved ? "Remove from saved" : "Save tutor"}
               >
