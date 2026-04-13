@@ -1,7 +1,7 @@
 // ============================================================
 // Tutr — Discover Page (personalized home feed)
 // ============================================================
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,6 +23,7 @@ import {
   useTutors,
 } from "@/hooks/useSupabaseQuery";
 import { useStudentCourses, useTutorsForStudentCourses } from "@/hooks/useStudentCourses";
+import { useSavedTutors } from "@/hooks/useSavedTutors";
 import { supabase } from "@/lib/supabase";
 import {
   isMissingSupabaseResourceError,
@@ -82,33 +83,7 @@ function useTrendingTutors(universityId: string) {
   });
 }
 
-// ── New tutors hook ───────────────────────────────────────────
-function useNewTutors(universityId: string) {
-  return useQuery({
-    queryKey: ["new-tutors", universityId],
-    queryFn: async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          *,
-          tutor_stats (*),
-          tutor_courses (*, course:courses(*))
-        `)
-        .eq("role", "tutor")
-        .eq("university_id", universityId)
-        .gte("created_at", thirtyDaysAgo.toISOString())
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return (data ?? []) as Profile[];
-    },
-    enabled: !!universityId,
-    staleTime: 5 * 60 * 1000,
-  });
-}
+// useNewTutors removed — new tutors are now derived client-side from allTutors
 
 // ── Section wrapper component ─────────────────────────────────
 interface SectionProps {
@@ -182,16 +157,34 @@ const DiscoverPage = () => {
     isLoading: tutorsForCoursesLoading,
   } = useTutorsForStudentCourses(studentId, selectedUniversity);
 
-  // Trending / new tutors
+  // Trending tutors (separate view query)
   const { data: trendingTutors = [] } = useTrendingTutors(selectedUniversity);
-  const { data: newTutors = [] } = useNewTutors(selectedUniversity);
+
+  // New tutors derived client-side — no extra query needed
+  const newTutors = useMemo(() => {
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    return allTutors
+      .filter(t => t.created_at > cutoff)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 5);
+  }, [allTutors]);
+
+  // Saved tutor IDs — one query, shared across all cards
+  const { data: savedEntries = [] } = useSavedTutors(studentId);
+  const savedTutorIds = useMemo(
+    () => new Set(savedEntries.map((e: any) => e.tutor_id as string)),
+    [savedEntries]
+  );
 
   const uni = universities.find((u) => u.id === selectedUniversity);
 
   // Top-rated: sort all tutors by rating desc, take top 5
-  const topTutors = [...allTutors]
-    .sort((a, b) => (b.tutor_stats?.rating ?? 0) - (a.tutor_stats?.rating ?? 0))
-    .slice(0, 5);
+  const topTutors = useMemo(
+    () => [...allTutors]
+      .sort((a, b) => (b.tutor_stats?.rating ?? 0) - (a.tutor_stats?.rating ?? 0))
+      .slice(0, 5),
+    [allTutors]
+  );
 
   const timeOfDay = getGreeting();
 
@@ -417,7 +410,7 @@ const DiscoverPage = () => {
                       variants={variants.staggerItem}
                       className="flex-shrink-0 w-[280px]"
                     >
-                      <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
+                      <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} isSaved={savedTutorIds.has(tutor.id)} />
                     </motion.div>
                   ))
                 ) : (
@@ -442,7 +435,7 @@ const DiscoverPage = () => {
               <div className="space-y-3">
                 {topTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
-                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
+                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} isSaved={savedTutorIds.has(tutor.id)} />
                   </motion.div>
                 ))}
               </div>
@@ -459,7 +452,7 @@ const DiscoverPage = () => {
               <div className="space-y-3">
                 {trendingTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
-                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
+                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} isSaved={savedTutorIds.has((tutor as any).id)} />
                   </motion.div>
                 ))}
               </div>
@@ -472,7 +465,7 @@ const DiscoverPage = () => {
               <div className="space-y-3">
                 {newTutors.map((tutor) => (
                   <motion.div key={tutor.id} variants={variants.staggerItem}>
-                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} />
+                    <TutorCard tutor={tutor as Parameters<typeof TutorCard>[0]["tutor"]} isSaved={savedTutorIds.has(tutor.id)} />
                   </motion.div>
                 ))}
               </div>

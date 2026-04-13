@@ -3,13 +3,14 @@
 // Debounced search, recent searches, filter sheet,
 // active filter pills, stagger results.
 // ============================================================
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search as SearchIcon, SlidersHorizontal, X, Star, Clock } from "lucide-react";
 import { useUniversity } from "@/contexts/UniversityContext";
 import { useCourses, useTutors, useUniversities, useBlockedByIds, useSubmitCourse } from "@/hooks/useSupabaseQuery";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSavedTutors } from "@/hooks/useSavedTutors";
 import { TutorCard } from "@/components/TutorCard";
 import { UniversityPill } from "@/components/UniversityPill";
 import { UniversitySwitcher } from "@/components/UniversitySwitcher";
@@ -312,11 +313,14 @@ function FilterPill({ label, onRemove }: { label: string; onRemove: () => void }
 // ── Main page ────────────────────────────────────────────────
 const FILTER_TABS: FilterTab[] = ["All", "Courses", "Tutors"];
 
+const RESULTS_PAGE_SIZE = 12;
+
 const SearchPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { selectedUniversity } = useUniversity();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const studentId = profile?.role === "student" ? (profile.id ?? "") : "";
 
   const [rawQuery, setRawQuery] = useState(searchParams.get("subject") || "");
   const [query, setQuery] = useState(rawQuery);
@@ -351,6 +355,15 @@ const SearchPage = () => {
   const { data: tutors = [] } = useTutors(selectedUniversity);
   const { data: universities = [] } = useUniversities();
   const { data: blockedIds } = useBlockedByIds(user?.id ?? "");
+  const { data: savedEntries = [] } = useSavedTutors(studentId);
+  const savedTutorIds = useMemo(
+    () => new Set(savedEntries.map((e: any) => e.tutor_id as string)),
+    [savedEntries]
+  );
+
+  // Pagination: reset when search/filter changes
+  const [displayCount, setDisplayCount] = useState(RESULTS_PAGE_SIZE);
+  useEffect(() => { setDisplayCount(RESULTS_PAGE_SIZE); }, [query, appliedFilters, activeTab]);
 
   const filteredCourses = useMemo(() => {
     if (!query) return courses;
@@ -671,18 +684,13 @@ const SearchPage = () => {
           {activeTab === "All" && (
             <p className="text-overline text-ink-muted mb-2">Tutors</p>
           )}
-          <motion.div
-            variants={variants.staggerChildren}
-            initial="hidden"
-            animate="visible"
-            className="space-y-3"
-          >
-            {filteredTutors.map((t, i) => {
+          <div className="space-y-3">
+            {filteredTutors.slice(0, displayCount).map((t) => {
               const boost = (t as any).tutor_boosts;
               const b = Array.isArray(boost) ? boost[0] : boost;
               const isFeatured = b?.active && (!b?.ends_at || new Date(b.ends_at) > new Date());
               return (
-                <motion.div key={t.id} variants={variants.staggerItem} custom={i}>
+                <div key={t.id}>
                   {isFeatured && (
                     <div className="flex items-center gap-1 mb-1 px-1">
                       <span className="inline-flex items-center gap-1 text-caption font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
@@ -690,11 +698,20 @@ const SearchPage = () => {
                       </span>
                     </div>
                   )}
-                  <TutorCard tutor={t as any} />
-                </motion.div>
+                  <TutorCard tutor={t as any} isSaved={savedTutorIds.has(t.id)} />
+                </div>
               );
             })}
-          </motion.div>
+          </div>
+          {filteredTutors.length > displayCount && (
+            <motion.button
+              whileTap={{ scale: 0.97 }} transition={springs.snappy}
+              onClick={() => setDisplayCount(n => n + RESULTS_PAGE_SIZE)}
+              className="w-full mt-4 py-3 rounded-xl border border-border text-body-sm text-ink-muted hover:border-accent hover:text-accent transition-colors"
+            >
+              Show {Math.min(RESULTS_PAGE_SIZE, filteredTutors.length - displayCount)} more tutors
+            </motion.button>
+          )}
         </div>
       )}
 

@@ -142,9 +142,9 @@ export function useConversations(userId: string) {
       return (data ?? []).map((conversation: any) => summarizeConversation(conversation, userId));
     },
     enabled: !!userId,
-    refetchInterval: !isSupabaseResourceMissing("conversations") ? 3000 : false,
-    refetchIntervalInBackground: true,
-    staleTime: 10 * 1000,
+    refetchInterval: !isSupabaseResourceMissing("conversations") ? 5000 : false,
+    refetchIntervalInBackground: false,  // don't poll when tab is hidden
+    staleTime: 30 * 1000,
   });
 }
 
@@ -209,7 +209,7 @@ export function useMessages(conversationId: string, poll = true) {
     enabled: !!conversationId,
     refetchInterval: poll && !isSupabaseResourceMissing("messages") ? 3000 : false,
     refetchIntervalInBackground: false,
-    staleTime: 0,
+    staleTime: 2000,  // prevents back-to-back refetches within the poll interval
   });
 }
 

@@ -3,7 +3,7 @@
 // University-tinted left border. Avatar, name, verified badge,
 // course chips, star rating, hourly rate, optional save action.
 // ============================================================
-import type { MouseEvent } from "react";
+import { memo, type MouseEvent } from "react";
 import { motion } from "framer-motion";
 import { Star, BadgeCheck, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -23,17 +23,29 @@ interface TutorCardProps {
   tutor: TutorWithDetails;
   className?: string;
   showSaveButton?: boolean;
+  /** Pass from parent to skip the per-card saved query (eliminates N+1) */
+  isSaved?: boolean;
 }
 
-export function TutorCard({
+export const TutorCard = memo(function TutorCard({
   tutor,
   className = "",
   showSaveButton = true,
+  isSaved: isSavedProp,
 }: TutorCardProps) {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const studentId = profile?.role === "student" ? profile.id : "";
-  const { data: isSaved = false } = useIsTutorSaved(studentId, tutor.id);
+
+  // Skip per-card query when parent provides isSaved directly.
+  // Pass empty strings so the query's `enabled` guard disables it.
+  const skipQuery = isSavedProp !== undefined;
+  const { data: queriedIsSaved = false } = useIsTutorSaved(
+    skipQuery ? "" : studentId,
+    skipQuery ? "" : tutor.id,
+  );
+  const isSaved = skipQuery ? isSavedProp : queriedIsSaved;
+
   const saveTutor = useSaveTutor();
   const unsaveTutor = useUnsaveTutor();
 
@@ -67,7 +79,7 @@ export function TutorCard({
   };
 
   return (
-    <div className={`relative w-full ${className}`}>
+    <div className={`relative w-full ${className}`} data-tutor-id={tutor.id}>
       {canSave && (
         <motion.button
           whileTap={{ scale: 0.9 }}
@@ -191,4 +203,4 @@ export function TutorCard({
       </motion.button>
     </div>
   );
-}
+});
